@@ -1,0 +1,36 @@
+.gameOverScreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.gameOverScreen h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.gameOverScreen h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.gameOverScreen button {
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.gameOverScreen button:hover {
+  background-color: #45a049;
+}
