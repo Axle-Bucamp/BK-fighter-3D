@@ -1,125 +1,116 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useGame } from '../contexts/GameContext';
-import Character from '../lib/Character';
-import { handleKeyDown, handleKeyUp } from '../lib/inputHandlers';
-import { GAME_WIDTH, GAME_HEIGHT, FRAME_RATE } from '../lib/constants';
-import gameLogic from '../lib/gameLogic';
-import ParticleSystem from './ParticleSystem';
-import AIOpponent from '../lib/aiOpponent';
+// components/GameScene.js
+import React, { useState, useEffect, useRef } from 'react';
+import Character from './Character';
 import GameOverScreen from './GameOverScreen';
+import { createCharacter, isGameOver, getWinner } from '../lib/gameLogic';
+import { getAIMove } from '../lib/aiOpponent';
+import styles from './GameScene.module.css';
 
-const GameScene = ({ gameMode }) => {
-  const canvasRef = useRef(null);
-  const { gameState, setGameState } = useGame();
-  const [showParticles1, setShowParticles1] = useState(false);
-  const [showParticles2, setShowParticles2] = useState(false);
-  const [gameOver, setGameOver] = useState(false);
+const GameScene = ({ gameMode, onGameEnd }) => {
+  const [player1, setPlayer1] = useState(createCharacter('Burger'));
+  const [player2, setPlayer2] = useState(createCharacter('Jean'));
+  const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
-
-  const player1Ref = useRef(null);
-  const player2Ref = useRef(null);
-  const aiOpponentRef = useRef(null);
+  const [isPlayer1Attacking, setIsPlayer1Attacking] = useState(false);
+  const [isPlayer2Attacking, setIsPlayer2Attacking] = useState(false);
+  const [isPlayer1SpecialAttacking, setIsPlayer1SpecialAttacking] = useState(false);
+  const [isPlayer2SpecialAttacking, setIsPlayer2SpecialAttacking] = useState(false);
+  const gameLoopId = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    player1Ref.current = new Character(100, 200, 'blue', 1);
-    player2Ref.current = new Character(500, 200, 'red', 2);
-
-    if (gameMode === 'singlePlayer') {
-      aiOpponentRef.current = new AIOpponent(player1Ref.current, player2Ref.current);
-    }
-
-    const handleKeyDownWrapper = (e) => handleKeyDown(e, gameState, setGameState);
-    const handleKeyUpWrapper = (e) => handleKeyUp(e, gameState, setGameState);
-
-    window.addEventListener('keydown', handleKeyDownWrapper);
-    window.addEventListener('keyup', handleKeyUpWrapper);
-
-    let animationFrameId;
-
-    const gameLoop = (timestamp) => {
-      ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-      const deltaTime = timestamp - lastUpdateTime;
-
-      if (deltaTime >= 1000 / FRAME_RATE) {
-        lastUpdateTime = timestamp;
-
-        // Update game logic
-        const { player1Hit, player2Hit } = gameLogic(
-          player1Ref.current,
-          player2Ref.current,
-          gameState
-        );
-
-        if (player1Hit) setShowParticles2(true);
-        if (player2Hit) setShowParticles1(true);
-
-        // Update AI opponent if in single-player mode
-        if (gameMode === 'singlePlayer') {
-          aiOpponentRef.current.update(deltaTime);
-        }
-
-        // Check for game over
-        if (player1Ref.current.health <= 0 || player2Ref.current.health <= 0) {
-          setGameOver(true);
-          setWinner(player1Ref.current.health <= 0 ? 'Player 2' : 'Player 1');
-        }
-
-        // Draw characters
-        player1Ref.current.draw(ctx);
-        player2Ref.current.draw(ctx);
-
-        // Draw particles
-        if (showParticles1) {
-          ParticleSystem.drawParticles(ctx, player1Ref.current.x, player1Ref.current.y);
-        }
-        if (showParticles2) {
-          ParticleSystem.drawParticles(ctx, player2Ref.current.x, player2Ref.current.y);
-        }
-      }
-
-      if (!gameOver) {
-        animationFrameId = requestAnimationFrame(gameLoop);
+    const handleKeyDown = (e) => {
+      if (e.key === 'a') {
+        attack(player1, player2, setPlayer2, setIsPlayer1Attacking);
+      } else if (e.key === 'l' && gameMode === 'twoPlayer') {
+        attack(player2, player1, setPlayer1, setIsPlayer2Attacking);
+      } else if (e.key === 's') {
+        specialAttack(player1, player2, setPlayer2, setIsPlayer1SpecialAttacking);
+      } else if (e.key === 'k' && gameMode === 'twoPlayer') {
+        specialAttack(player2, player1, setPlayer1, setIsPlayer2SpecialAttacking);
       }
     };
 
-    let lastUpdateTime = 0;
-    gameLoop(0);
-
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDownWrapper);
-      window.removeEventListener('keyup', handleKeyUpWrapper);
-      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [gameState, setGameState, gameMode]);
+  }, [player1, player2, gameMode]);
 
   useEffect(() => {
-    if (showParticles1 || showParticles2) {
-      const timer = setTimeout(() => {
-        setShowParticles1(false);
-        setShowParticles2(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
+    if (gameMode === 'singlePlayer') {
+      gameLoopId.current = requestAnimationFrame(gameLoop);
     }
-  }, [showParticles1, showParticles2]);
+    return () => {
+      if (gameLoopId.current) {
+        cancelAnimationFrame(gameLoopId.current);
+      }
+    };
+  }, [gameMode]);
 
-  const handleRestart = () => {
-    setGameOver(false);
-    setWinner(null);
-    player1Ref.current.reset();
-    player2Ref.current.reset();
+  const gameLoop = () => {
+    const aiMove = getAIMove(player2, player1);
+    if (aiMove === 'attack') {
+      attack(player2, player1, setPlayer1, setIsPlayer2Attacking);
+    } else if (aiMove === 'special' && player2.specialMoveReady) {
+      specialAttack(player2, player1, setPlayer1, setIsPlayer2SpecialAttacking);
+    }
+    gameLoopId.current = requestAnimationFrame(gameLoop);
   };
 
+  const attack = (attacker, defender, setDefender, setIsAttacking) => {
+    const damage = attacker.performAttack(defender);
+    setDefender({ ...defender });
+    setIsAttacking(true);
+    setTimeout(() => setIsAttacking(false), 500);
+    checkGameOver();
+  };
+
+  const specialAttack = (attacker, defender, setDefender, setIsSpecialAttacking) => {
+    if (attacker.specialMoveReady) {
+      const damage = attacker.performSpecialMove(defender);
+      setDefender({ ...defender });
+      setIsSpecialAttacking(true);
+      setTimeout(() => setIsSpecialAttacking(false), 1000);
+      checkGameOver();
+    }
+  };
+
+  const checkGameOver = () => {
+    if (isGameOver(player1, player2)) {
+      setIsGameOver(true);
+      setWinner(getWinner(player1, player2));
+      onGameEnd();
+    }
+  };
+
+  if (isGameOver) {
+    return <GameOverScreen winner={winner} onRestart={() => window.location.reload()} />;
+  }
+
   return (
-    <div>
-      <canvas ref={canvasRef} width={GAME_WIDTH} height={GAME_HEIGHT} />
-      {gameOver && (
-        <GameOverScreen winner={winner} onRestart={handleRestart} />
-      )}
+    <div className={styles.gameScene}>
+      <Character
+        name={player1.name}
+        health={player1.health}
+        position="left"
+        isAttacking={isPlayer1Attacking}
+        isSpecialAttacking={isPlayer1SpecialAttacking}
+      />
+      <Character
+        name={player2.name}
+        health={player2.health}
+        position="right"
+        isAttacking={isPlayer2Attacking}
+        isSpecialAttacking={isPlayer2SpecialAttacking}
+      />
+      <div className={styles.comboCounter}>
+        <div>Player 1 Combo: {player1.comboCount}</div>
+        <div>Player 2 Combo: {player2.comboCount}</div>
+      </div>
+      <div className={styles.controls}>
+        <div>Player 1: 'A' to attack, 'S' for special</div>
+        {gameMode === 'twoPlayer' && <div>Player 2: 'L' to attack, 'K' for special</div>}
+      </div>
     </div>
   );
 };
