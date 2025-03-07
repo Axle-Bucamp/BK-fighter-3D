@@ -1,93 +1,125 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styles from '../styles/GameScene.module.css';
-import { updateGameState } from '../lib/gameLogic';
-import AudioManager from '../lib/audioManager';
+import { useGame } from '../contexts/GameContext';
+import Character from '../lib/Character';
+import { handleKeyDown, handleKeyUp } from '../lib/inputHandlers';
+import { GAME_WIDTH, GAME_HEIGHT, FRAME_RATE } from '../lib/constants';
+import gameLogic from '../lib/gameLogic';
 import ParticleSystem from './ParticleSystem';
+import AIOpponent from '../lib/aiOpponent';
 import GameOverScreen from './GameOverScreen';
 
-const GameScene = ({ onGameEnd }) => {
+const GameScene = ({ gameMode }) => {
   const canvasRef = useRef(null);
-  const [gameState, setGameState] = useState(null);
+  const { gameState, setGameState } = useGame();
   const [showParticles1, setShowParticles1] = useState(false);
   const [showParticles2, setShowParticles2] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
 
-  const animationFrameRef = useRef(null);
+  const player1Ref = useRef(null);
+  const player2Ref = useRef(null);
+  const aiOpponentRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    let lastTime = 0;
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    player1Ref.current = new Character(100, 200, 'blue', 1);
+    player2Ref.current = new Character(500, 200, 'red', 2);
+
+    if (gameMode === 'singlePlayer') {
+      aiOpponentRef.current = new AIOpponent(player1Ref.current, player2Ref.current);
+    }
+
+    const handleKeyDownWrapper = (e) => handleKeyDown(e, gameState, setGameState);
+    const handleKeyUpWrapper = (e) => handleKeyUp(e, gameState, setGameState);
+
+    window.addEventListener('keydown', handleKeyDownWrapper);
+    window.addEventListener('keyup', handleKeyUpWrapper);
+
+    let animationFrameId;
+
+    const gameLoop = (timestamp) => {
+      ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+      const deltaTime = timestamp - lastUpdateTime;
+
+      if (deltaTime >= 1000 / FRAME_RATE) {
+        lastUpdateTime = timestamp;
+
+        // Update game logic
+        const { player1Hit, player2Hit } = gameLogic(
+          player1Ref.current,
+          player2Ref.current,
+          gameState
+        );
+
+        if (player1Hit) setShowParticles2(true);
+        if (player2Hit) setShowParticles1(true);
+
+        // Update AI opponent if in single-player mode
+        if (gameMode === 'singlePlayer') {
+          aiOpponentRef.current.update(deltaTime);
+        }
+
+        // Check for game over
+        if (player1Ref.current.health <= 0 || player2Ref.current.health <= 0) {
+          setGameOver(true);
+          setWinner(player1Ref.current.health <= 0 ? 'Player 2' : 'Player 1');
+        }
+
+        // Draw characters
+        player1Ref.current.draw(ctx);
+        player2Ref.current.draw(ctx);
+
+        // Draw particles
+        if (showParticles1) {
+          ParticleSystem.drawParticles(ctx, player1Ref.current.x, player1Ref.current.y);
+        }
+        if (showParticles2) {
+          ParticleSystem.drawParticles(ctx, player2Ref.current.x, player2Ref.current.y);
+        }
+      }
+
+      if (!gameOver) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+      }
     };
 
-    const gameLoop = (currentTime) => {
-      const deltaTime = (currentTime - lastTime) / 1000;
-      lastTime = currentTime;
-
-      const updatedState = updateGameState(gameState, deltaTime);
-      setGameState(updatedState);
-
-      // Check for hits and trigger particle effects
-      if (updatedState.player1.isHit) {
-        setShowParticles1(true);
-        AudioManager.playSoundEffect('hurt');
-        setTimeout(() => setShowParticles1(false), 300);
-      }
-      if (updatedState.player2.isHit) {
-        setShowParticles2(true);
-        AudioManager.playSoundEffect('hurt');
-        setTimeout(() => setShowParticles2(false), 300);
-      }
-
-      // Check for game over condition
-      if (updatedState.player1.health <= 0 || updatedState.player2.health <= 0) {
-        setIsGameOver(true);
-        setWinner(updatedState.player1.health <= 0 ? 'Player 2' : 'Player 1');
-        AudioManager.stopBackgroundMusic();
-        onGameEnd();
-      } else {
-        animationFrameRef.current = requestAnimationFrame(gameLoop);
-      }
-
-      // Render game state
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // ... (rest of the rendering code)
-    };
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    AudioManager.playBackgroundMusic('battle');
-
-    animationFrameRef.current = requestAnimationFrame(gameLoop);
+    let lastUpdateTime = 0;
+    gameLoop(0);
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      AudioManager.stopBackgroundMusic();
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      window.removeEventListener('keydown', handleKeyDownWrapper);
+      window.removeEventListener('keyup', handleKeyUpWrapper);
+      cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [gameState, setGameState, gameMode]);
+
+  useEffect(() => {
+    if (showParticles1 || showParticles2) {
+      const timer = setTimeout(() => {
+        setShowParticles1(false);
+        setShowParticles2(false);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showParticles1, showParticles2]);
 
   const handleRestart = () => {
-    setIsGameOver(false);
+    setGameOver(false);
     setWinner(null);
-    setGameState(null);
-    AudioManager.playBackgroundMusic('battle');
-    animationFrameRef.current = requestAnimationFrame(gameLoop);
+    player1Ref.current.reset();
+    player2Ref.current.reset();
   };
 
   return (
-    <div className={styles.gameContainer}>
-      <canvas ref={canvasRef} className={styles.gameCanvas} />
-      {showParticles1 && <ParticleSystem position={{ x: gameState.player1.x, y: gameState.player1.y }} />}
-      {showParticles2 && <ParticleSystem position={{ x: gameState.player2.x, y: gameState.player2.y }} />}
-      {isGameOver && <GameOverScreen winner={winner} onRestart={handleRestart} />}
+    <div>
+      <canvas ref={canvasRef} width={GAME_WIDTH} height={GAME_HEIGHT} />
+      {gameOver && (
+        <GameOverScreen winner={winner} onRestart={handleRestart} />
+      )}
     </div>
   );
 };
