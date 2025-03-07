@@ -4,84 +4,81 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #f0f0f0;
+  background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
   font-family: 'Arial', sans-serif;
+  color: #333;
 }
 
 .title {
   font-size: 3rem;
-  color: #333;
   margin-bottom: 2rem;
+  color: #FF6347;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .options {
-  background-color: white;
-  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.gameMode,
-.difficulty {
+.gameMode, .difficulty {
   margin-bottom: 1.5rem;
 }
 
-.gameMode h2,
-.difficulty h2 {
-  font-size: 1.5rem;
-  color: #444;
-  margin-bottom: 0.5rem;
-}
-
-.radioGroup {
+.buttonGroup {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
 }
 
-.radioGroup label {
-  margin-bottom: 0.5rem;
+.modeButton, .difficultyButton {
+  padding: 0.5rem 1rem;
   font-size: 1rem;
-  color: #666;
+  border: none;
+  border-radius: 5px;
+  background-color: #E0E0E0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.select {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
+.modeButton:hover, .difficultyButton:hover {
+  background-color: #D0D0D0;
+}
+
+.modeButton.active, .difficultyButton.active {
+  background-color: #4CAF50;
+  color: white;
 }
 
 .startButton {
-  padding: 0.75rem 2rem;
+  padding: 1rem 2rem;
   font-size: 1.2rem;
-  background-color: #4CAF50;
+  background-color: #FF6347;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .startButton:hover {
-  background-color: #45a049;
+  background-color: #FF4500;
 }
 
-/* Responsive design */
-@media (max-width: 600px) {
-  .title {
-    font-size: 2rem;
-  }
+.instructions {
+  margin-top: 2rem;
+  text-align: center;
+  max-width: 600px;
+}
 
-  .options {
-    padding: 1rem;
-  }
+.instructions h3 {
+  margin-bottom: 0.5rem;
+}
 
-  .startButton {
-    padding: 0.5rem 1.5rem;
-    font-size: 1rem;
-  }
+.instructions p {
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
