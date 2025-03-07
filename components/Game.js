@@ -1,56 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styles from './Game.module.css';
-import { initGame, updateGame, renderGame } from '../lib/gameEngine';
-import { loadAudioAssets, playBackgroundMusic, stopAllSounds } from '../lib/audioManager';
-import OptionsMenu from './OptionsMenu';
+import React, { useState, useEffect } from 'react';
 import StartScreen from './StartScreen';
 import GameOverScreen from './GameOverScreen';
+import OptionsMenu from './OptionsMenu';
+import GameEngine from '../lib/gameEngine';
+import styles from '../styles/Game.module.css';
 
 const Game = () => {
-  const canvasRef = useRef(null);
-  const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'gameOver'
+  const [gameState, setGameState] = useState('start');
   const [showOptions, setShowOptions] = useState(false);
-  const [winner, setWinner] = useState(null);
-  const [scores, setScores] = useState({ player1: 0, player2: 0 });
+  const [gameEngine, setGameEngine] = useState(null);
 
   useEffect(() => {
-    loadAudioAssets();
+    setGameEngine(new GameEngine());
   }, []);
-
-  useEffect(() => {
-    if (gameState === 'playing') {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      let animationFrameId;
-
-      const game = initGame(canvas.width, canvas.height);
-
-      const gameLoop = () => {
-        updateGame(game);
-        renderGame(ctx, game);
-
-        if (game.gameOver) {
-          setGameState('gameOver');
-          setWinner(game.winner);
-          setScores(game.scores);
-          stopAllSounds();
-        } else {
-          animationFrameId = requestAnimationFrame(gameLoop);
-        }
-      };
-
-      gameLoop();
-      playBackgroundMusic();
-
-      return () => {
-        cancelAnimationFrame(animationFrameId);
-        stopAllSounds();
-      };
-    }
-  }, [gameState]);
 
   const handleStartGame = () => {
     setGameState('playing');
+    gameEngine.resetGame();
   };
 
   const handleOpenOptions = () => {
@@ -61,30 +27,70 @@ const Game = () => {
     setShowOptions(false);
   };
 
-  const handleRestart = () => {
+  const handleAttack = (attackerId, defenderId, damage) => {
+    gameEngine.attack(attackerId, defenderId, damage);
+    const currentState = gameEngine.getGameState();
+    
+    if (currentState.isGameOver) {
+      setGameState('gameOver');
+    } else {
+      setGameState('playing'); // Force a re-render
+    }
+  };
+
+  const handleRestartGame = () => {
+    gameEngine.resetGame();
     setGameState('playing');
   };
 
-  const handleMainMenu = () => {
+  const handleReturnToMenu = () => {
     setGameState('start');
+  };
+
+  const renderGameContent = () => {
+    if (!gameEngine) return null;
+
+    const { players, currentTurn, isGameOver, winner, finalScores } = gameEngine.getGameState();
+
+    switch (gameState) {
+      case 'start':
+        return (
+          <StartScreen 
+            onStartGame={handleStartGame} 
+            onOpenOptions={handleOpenOptions}
+          />
+        );
+      case 'playing':
+        return (
+          <div className={styles.gamePlay}>
+            <h2>Burger vs. Jean</h2>
+            <div className={styles.playerInfo}>
+              <p>Burger Health: {players[0].health}</p>
+              <p>Jean Health: {players[1].health}</p>
+            </div>
+            <p>Current Turn: {players[currentTurn].name}</p>
+            <button onClick={() => handleAttack(currentTurn, 1 - currentTurn, 10)}>
+              Attack!
+            </button>
+          </div>
+        );
+      case 'gameOver':
+        return (
+          <GameOverScreen 
+            winner={winner}
+            finalScores={finalScores}
+            onRestart={handleRestartGame}
+            onReturnToMenu={handleReturnToMenu}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
     <div className={styles.game}>
-      {gameState === 'start' && (
-        <StartScreen onStartGame={handleStartGame} onOpenOptions={handleOpenOptions} />
-      )}
-      {gameState === 'playing' && (
-        <canvas ref={canvasRef} width={800} height={600} />
-      )}
-      {gameState === 'gameOver' && (
-        <GameOverScreen
-          winner={winner}
-          scores={scores}
-          onRestart={handleRestart}
-          onMainMenu={handleMainMenu}
-        />
-      )}
+      {renderGameContent()}
       {showOptions && (
         <OptionsMenu onClose={handleCloseOptions} />
       )}
