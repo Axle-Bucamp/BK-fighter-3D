@@ -1,26 +1,44 @@
 import React, { useState } from 'react';
-import { GameProvider } from '../contexts/GameContext';
-import GameScene from '../components/GameScene';
-import MainMenu from '../components/MainMenu';
+import Head from 'next/head';
+import styles from '../styles/Home.module.css';
+import Game from '../components/Game';
+import Menu from '../components/Menu';
+import TutorialScreen from '../components/TutorialScreen';
 
-const App = () => {
-  const [gameMode, setGameMode] = useState(null);
+export default function Home() {
+  const [gameState, setGameState] = useState('menu'); // Possible states: 'menu', 'game', 'tutorial'
 
-  const handleStartGame = (mode) => {
-    setGameMode(mode);
-  };
+  const startGame = () => setGameState('game');
+  const showTutorial = () => setGameState('tutorial');
+  const returnToMenu = () => setGameState('menu');
 
   return (
-    <GameProvider>
-      <div className="app">
-        {gameMode ? (
-          <GameScene gameMode={gameMode} />
-        ) : (
-          <MainMenu onStartGame={handleStartGame} />
-        )}
-      </div>
-    </GameProvider>
-  );
-};
+    <div className={styles.container}>
+      <Head>
+        <title>Burger vs. Jean</title>
+        <meta name="description" content="An epic fighting game featuring Burger and Jean" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
 
-export default App;
+      <main className={styles.main}>
+        <h1 className={styles.title}>Burger vs. Jean</h1>
+
+        {gameState === 'menu' && (
+          <Menu onStartGame={startGame} onShowTutorial={showTutorial} />
+        )}
+
+        {gameState === 'game' && (
+          <Game onReturnToMenu={returnToMenu} />
+        )}
+
+        {gameState === 'tutorial' && (
+          <TutorialScreen onReturnToMenu={returnToMenu} />
+        )}
+      </main>
+
+      <footer className={styles.footer}>
+        <p>&copy; 2023 Burger vs. Jean. All rights reserved.</p>
+      </footer>
+    </div>
+  );
+}
