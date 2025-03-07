@@ -1,61 +1,61 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Game.module.css';
 import { initGame, updateGame, handleInput } from '../lib/gameEngine';
 import { renderGame } from '../lib/renderer';
+import { loadAudioAssets, playBackgroundMusic, stopBackgroundMusic, stopAllSounds } from '../lib/audioManager';
 
 const Game = () => {
-  const canvasRef = useRef(null);
   const [gameState, setGameState] = useState(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    
+    // Load audio assets
+    loadAudioAssets().then(() => {
+      // Start background music
+      playBackgroundMusic();
+    });
 
     // Initialize game state
-    const initialState = initGame(canvas.width, canvas.height);
-    setGameState(initialState);
+    setGameState(initGame());
 
-    // Set up game loop
-    let animationFrameId;
-    const gameLoop = () => {
-      // Update game state
-      const updatedState = updateGame(gameState);
-      setGameState(updatedState);
-
-      // Render game
-      renderGame(ctx, updatedState);
-
-      // Request next frame
-      animationFrameId = window.requestAnimationFrame(gameLoop);
-    };
-
-    gameLoop();
-
-    // Set up event listeners
-    const handleKeyDown = (event) => {
-      const updatedState = handleInput(gameState, event.key, true);
-      setGameState(updatedState);
-    };
-
-    const handleKeyUp = (event) => {
-      const updatedState = handleInput(gameState, event.key, false);
-      setGameState(updatedState);
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowUp') {
+        setGameState(prevState => handleInput(prevState, 'burger', 'JUMP'));
+      } else if (e.key === 'w') {
+        setGameState(prevState => handleInput(prevState, 'jean', 'JUMP'));
+      } else if (e.key === 'ArrowRight') {
+        setGameState(prevState => handleInput(prevState, 'burger', 'ATTACK'));
+      } else if (e.key === 'd') {
+        setGameState(prevState => handleInput(prevState, 'jean', 'ATTACK'));
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
 
-    // Clean up
-    return () => {
-      window.cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+    // Game loop
+    let animationFrameId;
+    const gameLoop = () => {
+      setGameState(prevState => updateGame(prevState));
+      renderGame(ctx, gameState);
+      animationFrameId = requestAnimationFrame(gameLoop);
     };
-  }, [gameState]);
+    gameLoop();
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      cancelAnimationFrame(animationFrameId);
+      stopBackgroundMusic();
+      stopAllSounds();
+    };
+  }, []);
 
   return (
     <div className={styles.gameContainer}>
-      <canvas ref={canvasRef} className={styles.gameCanvas} width={800} height={600} />
+      <canvas ref={canvasRef} width={800} height={600} className={styles.gameCanvas} />
     </div>
   );
 };
