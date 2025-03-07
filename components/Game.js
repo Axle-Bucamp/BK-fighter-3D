@@ -3,6 +3,7 @@ import StartScreen from './StartScreen';
 import Renderer from './Renderer';
 import GameOverScreen from './GameOverScreen';
 import GameEngine from '../lib/gameEngine';
+import AudioManager from '../lib/audioManager';
 import styles from '../styles/Game.module.css';
 
 /**
@@ -12,85 +13,93 @@ import styles from '../styles/Game.module.css';
 const Game = () => {
   const [gameState, setGameState] = useState('start');
   const [gameEngine, setGameEngine] = useState(null);
-  const [gameStats, setGameStats] = useState({ duration: 0, totalAttacks: 0 });
-  const requestRef = useRef();
-  const previousTimeRef = useRef();
+  const audioManagerRef = useRef(null);
+  const gameLoopRef = useRef(null);
+  const lastUpdateTimeRef = useRef(0);
+  const gameStatsRef = useRef({ duration: 0, totalAttacks: 0 });
 
   useEffect(() => {
     const engine = new GameEngine();
     setGameEngine(engine);
 
+    const audio = new AudioManager();
+    audio.preloadAudio();
+    audioManagerRef.current = audio;
+
     return () => {
-      cancelAnimationFrame(requestRef.current);
+      if (gameLoopRef.current) {
+        cancelAnimationFrame(gameLoopRef.current);
+      }
+      audioManagerRef.current.stopMusic();
     };
   }, []);
 
   const handleStartGame = useCallback(() => {
     setGameState('playing');
-    if (gameEngine) {
-      gameEngine.reset();
-      previousTimeRef.current = performance.now();
-      requestRef.current = requestAnimationFrame(gameLoop);
-    }
+    gameEngine.reset();
+    lastUpdateTimeRef.current = performance.now();
+    gameStatsRef.current = { duration: 0, totalAttacks: 0 };
+    audioManagerRef.current.playSound('gameStart');
+    audioManagerRef.current.playMusic();
+    gameLoop();
   }, [gameEngine]);
 
   const handleGameOver = useCallback(() => {
     setGameState('gameOver');
-    cancelAnimationFrame(requestRef.current);
-    if (gameEngine) {
-      setGameStats({
-        duration: Math.floor(gameEngine.getGameDuration() / 1000),
-        totalAttacks: gameEngine.getTotalAttacks(),
-      });
-    }
-  }, [gameEngine]);
+    audioManagerRef.current.stopMusic();
+    audioManagerRef.current.playSound('gameOver');
+  }, []);
 
   const handlePlayAgain = useCallback(() => {
     setGameState('start');
+    audioManagerRef.current.stopMusic();
   }, []);
 
-  const gameLoop = useCallback((time) => {
-    if (previousTimeRef.current !== undefined) {
-      const deltaTime = time - previousTimeRef.current;
-      if (gameEngine) {
-        gameEngine.update(deltaTime);
-        if (gameEngine.isGameOver()) {
-          handleGameOver();
-          return;
-        }
+  const gameLoop = useCallback(() => {
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - lastUpdateTimeRef.current) / 1000;
+    lastUpdateTimeRef.current = currentTime;
+
+    if (gameEngine) {
+      gameEngine.update(deltaTime);
+      gameStatsRef.current.duration += deltaTime;
+      gameStatsRef.current.totalAttacks = gameEngine.getTotalAttacks();
+
+      if (gameEngine.isGameOver()) {
+        handleGameOver();
+      } else {
+        gameLoopRef.current = requestAnimationFrame(gameLoop);
       }
     }
-    previousTimeRef.current = time;
-    requestRef.current = requestAnimationFrame(gameLoop);
   }, [gameEngine, handleGameOver]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (gameState === 'playing' && gameEngine) {
+      if (gameState === 'playing') {
         switch (event.key) {
-          case 'ArrowLeft':
-            gameEngine.moveCharacter('burger', 'left');
-            break;
-          case 'ArrowRight':
-            gameEngine.moveCharacter('burger', 'right');
-            break;
-          case 'ArrowUp':
-            gameEngine.jump('burger');
-            break;
-          case ' ':
-            gameEngine.attack('burger');
-            break;
           case 'a':
-            gameEngine.moveCharacter('jean', 'left');
+            gameEngine.attack('burger', 'light');
+            audioManagerRef.current.playSound('lightAttack');
+            break;
+          case 's':
+            gameEngine.attack('burger', 'heavy');
+            audioManagerRef.current.playSound('heavyAttack');
             break;
           case 'd':
-            gameEngine.moveCharacter('jean', 'right');
+            gameEngine.attack('burger', 'special');
+            audioManagerRef.current.playSound('specialAttack');
             break;
-          case 'w':
-            gameEngine.jump('jean');
+          case 'ArrowLeft':
+            gameEngine.attack('jean', 'light');
+            audioManagerRef.current.playSound('lightAttack');
             break;
-          case 'f':
-            gameEngine.attack('jean');
+          case 'ArrowDown':
+            gameEngine.attack('jean', 'heavy');
+            audioManagerRef.current.playSound('heavyAttack');
+            break;
+          case 'ArrowRight':
+            gameEngine.attack('jean', 'special');
+            audioManagerRef.current.playSound('specialAttack');
             break;
           default:
             break;
@@ -116,7 +125,7 @@ const Game = () => {
             winner={gameEngine.getWinner()}
             scores={gameEngine.getScores()}
             onPlayAgain={handlePlayAgain}
-            stats={gameStats}
+            stats={gameStatsRef.current}
           />
         ) : null;
       default:
