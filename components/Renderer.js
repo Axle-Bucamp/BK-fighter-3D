@@ -1,104 +1,105 @@
 import React, { useRef, useEffect } from 'react';
 
-/**
- * @component Renderer
- * @description Renders the game state using HTML5 Canvas
- * @param {Object} props - Component props
- * @param {Object} props.gameState - Current game state from GameEngine
- */
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
+const GROUND_HEIGHT = 100;
+const CHARACTER_WIDTH = 50;
+const CHARACTER_HEIGHT = 80;
+
 const Renderer = ({ gameState }) => {
   const canvasRef = useRef(null);
+  const animationRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Render game elements
-    renderArena(ctx, gameState);
-    renderCharacters(ctx, gameState);
-    renderUI(ctx, gameState);
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      renderBackground(ctx);
+      renderCharacters(ctx, gameState);
+      renderUI(ctx, gameState);
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+    };
   }, [gameState]);
 
-  /**
-   * @function renderArena
-   * @description Renders the game arena
-   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-   * @param {Object} gameState - Current game state
-   */
-  const renderArena = (ctx, gameState) => {
-    // Set arena background
-    ctx.fillStyle = '#87CEEB'; // Sky blue background
-    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  const renderBackground = (ctx) => {
+    // Sky
+    ctx.fillStyle = '#87CEEB';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Draw a simple platform
-    ctx.fillStyle = '#8B4513'; // Saddle brown for the platform
-    ctx.fillRect(0, ctx.canvas.height - 50, ctx.canvas.width, 50);
+    // Ground
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
   };
 
-  /**
-   * @function renderCharacters
-   * @description Renders the game characters
-   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-   * @param {Object} gameState - Current game state
-   */
   const renderCharacters = (ctx, gameState) => {
-    const { burger, jean } = gameState.characters;
+    const { burger, jean } = gameState;
 
-    // Render Burger
-    ctx.fillStyle = '#FF6347'; // Tomato color for Burger
-    ctx.fillRect(burger.position.x, burger.position.y, 50, 100);
-    renderHealthBar(ctx, burger.position.x, burger.position.y - 20, burger.health);
-
-    // Render Jean
-    ctx.fillStyle = '#4169E1'; // Royal blue for Jean
-    ctx.fillRect(jean.position.x, jean.position.y, 50, 100);
-    renderHealthBar(ctx, jean.position.x, jean.position.y - 20, jean.health);
+    renderCharacter(ctx, burger, '#FFA500'); // Orange for Burger
+    renderCharacter(ctx, jean, '#0000FF');   // Blue for Jean
   };
 
-  /**
-   * @function renderHealthBar
-   * @description Renders a health bar for a character
-   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-   * @param {number} x - X position of the health bar
-   * @param {number} y - Y position of the health bar
-   * @param {number} health - Current health of the character
-   */
-  const renderHealthBar = (ctx, x, y, health) => {
-    const width = 50;
-    const height = 10;
+  const renderCharacter = (ctx, character, color) => {
+    const y = CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT + character.verticalPosition;
 
-    // Draw background
-    ctx.fillStyle = '#FF0000';
-    ctx.fillRect(x, y, width, height);
+    // Body
+    ctx.fillStyle = color;
+    ctx.fillRect(character.position, y, CHARACTER_WIDTH, CHARACTER_HEIGHT);
 
-    // Draw health
-    ctx.fillStyle = '#00FF00';
-    ctx.fillRect(x, y, width * (health / 100), height);
+    // Eyes
+    ctx.fillStyle = 'white';
+    ctx.fillRect(character.position + 10, y + 15, 10, 10);
+    ctx.fillRect(character.position + 30, y + 15, 10, 10);
+
+    // Mouth
+    ctx.fillStyle = 'red';
+    ctx.fillRect(character.position + 15, y + 40, 20, 5);
+
+    // Render attack animation if attacking
+    if (character.isAttacking) {
+      renderAttack(ctx, character, color);
+    }
+
+    // Render hit animation if hit
+    if (character.isHit) {
+      renderHit(ctx, character);
+    }
   };
 
-  /**
-   * @function renderUI
-   * @description Renders the game UI (scores, time, etc.)
-   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context
-   * @param {Object} gameState - Current game state
-   */
+  const renderAttack = (ctx, character, color) => {
+    ctx.fillStyle = color;
+    const attackWidth = 30;
+    const attackHeight = 20;
+    const attackX = character.position + (character.direction === 'right' ? CHARACTER_WIDTH : -attackWidth);
+    const attackY = CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT / 2;
+
+    ctx.fillRect(attackX, attackY, attackWidth, attackHeight);
+  };
+
+  const renderHit = (ctx, character) => {
+    ctx.fillStyle = 'red';
+    ctx.globalAlpha = 0.5;
+    ctx.fillRect(character.position, CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT, CHARACTER_WIDTH, CHARACTER_HEIGHT);
+    ctx.globalAlpha = 1;
+  };
+
   const renderUI = (ctx, gameState) => {
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = 'black';
     ctx.font = '20px Arial';
-
-    // Render scores
-    ctx.fillText(`Burger: ${gameState.scores.burger}`, 10, 30);
-    ctx.fillText(`Jean: ${gameState.scores.jean}`, ctx.canvas.width - 100, 30);
-
-    // Render time
-    const timeRemaining = Math.max(0, Math.floor(gameState.timeRemaining / 1000));
-    ctx.fillText(`Time: ${timeRemaining}s`, ctx.canvas.width / 2 - 40, 30);
+    ctx.fillText(`Burger: ${gameState.burger.health}`, 10, 30);
+    ctx.fillText(`Jean: ${gameState.jean.health}`, CANVAS_WIDTH - 100, 30);
   };
 
-  return <canvas ref={canvasRef} width={800} height={600} />;
+  return <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />;
 };
 
 export default Renderer;
