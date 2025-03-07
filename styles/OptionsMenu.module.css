@@ -1,0 +1,81 @@
+/* Options Menu - Fullscreen Overlay */
+.optionsMenu {
+  position: absolute; /* Ensure it overlays the game */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 24, 24, 0.95); /* Slight transparency */
+  color: white;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  z-index: 100; /* Ensure it's above everything */
+}
+
+/* Title */
+.optionsMenu h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Volume Controls */
+.volumeControl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.optionsMenu label {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Slider Input */
+.optionsMenu input[type="range"] {
+  width: 200px;
+  -webkit-appearance: none;
+  transition: background 0.3s ease;
+}
+
+.optionsMenu input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #ff9800;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.optionsMenu input[type="range"]::-webkit-slider-thumb:hover {
+  background: #e68900;
+}
+
+/* Back Button */
+.backButton {
+  background-color: #444;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  margin-top: 2rem;
+}
+
+.backButton:hover {
+  background-color: #666;
+  transform: scale(1.05);
+}
+
+.backButton:active {
+  background-color: #555;
+  transform: scale(0.98);
+}

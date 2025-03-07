@@ -1,0 +1,40 @@
+.mainMenu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  text-align: center;
+  border-radius: 10px;
+  color: white;
+  }
+  
+  .mainMenu h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+  
+  .mainMenu button {
+    display: block;
+    width: 200px;
+    margin: 10px auto;
+    padding: 10px;
+    font-size: 18px;
+    border: none;
+    background: #ff5722;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .mainMenu button:hover {
+    background-color: #e63e00;
+    transform: scale(1.05);
+  }
+  
+  .mainMenu button:active {
+    background-color: #cc3700;
+    transform: scale(0.98);
+  }
+  
