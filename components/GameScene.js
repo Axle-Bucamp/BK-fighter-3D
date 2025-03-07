@@ -1,113 +1,97 @@
-import React, { useRef, useEffect } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrthographicCamera, Text } from '@react-three/drei';
-import * as THREE from 'three';
-import { useGameStore, useKeyPress } from '../lib/gameLogic';
+import React, { useEffect, useState } from 'react';
+import { Stage, Container, Sprite, Text } from '@inlet/react-pixi';
+import useGameStore from '../lib/gameLogic';
+import useAudioStore from '../lib/audioManager';
+import Character from './Character';
 
-function Background() {
-  const texture = useLoader(THREE.TextureLoader, '/background.jpg');
-  return (
-    <mesh position={[0, 0, -1]}>
-      <planeGeometry args={[16, 9]} />
-      <meshBasicMaterial map={texture} />
-    </mesh>
-  );
-}
-
-function Character({ position, spritesheet, direction, attacking }) {
-  const texture = useLoader(THREE.TextureLoader, spritesheet);
-  const ref = useRef();
-
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      const elapsedTime = clock.getElapsedTime();
-      const frame = Math.floor(elapsedTime * 10) % 4;
-      ref.current.material.map.offset.x = frame / 4;
-    }
-  });
-
-  return (
-    <sprite ref={ref} position={position} scale={[2, 2, 1]}>
-      <spriteMaterial
-        transparent
-        map={texture}
-        opacity={attacking ? 0.7 : 1}
-      />
-    </sprite>
-  );
-}
-
-function HealthBar({ position, health }) {
-  return (
-    <group position={position}>
-      <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[2, 0.2]} />
-        <meshBasicMaterial color="red" />
-      </mesh>
-      <mesh position={[-1 + health / 100, 0, 0.1]}>
-        <planeGeometry args={[2 * (health / 100), 0.2]} />
-        <meshBasicMaterial color="green" />
-      </mesh>
-    </group>
-  );
-}
-
-export function GameScene({ player1Character, player2Character }) {
-  const { characters, moveCharacter, attack, resetAttack, setCharacter } = useGameStore();
+const GameScene = ({ selectedCharacters }) => {
+  const { gameState, moveLeft, moveRight, attack } = useGameStore();
+  const { audioManager } = useAudioStore();
+  const [windowSize, setWindowSize] = useState({ width: 800, height: 600 });
 
   useEffect(() => {
-    setCharacter('player1', player1Character);
-    setCharacter('player2', player2Character);
-  }, [player1Character, player2Character, setCharacter]);
+    const handleResize = () => {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    };
 
-  // Player 1 controls
-  const leftPressed = useKeyPress('a');
-  const rightPressed = useKeyPress('d');
-  const attackPressed = useKeyPress('s');
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
-  // Player 2 controls
-  const leftPressed2 = useKeyPress('j');
-  const rightPressed2 = useKeyPress('l');
-  const attackPressed2 = useKeyPress('k');
+    audioManager.loadSound('attack', '/sounds/attack.mp3');
+    audioManager.loadSound('hurt', '/sounds/hurt.mp3');
+    audioManager.loadMusic('/sounds/battle_music.mp3');
+    audioManager.playMusic();
 
-  useFrame(() => {
-    if (leftPressed) moveCharacter('player1', -1);
-    if (rightPressed) moveCharacter('player1', 1);
-    if (attackPressed) attack('player1');
-    else resetAttack('player1');
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      audioManager.stopMusic();
+    };
+  }, []);
 
-    if (leftPressed2) moveCharacter('player2', -1);
-    if (rightPressed2) moveCharacter('player2', 1);
-    if (attackPressed2) attack('player2');
-    else resetAttack('player2');
-  });
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      switch (e.key.toLowerCase()) {
+        case 'a':
+          moveLeft(1);
+          break;
+        case 'd':
+          moveRight(1);
+          break;
+        case 'h':
+          attack(1);
+          audioManager.playSound('attack');
+          break;
+        case 'j':
+          moveLeft(2);
+          break;
+        case 'l':
+          moveRight(2);
+          break;
+        case 'k':
+          attack(2);
+          audioManager.playSound('attack');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [moveLeft, moveRight, attack]);
+
+  useEffect(() => {
+    if (gameState.player1.health < gameState.player1.prevHealth ||
+        gameState.player2.health < gameState.player2.prevHealth) {
+      audioManager.playSound('hurt');
+    }
+  }, [gameState.player1.health, gameState.player2.health]);
 
   return (
-    <Canvas>
-      <OrthographicCamera makeDefault position={[0, 0, 5]} zoom={100} />
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <Background />
-      <Character
-        position={[characters.player1.x / 50 - 8, characters.player1.y / 50 - 4.5, 0]}
-        spritesheet={`/${characters.player1.character}_spritesheet.png`}
-        direction={characters.player1.direction}
-        attacking={characters.player1.attacking}
-      />
-      <Character
-        position={[characters.player2.x / 50 - 8, characters.player2.y / 50 - 4.5, 0]}
-        spritesheet={`/${characters.player2.character}_spritesheet.png`}
-        direction={characters.player2.direction}
-        attacking={characters.player2.attacking}
-      />
-      <HealthBar position={[-7, 4, 0]} health={characters.player1.health} />
-      <HealthBar position={[7, 4, 0]} health={characters.player2.health} />
-      <Text position={[-7, 4.2, 0]} fontSize={0.5} color="white">
-        Player 1
-      </Text>
-      <Text position={[7, 4.2, 0]} fontSize={0.5} color="white">
-        Player 2
-      </Text>
-    </Canvas>
+    <Stage width={windowSize.width} height={windowSize.height}>
+      <Sprite image="/background.jpg" width={windowSize.width} height={windowSize.height} />
+      <Container>
+        <Character
+          x={gameState.player1.x}
+          y={windowSize.height - 200}
+          width={100}
+          height={200}
+          isAttacking={gameState.player1.isAttacking}
+          spriteSheet={`/${selectedCharacters[0].toLowerCase()}_spritesheet.png`}
+        />
+        <Character
+          x={gameState.player2.x}
+          y={windowSize.height - 200}
+          width={100}
+          height={200}
+          isAttacking={gameState.player2.isAttacking}
+          spriteSheet={`/${selectedCharacters[1].toLowerCase()}_spritesheet.png`}
+        />
+        <Text text={`P1 Health: ${gameState.player1.health}`} x={10} y={10} style={{ fill: 'white' }} />
+        <Text text={`P2 Health: ${gameState.player2.health}`} x={windowSize.width - 150} y={10} style={{ fill: 'white' }} />
+      </Container>
+    </Stage>
   );
-}
+};
+
+export default GameScene;
