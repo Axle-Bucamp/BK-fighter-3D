@@ -8,8 +8,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "lighthouse": "node scripts/run-lighthouse.js"
   },
   "dependencies": {
     "react": "^17.0.2",
@@ -17,6 +16,7 @@
     "react-scripts": "4.0.3"
   },
   "devDependencies": {
-    "cypress": "^9.5.0"
+    "lighthouse": "^9.6.8",
+    "chrome-launcher": "^0.15.1"
   }
 }
