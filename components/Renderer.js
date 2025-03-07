@@ -1,105 +1,100 @@
 import React, { useRef, useEffect } from 'react';
 
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
-const GROUND_HEIGHT = 100;
-const CHARACTER_WIDTH = 50;
-const CHARACTER_HEIGHT = 80;
-
 const Renderer = ({ gameState }) => {
   const canvasRef = useRef(null);
-  const animationRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      renderBackground(ctx);
-      renderCharacters(ctx, gameState);
-      renderUI(ctx, gameState);
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      cancelAnimationFrame(animationRef.current);
-    };
+    // Render game elements
+    renderBackground(ctx);
+    renderPlatforms(ctx, gameState.platforms);
+    renderCharacters(ctx, gameState.characters);
+    renderUI(ctx, gameState);
   }, [gameState]);
 
   const renderBackground = (ctx) => {
-    // Sky
-    ctx.fillStyle = '#87CEEB';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Simple gradient background
+    const gradient = ctx.createLinearGradient(0, 0, 0, 600);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(1, '#E0F6FF');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 600);
+  };
 
-    // Ground
+  const renderPlatforms = (ctx, platforms) => {
     ctx.fillStyle = '#8B4513';
-    ctx.fillRect(0, CANVAS_HEIGHT - GROUND_HEIGHT, CANVAS_WIDTH, GROUND_HEIGHT);
+    platforms.forEach(platform => {
+      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    });
   };
 
-  const renderCharacters = (ctx, gameState) => {
-    const { burger, jean } = gameState;
+  const renderCharacters = (ctx, characters) => {
+    characters.forEach((character, index) => {
+      // Character body
+      ctx.fillStyle = index === 0 ? '#FF0000' : '#0000FF';
+      ctx.fillRect(character.x, character.y, 50, 100);
 
-    renderCharacter(ctx, burger, '#FFA500'); // Orange for Burger
-    renderCharacter(ctx, jean, '#0000FF');   // Blue for Jean
-  };
+      // Character face
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(character.x + 10, character.y + 10, 30, 20);
 
-  const renderCharacter = (ctx, character, color) => {
-    const y = CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT + character.verticalPosition;
+      // Eyes
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(character.x + 15, character.y + 15, 5, 5);
+      ctx.fillRect(character.x + 30, character.y + 15, 5, 5);
 
-    // Body
-    ctx.fillStyle = color;
-    ctx.fillRect(character.position, y, CHARACTER_WIDTH, CHARACTER_HEIGHT);
+      // Animate attack
+      if (character.isAttacking) {
+        ctx.fillStyle = '#FFFF00';
+        ctx.beginPath();
+        ctx.arc(character.x + (index === 0 ? 60 : -10), character.y + 50, 20, 0, 2 * Math.PI);
+        ctx.fill();
+      }
 
-    // Eyes
-    ctx.fillStyle = 'white';
-    ctx.fillRect(character.position + 10, y + 15, 10, 10);
-    ctx.fillRect(character.position + 30, y + 15, 10, 10);
-
-    // Mouth
-    ctx.fillStyle = 'red';
-    ctx.fillRect(character.position + 15, y + 40, 20, 5);
-
-    // Render attack animation if attacking
-    if (character.isAttacking) {
-      renderAttack(ctx, character, color);
-    }
-
-    // Render hit animation if hit
-    if (character.isHit) {
-      renderHit(ctx, character);
-    }
-  };
-
-  const renderAttack = (ctx, character, color) => {
-    ctx.fillStyle = color;
-    const attackWidth = 30;
-    const attackHeight = 20;
-    const attackX = character.position + (character.direction === 'right' ? CHARACTER_WIDTH : -attackWidth);
-    const attackY = CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT / 2;
-
-    ctx.fillRect(attackX, attackY, attackWidth, attackHeight);
-  };
-
-  const renderHit = (ctx, character) => {
-    ctx.fillStyle = 'red';
-    ctx.globalAlpha = 0.5;
-    ctx.fillRect(character.position, CANVAS_HEIGHT - GROUND_HEIGHT - CHARACTER_HEIGHT, CHARACTER_WIDTH, CHARACTER_HEIGHT);
-    ctx.globalAlpha = 1;
+      // Animate jump
+      if (character.velocityY < 0) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(character.x + 25, character.y + 110, 10, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    });
   };
 
   const renderUI = (ctx, gameState) => {
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-    ctx.fillText(`Burger: ${gameState.burger.health}`, 10, 30);
-    ctx.fillText(`Jean: ${gameState.jean.health}`, CANVAS_WIDTH - 100, 30);
+    // Health bars
+    gameState.characters.forEach((character, index) => {
+      const x = index === 0 ? 20 : 580;
+      const width = 200;
+      const height = 20;
+      const healthPercentage = character.health / 100;
+
+      // Health bar background
+      ctx.fillStyle = '#333333';
+      ctx.fillRect(x, 20, width, height);
+
+      // Health bar fill
+      ctx.fillStyle = '#00FF00';
+      ctx.fillRect(x, 20, width * healthPercentage, height);
+
+      // Health text
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '16px Arial';
+      ctx.fillText(`Health: ${character.health}`, x + 5, 35);
+    });
+
+    // Game timer
+    ctx.fillStyle = '#000000';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Time: ${Math.floor(gameState.time / 60)}`, 375, 30);
   };
 
-  return <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />;
+  return <canvas ref={canvasRef} width={800} height={600} />;
 };
 
 export default Renderer;
