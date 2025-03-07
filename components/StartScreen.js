@@ -16,47 +16,46 @@ const StartScreen = ({ onStartGame }) => {
       <div className={styles.options}>
         <div className={styles.gameMode}>
           <h2>Game Mode</h2>
-          <div className={styles.radioGroup}>
-            <label>
-              <input
-                type="radio"
-                value="single"
-                checked={gameMode === 'single'}
-                onChange={() => setGameMode('single')}
-              />
+          <div className={styles.buttonGroup}>
+            <button 
+              className={`${styles.modeButton} ${gameMode === 'single' ? styles.active : ''}`}
+              onClick={() => setGameMode('single')}
+            >
               Single Player
-            </label>
-            <label>
-              <input
-                type="radio"
-                value="multi"
-                checked={gameMode === 'multi'}
-                onChange={() => setGameMode('multi')}
-              />
+            </button>
+            <button 
+              className={`${styles.modeButton} ${gameMode === 'multi' ? styles.active : ''}`}
+              onClick={() => setGameMode('multi')}
+            >
               Multiplayer
-            </label>
+            </button>
           </div>
         </div>
         
         {gameMode === 'single' && (
           <div className={styles.difficulty}>
             <h2>Difficulty</h2>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className={styles.select}
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
+            <div className={styles.buttonGroup}>
+              {['easy', 'medium', 'hard'].map((diff) => (
+                <button 
+                  key={diff}
+                  className={`${styles.difficultyButton} ${difficulty === diff ? styles.active : ''}`}
+                  onClick={() => setDifficulty(diff)}
+                >
+                  {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
       
-      <button onClick={handleStartClick} className={styles.startButton}>
-        Start Game
-      </button>
+      <button className={styles.startButton} onClick={handleStartClick}>Start Game</button>
+      
+      <div className={styles.instructions}>
+        <h3>How to Play</h3>
+        <p>Use arrow keys to move and jump. Press 'A' for light attack, 'S' for heavy attack, and 'D' for special attack.</p>
+      </div>
     </div>
   );
 };
