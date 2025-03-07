@@ -1,77 +1,55 @@
-.gameOverContainer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+.container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
+  justify-content: center;
+  height: 100vh;
+  background-color: #191970; /* Midnight blue (denim) */
+  color: white;
+  font-family: 'Arial', sans-serif;
 }
 
-.gameOverContent {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 10px;
-  text-align: center;
-  max-width: 90%;
-  width: 400px;
+.title {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  color: #ffd700; /* Golden */
+  text-shadow: 2px 2px #000;
 }
 
-.gameOverTitle {
-  font-size: 2.5rem;
+.result {
+  font-size: 2rem;
   margin-bottom: 1rem;
-  color: var(--primary-color);
 }
 
-.winnerText {
+.scores {
   font-size: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.restartButton {
+.button {
   font-size: 1.2rem;
-  padding: 0.8rem 1.5rem;
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-@media (max-width: 768px) {
-  .gameOverContent {
-    padding: 1.5rem;
-    width: 350px;
-  }
-
-  .gameOverTitle {
-    font-size: 2rem;
-  }
-
-  .winnerText {
-    font-size: 1.2rem;
-  }
-
-  .restartButton {
-    font-size: 1rem;
-    padding: 0.6rem 1.2rem;
-  }
+.restartButton {
+  background-color: #8b4513; /* Burger patty color */
+  color: white;
 }
 
-@media (max-width: 480px) {
-  .gameOverContent {
-    padding: 1rem;
-    width: 300px;
-  }
+.restartButton:hover {
+  background-color: #a0522d; /* Lighter brown */
+}
 
-  .gameOverTitle {
-    font-size: 1.8rem;
-  }
+.menuButton {
+  background-color: #f5d6a8; /* Light burger bun color */
+  color: #8b4513;
+}
 
-  .winnerText {
-    font-size: 1rem;
-  }
-
-  .restartButton {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
-  }
+.menuButton:hover {
+  background-color: #ffe4b5; /* Lighter bun color */
 }
