@@ -1,44 +1,61 @@
-.container {
+.startScreen {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #f5d6a8; /* Light burger bun color */
+  background-color: #FFF3E0;
   font-family: 'Arial', sans-serif;
 }
 
 .title {
   font-size: 4rem;
-  margin-bottom: 2rem;
-  color: #8b4513; /* Burger patty color */
-  text-shadow: 2px 2px #fff;
+  color: #FF5722;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.5rem;
 }
 
-.button {
+.subtitle {
   font-size: 1.5rem;
-  margin: 1rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: #E64A19;
+  margin-bottom: 2rem;
 }
 
 .startButton {
-  background-color: #4169e1; /* Denim blue */
+  font-size: 1.5rem;
+  padding: 15px 30px;
+  background-color: #4CAF50;
   color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .startButton:hover {
-  background-color: #1e90ff; /* Lighter denim blue */
+  background-color: #45a049;
 }
 
-.optionsButton {
-  background-color: #daa520; /* Golden brown */
-  color: white;
+.instructions {
+  margin-top: 2rem;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  border-radius: 10px;
+  max-width: 80%;
 }
 
-.optionsButton:hover {
-  background-color: #ffd700; /* Lighter golden */
+.instructions h2 {
+  color: #FF5722;
+  margin-bottom: 1rem;
+}
+
+.instructions ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.instructions li {
+  margin-bottom: 0.5rem;
+  color: #333;
 }
