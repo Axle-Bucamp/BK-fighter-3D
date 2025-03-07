@@ -4,107 +4,172 @@ import GameOverScreen from './GameOverScreen';
 import Renderer from './Renderer';
 import GameEngine from '../lib/GameEngine';
 import AIController from '../lib/AIController';
-import { playSound } from '../lib/soundEffects';
+import soundEffects from '../lib/soundEffects';
 
 const Game = () => {
   const [gameState, setGameState] = useState('start');
-  const [winner, setWinner] = useState(null);
   const [gameMode, setGameMode] = useState('single');
   const [difficulty, setDifficulty] = useState('medium');
-  const [players, setPlayers] = useState({
-    burger: { health: 100, position: { x: 100, y: 0 } },
-    jean: { health: 100, position: { x: 700, y: 0 } }
-  });
+  const [winner, setWinner] = useState(null);
+  const [scores, setScores] = useState({ player1: 0, player2: 0 });
 
   const gameEngineRef = useRef(null);
   const aiControllerRef = useRef(null);
 
   useEffect(() => {
     gameEngineRef.current = new GameEngine();
-    aiControllerRef.current = new AIController();
+    aiControllerRef.current = new AIController(difficulty);
+
+    return () => {
+      // Cleanup if needed
+    };
   }, []);
 
-  const handleStartGame = (mode, diff) => {
+  useEffect(() => {
+    if (gameState === 'playing') {
+      window.addEventListener('keydown', handlePlayerInput);
+      window.addEventListener('keyup', handlePlayerInput);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handlePlayerInput);
+      window.removeEventListener('keyup', handlePlayerInput);
+    };
+  }, [gameState]);
+
+  const handleStartGame = (selectedGameMode, selectedDifficulty) => {
+    setGameMode(selectedGameMode);
+    setDifficulty(selectedDifficulty);
     setGameState('playing');
-    setGameMode(mode);
-    setDifficulty(diff);
-    aiControllerRef.current.setDifficulty(diff);
-    // Reset game state
-    setPlayers({
-      burger: { health: 100, position: { x: 100, y: 0 } },
-      jean: { health: 100, position: { x: 700, y: 0 } }
-    });
-    setWinner(null);
+    gameEngineRef.current.resetGame();
+    aiControllerRef.current.setDifficulty(selectedDifficulty);
   };
 
-  const handleGameOver = () => {
+  const handleGameOver = (winner, finalScores) => {
     setGameState('gameOver');
+    setWinner(winner);
+    setScores(finalScores);
   };
 
   const handleRestartGame = () => {
+    setGameState('playing');
+    gameEngineRef.current.resetGame();
+  };
+
+  const handleReturnToMainMenu = () => {
     setGameState('start');
+  };
+
+  const handlePlayerInput = (event) => {
+    const { key, type } = event;
+    const isKeyDown = type === 'keydown';
+    let player1Action = null;
+    let player2Action = null;
+
+    // Player 1 controls
+    switch (key.toLowerCase()) {
+      case 'a':
+        player1Action = { move: isKeyDown ? 'left' : null };
+        break;
+      case 'd':
+        player1Action = { move: isKeyDown ? 'right' : null };
+        break;
+      case 'w':
+        player1Action = { jump: isKeyDown };
+        break;
+      case 'j':
+        player1Action = { attack: isKeyDown ? 'light' : null };
+        break;
+      case 'k':
+        player1Action = { attack: isKeyDown ? 'heavy' : null };
+        break;
+      case 'l':
+        player1Action = { attack: isKeyDown ? 'special' : null };
+        break;
+    }
+
+    // Player 2 controls (only in multiplayer mode)
+    if (gameMode === 'multi') {
+      switch (key.toLowerCase()) {
+        case 'arrowleft':
+          player2Action = { move: isKeyDown ? 'left' : null };
+          break;
+        case 'arrowright':
+          player2Action = { move: isKeyDown ? 'right' : null };
+          break;
+        case 'arrowup':
+          player2Action = { jump: isKeyDown };
+          break;
+        case 'num1':
+        case 'end':
+          player2Action = { attack: isKeyDown ? 'light' : null };
+          break;
+        case 'num2':
+        case 'down':
+          player2Action = { attack: isKeyDown ? 'heavy' : null };
+          break;
+        case 'num3':
+        case 'pagedown':
+          player2Action = { attack: isKeyDown ? 'special' : null };
+          break;
+      }
+    }
+
+    if (player1Action) {
+      gameEngineRef.current.updatePlayerAction('player1', player1Action);
+      if (player1Action.attack && isKeyDown) {
+        soundEffects.playAttackSound(player1Action.attack);
+      }
+    }
+
+    if (player2Action) {
+      gameEngineRef.current.updatePlayerAction('player2', player2Action);
+      if (player2Action.attack && isKeyDown) {
+        soundEffects.playAttackSound(player2Action.attack);
+      }
+    }
+  };
+
+  const gameLoop = () => {
+    if (gameState !== 'playing') return;
+
+    const currentGameState = gameEngineRef.current.getGameState();
+
+    if (gameMode === 'single') {
+      const aiAction = aiControllerRef.current.getAction(currentGameState);
+      gameEngineRef.current.updatePlayerAction('player2', aiAction);
+    }
+
+    gameEngineRef.current.update();
+
+    if (gameEngineRef.current.isGameOver()) {
+      const winner = gameEngineRef.current.getWinner();
+      const finalScores = gameEngineRef.current.getScores();
+      handleGameOver(winner, finalScores);
+    } else {
+      requestAnimationFrame(gameLoop);
+    }
   };
 
   useEffect(() => {
     if (gameState === 'playing') {
-      const gameLoop = setInterval(() => {
-        const currentState = { ...players };
-
-        // Handle player input (you'll need to implement this)
-        const playerAction = handlePlayerInput();
-
-        // Handle AI input in single-player mode
-        let aiAction = null;
-        if (gameMode === 'single') {
-          aiAction = aiControllerRef.current.getAction(currentState);
-        }
-
-        // Update game state
-        const newState = gameEngineRef.current.update(currentState, playerAction, aiAction);
-
-        // Check for game over condition
-        if (newState.burger.health <= 0 || newState.jean.health <= 0) {
-          handleGameOver();
-          setWinner(newState.burger.health <= 0 ? 'Jean' : 'Burger');
-        } else {
-          setPlayers(newState);
-        }
-
-        // Play sound effects
-        if (playerAction && playerAction.attack) {
-          playSound('attack');
-        }
-        if (aiAction && aiAction.attack) {
-          playSound('aiAttack');
-        }
-
-      }, 1000 / 60); // 60 FPS
-
-      return () => clearInterval(gameLoop);
+      gameLoop();
     }
-  }, [gameState, players, gameMode]);
-
-  const handlePlayerInput = () => {
-    // Implement player input logic here
-    // Return an action object, e.g., { move: 'left', attack: 'light' }
-    return {};
-  };
+  }, [gameState]);
 
   const renderGame = () => {
     switch (gameState) {
       case 'start':
         return <StartScreen onStartGame={handleStartGame} />;
       case 'playing':
-        return <Renderer gameState={players} />;
+        return <Renderer gameState={gameEngineRef.current.getGameState()} />;
       case 'gameOver':
         return (
           <GameOverScreen
             winner={winner}
+            scores={scores}
             onRestart={handleRestartGame}
-            finalScores={{
-              burger: players.burger.health,
-              jean: players.jean.health
-            }}
+            onReturnToMainMenu={handleReturnToMainMenu}
           />
         );
       default:
