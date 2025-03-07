@@ -1,12 +1,9 @@
-import dynamic from 'next/dynamic'
-import React from 'react'
-
-const Scene = dynamic(() => import('../components/Scene'), { ssr: false })
+import MainMenu from '../components/MainMenu';
 
 export default function Home() {
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <Scene />
+    <div>
+      <MainMenu />
     </div>
-  )
+  );
 }
