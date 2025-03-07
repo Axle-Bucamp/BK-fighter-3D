@@ -1,6 +1,10 @@
 // components/Character.js
-import React, { useState, useEffect } from 'react';
-import styles from './Character.module.css';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import styles from '../styles/Character.module.css';
 
 const Character = ({ name, health, position, isAttacking, isSpecialAttacking }) => {
   const [animation, setAnimation] = useState('idle');

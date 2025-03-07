@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
 import { useRouter } from 'next/router';
-import useAudioStore from '../lib/audioManager';
+
+import initAudio from '../lib/audioManager';
 
 export default function Options() {
   const router = useRouter();
-  const { audioManager, setMusicVolume, setSFXVolume } = useAudioStore();
+  const { audioManager } = initAudio();
   const [musicVol, setMusicVol] = useState(0.5);
   const [sfxVol, setSfxVol] = useState(0.5);
   const [isMounted, setIsMounted] = useState(false);

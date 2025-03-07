@@ -5,11 +5,7 @@ import React, {
   useState,
 } from 'react';
 
-import { getAIMove } from '../lib/aiOpponent';
-import {
-  createCharacter,
-  getWinner,
-} from '../lib/gameLogic';
+import { createCharacter } from '../lib/gameLogic';
 import styles from '../styles/GameScene.module.css';
 import Character from './Character';
 import GameOverScreen from './GameOverScreen';
@@ -56,40 +52,6 @@ const GameScene = ({ gameMode, onGameEnd }) => {
   }, [gameMode]);
 
   const gameLoop = () => {
-    const aiMove = getAIMove(player2, player1);
-    if (aiMove === 'attack') {
-      attack(player2, player1, setPlayer1, setIsPlayer2Attacking);
-    } else if (aiMove === 'special' && player2.specialMoveReady) {
-      specialAttack(player2, player1, setPlayer1, setIsPlayer2SpecialAttacking);
-    }
-    gameLoopId.current = requestAnimationFrame(gameLoop);
-  };
-
-  const attack = (attacker, defender, setDefender, setIsAttacking) => {
-    const damage = attacker.performAttack(defender);
-    setDefender({ ...defender });
-    setIsAttacking(true);
-    setTimeout(() => setIsAttacking(false), 500);
-    checkGameOver();
-  };
-
-  const specialAttack = (attacker, defender, setDefender, setIsSpecialAttacking) => {
-    if (attacker.specialMoveReady) {
-      const damage = attacker.performSpecialMove(defender);
-      setDefender({ ...defender });
-      setIsSpecialAttacking(true);
-      setTimeout(() => setIsSpecialAttacking(false), 1000);
-      checkGameOver();
-    }
-  };
-
-  const checkGameOver = () => {
-    if (isGameOver(player1, player2)) {
-      setIsGameOver(true);
-      setWinner(getWinner(player1, player2));
-      onGameEnd();
-    }
-  };
 
   if (isGameOver) {
     return <GameOverScreen winner={winner} onRestart={() => window.location.reload()} />;
@@ -122,5 +84,6 @@ const GameScene = ({ gameMode, onGameEnd }) => {
     </div>
   );
 };
+}
 
 export default GameScene;
