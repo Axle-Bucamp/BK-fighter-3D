@@ -1,164 +1,118 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StartScreen from './StartScreen';
-import Renderer from './Renderer';
 import GameOverScreen from './GameOverScreen';
-import GameEngine from '../lib/gameEngine';
-import AudioManager from '../lib/audioManager';
-import AIController from '../lib/aiController';
-import styles from '../styles/Game.module.css';
+import Renderer from './Renderer';
+import GameEngine from '../lib/GameEngine';
+import AIController from '../lib/AIController';
+import { playSound } from '../lib/soundEffects';
 
-/**
- * @component Game
- * @description Main game component that manages game state and renders appropriate screens
- */
 const Game = () => {
   const [gameState, setGameState] = useState('start');
-  const [gameEngine, setGameEngine] = useState(null);
-  const [gameMode, setGameMode] = useState('singlePlayer');
+  const [winner, setWinner] = useState(null);
+  const [gameMode, setGameMode] = useState('single');
   const [difficulty, setDifficulty] = useState('medium');
-  const audioManagerRef = useRef(null);
+  const [players, setPlayers] = useState({
+    burger: { health: 100, position: { x: 100, y: 0 } },
+    jean: { health: 100, position: { x: 700, y: 0 } }
+  });
+
+  const gameEngineRef = useRef(null);
   const aiControllerRef = useRef(null);
 
   useEffect(() => {
-    const engine = new GameEngine();
-    setGameEngine(engine);
+    gameEngineRef.current = new GameEngine();
+    aiControllerRef.current = new AIController();
+  }, []);
 
-    audioManagerRef.current = new AudioManager();
-    aiControllerRef.current = new AIController(difficulty);
-
-    // Preload audio
-    audioManagerRef.current.loadSound('gameStart', '/sounds/game-start.mp3');
-    audioManagerRef.current.loadSound('lightAttack', '/sounds/light-attack.mp3');
-    audioManagerRef.current.loadSound('heavyAttack', '/sounds/heavy-attack.mp3');
-    audioManagerRef.current.loadSound('specialAttack', '/sounds/special-attack.mp3');
-    audioManagerRef.current.loadSound('hit', '/sounds/hit.mp3');
-    audioManagerRef.current.loadSound('gameOver', '/sounds/game-over.mp3');
-    audioManagerRef.current.loadMusic('/sounds/background-music.mp3');
-
-    return () => {
-      audioManagerRef.current.stopMusic();
-    };
-  }, [difficulty]);
-
-  const handleStartGame = useCallback(() => {
+  const handleStartGame = (mode, diff) => {
     setGameState('playing');
-    gameEngine.reset();
-    audioManagerRef.current.playSound('gameStart');
-    audioManagerRef.current.playMusic();
-  }, [gameEngine]);
+    setGameMode(mode);
+    setDifficulty(diff);
+    aiControllerRef.current.setDifficulty(diff);
+    // Reset game state
+    setPlayers({
+      burger: { health: 100, position: { x: 100, y: 0 } },
+      jean: { health: 100, position: { x: 700, y: 0 } }
+    });
+    setWinner(null);
+  };
 
-  const handleGameOver = useCallback(() => {
+  const handleGameOver = () => {
     setGameState('gameOver');
-    audioManagerRef.current.playSound('gameOver');
-    audioManagerRef.current.stopMusic();
-  }, []);
+  };
 
-  const handlePlayAgain = useCallback(() => {
+  const handleRestartGame = () => {
     setGameState('start');
-  }, []);
-
-  const handleKeyDown = useCallback((event) => {
-    if (gameState !== 'playing') return;
-
-    const key = event.key.toLowerCase();
-    let action = null;
-
-    switch (key) {
-      case 'a':
-        action = { move: 'left' };
-        break;
-      case 'd':
-        action = { move: 'right' };
-        break;
-      case 'w':
-        action = { move: 'jump' };
-        break;
-      case 'j':
-        action = { attack: 'light' };
-        audioManagerRef.current.playSound('lightAttack');
-        break;
-      case 'k':
-        action = { attack: 'heavy' };
-        audioManagerRef.current.playSound('heavyAttack');
-        break;
-      case 'l':
-        action = { attack: 'special' };
-        audioManagerRef.current.playSound('specialAttack');
-        break;
-      default:
-        break;
-    }
-
-    if (action) {
-      gameEngine.handlePlayerAction(action);
-    }
-  }, [gameState, gameEngine]);
+  };
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [handleKeyDown]);
+    if (gameState === 'playing') {
+      const gameLoop = setInterval(() => {
+        const currentState = { ...players };
 
-  useEffect(() => {
-    if (gameState !== 'playing' || !gameEngine) return;
+        // Handle player input (you'll need to implement this)
+        const playerAction = handlePlayerInput();
 
-    let animationFrameId;
-
-    const gameLoop = () => {
-      if (gameMode === 'singlePlayer') {
-        const aiAction = aiControllerRef.current.getAction(gameEngine.getState());
-        if (aiAction) {
-          gameEngine.handleAIAction(aiAction);
-          if (aiAction.attack) {
-            audioManagerRef.current.playSound(`${aiAction.attack}Attack`);
-          }
+        // Handle AI input in single-player mode
+        let aiAction = null;
+        if (gameMode === 'single') {
+          aiAction = aiControllerRef.current.getAction(currentState);
         }
-      }
 
-      gameEngine.update();
+        // Update game state
+        const newState = gameEngineRef.current.update(currentState, playerAction, aiAction);
 
-      if (gameEngine.isGameOver()) {
-        handleGameOver();
-      } else {
-        animationFrameId = requestAnimationFrame(gameLoop);
-      }
-    };
+        // Check for game over condition
+        if (newState.burger.health <= 0 || newState.jean.health <= 0) {
+          handleGameOver();
+          setWinner(newState.burger.health <= 0 ? 'Jean' : 'Burger');
+        } else {
+          setPlayers(newState);
+        }
 
-    gameLoop();
+        // Play sound effects
+        if (playerAction && playerAction.attack) {
+          playSound('attack');
+        }
+        if (aiAction && aiAction.attack) {
+          playSound('aiAttack');
+        }
 
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [gameState, gameEngine, gameMode, handleGameOver]);
+      }, 1000 / 60); // 60 FPS
+
+      return () => clearInterval(gameLoop);
+    }
+  }, [gameState, players, gameMode]);
+
+  const handlePlayerInput = () => {
+    // Implement player input logic here
+    // Return an action object, e.g., { move: 'left', attack: 'light' }
+    return {};
+  };
 
   const renderGame = () => {
     switch (gameState) {
       case 'start':
+        return <StartScreen onStartGame={handleStartGame} />;
+      case 'playing':
+        return <Renderer gameState={players} />;
+      case 'gameOver':
         return (
-          <StartScreen
-            onStartGame={handleStartGame}
-            onSetGameMode={setGameMode}
-            onSetDifficulty={setDifficulty}
+          <GameOverScreen
+            winner={winner}
+            onRestart={handleRestartGame}
+            finalScores={{
+              burger: players.burger.health,
+              jean: players.jean.health
+            }}
           />
         );
-      case 'playing':
-        return gameEngine ? <Renderer gameState={gameEngine.getState()} /> : null;
-      case 'gameOver':
-        return gameEngine ? (
-          <GameOverScreen
-            winner={gameEngine.getWinner()}
-            scores={gameEngine.getScores()}
-            onPlayAgain={handlePlayAgain}
-          />
-        ) : null;
       default:
         return null;
     }
   };
 
-  return <div className={styles.gameContainer}>{renderGame()}</div>;
+  return <div className="game-container">{renderGame()}</div>;
 };
 
 export default Game;
