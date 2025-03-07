@@ -1,0 +1,56 @@
+.tutorialScreen {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.tutorialScreen h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.tutorialScreen section {
+  margin-bottom: 20px;
+}
+
+.tutorialScreen ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.closeButton {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+  .tutorialScreen {
+    font-size: 14px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tutorialScreen {
+    font-size: 12px;
+    padding: 10px;
+  }
+}
