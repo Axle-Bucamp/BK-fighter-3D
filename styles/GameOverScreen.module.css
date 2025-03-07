@@ -1,101 +1,87 @@
 .gameOverScreen {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, #f5a623, #f8e71c);
   font-family: 'Arial', sans-serif;
-}
-
-.content {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 2rem;
+  color: #333;
   text-align: center;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .title {
-  font-size: 3rem;
-  color: #ff6b6b;
+  font-size: 4rem;
   margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .winner {
-  font-size: 2rem;
-  color: #4ecdc4;
+  font-size: 2.5rem;
   margin-bottom: 2rem;
+  color: #4a90e2;
 }
 
 .scores {
   display: flex;
   justify-content: space-around;
+  width: 100%;
+  max-width: 400px;
   margin-bottom: 2rem;
 }
 
-.scoreItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.character {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
 .score {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  color: #f7b731;
 }
 
 .stats {
-  background-color: #f1f2f6;
-  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
   padding: 1rem;
   margin-bottom: 2rem;
 }
 
 .stats h3 {
-  color: #45aaf2;
-  margin-bottom: 0.5rem;
+  margin-top: 0;
+  color: #4a90e2;
 }
 
-.playAgainButton {
-  background-color: #26de81;
+.buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
   color: white;
+  background-color: #4a90e2;
   border: none;
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-.playAgainButton:hover {
-  background-color: #20bf6b;
+.button:hover {
+  background-color: #3a7bc8;
 }
 
 @media (max-width: 600px) {
-  .content {
-    width: 90%;
-    padding: 1rem;
-  }
-
   .title {
-    font-size: 2rem;
+    font-size: 3rem;
   }
 
   .winner {
-    font-size: 1.5rem;
-  }
-
-  .character {
-    font-size: 1.2rem;
+    font-size: 2rem;
   }
 
   .score {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  .buttons {
+    flex-direction: column;
   }
 }
