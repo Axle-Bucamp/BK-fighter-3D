@@ -1,12 +1,13 @@
 import React from 'react';
 import styles from './MainMenu.module.css';
 
-const MainMenu = ({ onStartGame }) => {
+const MainMenu = ({ onStartSinglePlayer, onStartTwoPlayer, onShowTutorial }) => {
   return (
     <div className={styles.mainMenu}>
-      <h1>Fighting Game</h1>
-      <button onClick={() => onStartGame('singlePlayer')}>Single Player</button>
-      <button onClick={() => onStartGame('twoPlayer')}>Two Player</button>
+      <h1>Burger vs Jean</h1>
+      <button onClick={onStartSinglePlayer}>Single Player</button>
+      <button onClick={onStartTwoPlayer}>Two Player</button>
+      <button onClick={onShowTutorial}>How to Play</button>
     </div>
   );
 };
