@@ -1,89 +1,78 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 
-const MultiplayerManager = ({ userId, onStateUpdate }) => {
-  const [socket, setSocket] = useState(null);
-  const [connected, setConnected] = useState(false);
+const MultiplayerManager = ({ gameState, onStateUpdate, onPlayerJoin, onPlayerLeave }) => {
+  const ws = useRef(null);
 
-  // Initialize WebSocket connection
-  useEffect(() => {
-    const newSocket = new WebSocket('ws://your-websocket-server-url');
+  const connectToServer = useCallback(() => {
+    ws.current = new WebSocket('ws://your-server-url:port');
 
-    newSocket.onopen = () => {
-      console.log('WebSocket connected');
-      setConnected(true);
-      // Send initial connection message with user ID
-      newSocket.send(JSON.stringify({ type: 'connect', userId }));
+    ws.current.onopen = () => {
+      console.log('Connected to the multiplayer server');
+      // Send initial player data
+      sendGameState(gameState);
     };
 
-    newSocket.onclose = () => {
-      console.log('WebSocket disconnected');
-      setConnected(false);
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      switch (data.type) {
+        case 'gameStateUpdate':
+          onStateUpdate(data.gameState);
+          break;
+        case 'playerJoined':
+          onPlayerJoin(data.player);
+          break;
+        case 'playerLeft':
+          onPlayerLeave(data.playerId);
+          break;
+        default:
+          console.log('Unknown message type:', data.type);
+      }
     };
 
-    newSocket.onerror = (error) => {
+    ws.current.onclose = () => {
+      console.log('Disconnected from the multiplayer server');
+      // Attempt to reconnect after a delay
+      setTimeout(connectToServer, 5000);
+    };
+
+    ws.current.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
+  }, [gameState, onStateUpdate, onPlayerJoin, onPlayerLeave]);
 
-    newSocket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      handleIncomingMessage(data);
-    };
-
-    setSocket(newSocket);
+  useEffect(() => {
+    connectToServer();
 
     return () => {
-      newSocket.close();
+      if (ws.current) {
+        ws.current.close();
+      }
     };
-  }, [userId]);
+  }, [connectToServer]);
 
-  // Handle incoming messages
-  const handleIncomingMessage = useCallback((data) => {
-    switch (data.type) {
-      case 'gameState':
-        onStateUpdate(data.state);
-        break;
-      case 'playerJoined':
-        console.log(`Player ${data.userId} joined the game`);
-        break;
-      case 'playerLeft':
-        console.log(`Player ${data.userId} left the game`);
-        break;
-      default:
-        console.log('Unknown message type:', data.type);
-    }
-  }, [onStateUpdate]);
-
-  // Send game state update to server
-  const sendGameStateUpdate = useCallback((gameState) => {
-    if (socket && connected) {
-      socket.send(JSON.stringify({
+  const sendGameState = useCallback((state) => {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
         type: 'gameStateUpdate',
-        userId,
-        state: gameState
+        gameState: state
       }));
     }
-  }, [socket, connected, userId]);
+  }, []);
 
-  // Send player action to server
+  useEffect(() => {
+    sendGameState(gameState);
+  }, [gameState, sendGameState]);
+
   const sendPlayerAction = useCallback((action) => {
-    if (socket && connected) {
-      socket.send(JSON.stringify({
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({
         type: 'playerAction',
-        userId,
-        action
+        action: action
       }));
     }
-  }, [socket, connected, userId]);
+  }, []);
 
-  return (
-    <div>
-      {connected ? (
-        <p>Connected to game server</p>
-      ) : (
-        <p>Connecting to game server...</p>
-      )}
-    </div>
-  );
+  return null; // This component doesn't render anything
 };
 
 export default MultiplayerManager;
