@@ -1,26 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../styles/StartScreen.module.css';
 
-/**
- * @component StartScreen
- * @description Displays the start screen for the "Burger vs. Jean" game
- * @param {Object} props - Component props
- * @param {function} props.onStartGame - Function to call when the start game button is clicked
- */
 const StartScreen = ({ onStartGame }) => {
+  const [gameMode, setGameMode] = useState('single');
+  const [difficulty, setDifficulty] = useState('medium');
+
+  const handleStartClick = () => {
+    onStartGame(gameMode, difficulty);
+  };
+
   return (
     <div className={styles.startScreen}>
       <h1 className={styles.title}>Burger vs. Jean</h1>
-      <p className={styles.subtitle}>The ultimate food fight!</p>
-      <button className={styles.startButton} onClick={onStartGame}>Start Game</button>
-      <div className={styles.instructions}>
-        <h2>How to Play:</h2>
-        <ul>
-          <li>Use A, S, D keys for Burger's attacks</li>
-          <li>Use J, K, L keys for Jean's attacks</li>
-          <li>Defeat your opponent to win!</li>
-        </ul>
+      
+      <div className={styles.options}>
+        <div className={styles.gameMode}>
+          <h2>Game Mode</h2>
+          <div className={styles.radioGroup}>
+            <label>
+              <input
+                type="radio"
+                value="single"
+                checked={gameMode === 'single'}
+                onChange={() => setGameMode('single')}
+              />
+              Single Player
+            </label>
+            <label>
+              <input
+                type="radio"
+                value="multi"
+                checked={gameMode === 'multi'}
+                onChange={() => setGameMode('multi')}
+              />
+              Multiplayer
+            </label>
+          </div>
+        </div>
+        
+        {gameMode === 'single' && (
+          <div className={styles.difficulty}>
+            <h2>Difficulty</h2>
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              className={styles.select}
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        )}
       </div>
+      
+      <button onClick={handleStartClick} className={styles.startButton}>
+        Start Game
+      </button>
     </div>
   );
 };
