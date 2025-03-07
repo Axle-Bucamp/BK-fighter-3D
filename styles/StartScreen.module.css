@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f5d6a8; /* Light burger bun color */
+  font-family: 'Arial', sans-serif;
+}
+
+.title {
+  font-size: 4rem;
+  margin-bottom: 2rem;
+  color: #8b4513; /* Burger patty color */
+  text-shadow: 2px 2px #fff;
+}
+
+.button {
+  font-size: 1.5rem;
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.startButton {
+  background-color: #4169e1; /* Denim blue */
+  color: white;
+}
+
+.startButton:hover {
+  background-color: #1e90ff; /* Lighter denim blue */
+}
+
+.optionsButton {
+  background-color: #daa520; /* Golden brown */
+  color: white;
+}
+
+.optionsButton:hover {
+  background-color: #ffd700; /* Lighter golden */
+}
