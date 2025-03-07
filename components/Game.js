@@ -1,62 +1,61 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from '../styles/Game.module.css';
+import { initGame, updateGame, handleInput } from '../lib/gameEngine';
+import { renderGame } from '../lib/renderer';
 
-const Game = ({ gameMode }) => {
+const Game = () => {
   const canvasRef = useRef(null);
-  const [gameState, setGameState] = useState({
-    player1: { x: 100, y: 300, health: 100 },
-    player2: { x: 500, y: 300, health: 100 },
-  });
+  const [gameState, setGameState] = useState(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
+    // Initialize game state
+    const initialState = initGame(canvas.width, canvas.height);
+    setGameState(initialState);
+
     // Set up game loop
+    let animationFrameId;
     const gameLoop = () => {
-      updateGame();
-      renderGame(ctx);
-      requestAnimationFrame(gameLoop);
+      // Update game state
+      const updatedState = updateGame(gameState);
+      setGameState(updatedState);
+
+      // Render game
+      renderGame(ctx, updatedState);
+
+      // Request next frame
+      animationFrameId = window.requestAnimationFrame(gameLoop);
     };
+
     gameLoop();
-  }, []);
 
-  const updateGame = () => {
-    // TODO: Implement game logic here
-    // - Handle player movements
-    // - Check for collisions
-    // - Update player states
-  };
+    // Set up event listeners
+    const handleKeyDown = (event) => {
+      const updatedState = handleInput(gameState, event.key, true);
+      setGameState(updatedState);
+    };
 
-  const renderGame = (ctx) => {
-    // Clear the canvas
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const handleKeyUp = (event) => {
+      const updatedState = handleInput(gameState, event.key, false);
+      setGameState(updatedState);
+    };
 
-    // TODO: Render game elements
-    // - Draw background
-    // - Draw players
-    // - Draw UI elements (health bars, etc.)
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
-    // Placeholder: draw simple rectangles for players
-    ctx.fillStyle = 'red';
-    ctx.fillRect(gameState.player1.x, gameState.player1.y, 50, 100);
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(gameState.player2.x, gameState.player2.y, 50, 100);
-  };
-
-  const handleKeyDown = (event) => {
-    // TODO: Implement key handling for player controls
-  };
+    // Clean up
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [gameState]);
 
   return (
     <div className={styles.gameContainer}>
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={600}
-        className={styles.gameCanvas}
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
-      />
+      <canvas ref={canvasRef} className={styles.gameCanvas} width={800} height={600} />
     </div>
   );
 };
