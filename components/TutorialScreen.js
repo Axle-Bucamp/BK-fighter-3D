@@ -1,31 +1,54 @@
 import React from 'react';
-import styles from './TutorialScreen.module.css';
+import styles from '../styles/TutorialScreen.module.css';
 
-const TutorialScreen = ({ onClose }) => {
+const TutorialScreen = ({ onBack }) => {
   return (
-    <div className={styles.tutorialScreen}>
-      <h2>How to Play</h2>
-      <section>
-        <h3>Basic Controls</h3>
+    <div className={styles.tutorialContainer}>
+      <h1 className={styles.title}>How to Play Burger vs. Jean</h1>
+      
+      <section className={styles.section}>
+        <h2>Game Objective</h2>
+        <p>Battle it out as either Burger or Jean! Reduce your opponent's health to zero to win.</p>
+      </section>
+
+      <section className={styles.section}>
+        <h2>Controls</h2>
+        <h3>Burger:</h3>
         <ul>
-          <li>Move Left: A or ←</li>
-          <li>Move Right: D or →</li>
-          <li>Jump: W or ↑</li>
+          <li>Move Left: A</li>
+          <li>Move Right: D</li>
+          <li>Jump: W</li>
           <li>Attack: Space</li>
+          <li>Special Move: Q</li>
+        </ul>
+        <h3>Jean:</h3>
+        <ul>
+          <li>Move Left: Left Arrow</li>
+          <li>Move Right: Right Arrow</li>
+          <li>Jump: Up Arrow</li>
+          <li>Attack: Enter</li>
+          <li>Special Move: Right Shift</li>
         </ul>
       </section>
-      <section>
-        <h3>Combo System</h3>
-        <p>Chain attacks together quickly to increase your combo count. Higher combos deal more damage!</p>
+
+      <section className={styles.section}>
+        <h2>Special Moves</h2>
+        <p>Burger: "Patty Slam" - A powerful downward attack</p>
+        <p>Jean: "Denim Dash" - A quick dash attack</p>
       </section>
-      <section>
-        <h3>Special Moves</h3>
-        <h4>Burger</h4>
-        <p>Burger Slam: ↓ + ↑ + Space</p>
-        <h4>Jean</h4>
-        <p>Jean Spin: → + ← + Space</p>
+
+      <section className={styles.section}>
+        <h2>Tips</h2>
+        <ul>
+          <li>Use a combination of regular attacks and special moves</li>
+          <li>Time your jumps to avoid attacks</li>
+          <li>Watch your health bar and try to predict your opponent's moves</li>
+        </ul>
       </section>
-      <button className={styles.closeButton} onClick={onClose}>Close Tutorial</button>
+
+      <button className={styles.backButton} onClick={onBack}>
+        Back to Main Menu
+      </button>
     </div>
   );
 };
