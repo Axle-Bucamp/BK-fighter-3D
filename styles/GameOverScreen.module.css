@@ -1,55 +1,101 @@
-.container {
+.gameOverScreen {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   height: 100vh;
-  background-color: #191970; /* Midnight blue (denim) */
-  color: white;
+  background-color: rgba(0, 0, 0, 0.8);
   font-family: 'Arial', sans-serif;
+}
+
+.content {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .title {
   font-size: 3rem;
-  margin-bottom: 2rem;
-  color: #ffd700; /* Golden */
-  text-shadow: 2px 2px #000;
-}
-
-.result {
-  font-size: 2rem;
+  color: #ff6b6b;
   margin-bottom: 1rem;
 }
 
-.scores {
-  font-size: 1.5rem;
+.winner {
+  font-size: 2rem;
+  color: #4ecdc4;
   margin-bottom: 2rem;
 }
 
-.button {
-  font-size: 1.2rem;
-  margin: 0.5rem;
-  padding: 0.5rem 1rem;
+.scores {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+}
+
+.scoreItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.character {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.score {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #f7b731;
+}
+
+.stats {
+  background-color: #f1f2f6;
+  border-radius: 5px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stats h3 {
+  color: #45aaf2;
+  margin-bottom: 0.5rem;
+}
+
+.playAgainButton {
+  background-color: #26de81;
+  color: white;
   border: none;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
-.restartButton {
-  background-color: #8b4513; /* Burger patty color */
-  color: white;
+.playAgainButton:hover {
+  background-color: #20bf6b;
 }
 
-.restartButton:hover {
-  background-color: #a0522d; /* Lighter brown */
-}
+@media (max-width: 600px) {
+  .content {
+    width: 90%;
+    padding: 1rem;
+  }
 
-.menuButton {
-  background-color: #f5d6a8; /* Light burger bun color */
-  color: #8b4513;
-}
+  .title {
+    font-size: 2rem;
+  }
 
-.menuButton:hover {
-  background-color: #ffe4b5; /* Lighter bun color */
+  .winner {
+    font-size: 1.5rem;
+  }
+
+  .character {
+    font-size: 1.2rem;
+  }
+
+  .score {
+    font-size: 1.5rem;
+  }
 }
