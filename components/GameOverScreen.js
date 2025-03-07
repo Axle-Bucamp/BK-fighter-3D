@@ -1,17 +1,21 @@
 import React from 'react';
-import styles from './GameOverScreen.module.css';
+import styles from '../styles/GameOverScreen.module.css';
 
 const GameOverScreen = ({ winner, scores, onRestart, onMainMenu }) => {
   return (
-    <div className={styles.gameOverScreen}>
+    <div className={styles.container}>
       <h1 className={styles.title}>Game Over</h1>
-      <h2 className={styles.winner}>{winner} Wins!</h2>
+      <p className={styles.result}>{winner} wins!</p>
       <div className={styles.scores}>
-        <p>Player 1: {scores.player1}</p>
-        <p>Player 2: {scores.player2}</p>
+        <p>Burger Score: {scores.burger}</p>
+        <p>Jean Score: {scores.jean}</p>
       </div>
-      <button className={styles.button} onClick={onRestart}>Play Again</button>
-      <button className={styles.button} onClick={onMainMenu}>Main Menu</button>
+      <button className={`${styles.button} ${styles.restartButton}`} onClick={onRestart}>
+        Play Again
+      </button>
+      <button className={`${styles.button} ${styles.menuButton}`} onClick={onMainMenu}>
+        Main Menu
+      </button>
     </div>
   );
 };
