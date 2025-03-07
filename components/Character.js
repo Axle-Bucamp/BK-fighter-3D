@@ -1,32 +1,30 @@
-import React, { useRef, useEffect } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { TextureLoader, RepeatWrapping, NearestFilter } from 'three';
-import * as THREE from 'three';
+// components/Character.js
+import React, { useState, useEffect } from 'react';
+import styles from './Character.module.css';
 
-const Character = ({ position, spriteSheet, frameSize, totalFrames, animationSpeed = 0.1 }) => {
-  const meshRef = useRef();
-  const texture = useLoader(TextureLoader, spriteSheet);
-  
+const Character = ({ name, health, position, isAttacking, isSpecialAttacking }) => {
+  const [animation, setAnimation] = useState('idle');
+
   useEffect(() => {
-    texture.wrapS = texture.wrapT = RepeatWrapping;
-    texture.magFilter = NearestFilter;
-    texture.repeat.set(1 / totalFrames, 1);
-  }, [texture, totalFrames]);
-
-  useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.material.map.offset.x += animationSpeed * delta;
-      if (meshRef.current.material.map.offset.x > 1) {
-        meshRef.current.material.map.offset.x = 0;
-      }
+    if (isSpecialAttacking) {
+      setAnimation('special');
+      const timer = setTimeout(() => setAnimation('idle'), 1000);
+      return () => clearTimeout(timer);
+    } else if (isAttacking) {
+      setAnimation('attack');
+      const timer = setTimeout(() => setAnimation('idle'), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setAnimation('idle');
     }
-  });
+  }, [isAttacking, isSpecialAttacking]);
 
   return (
-    <mesh ref={meshRef} position={position}>
-      <planeGeometry args={frameSize} />
-      <meshBasicMaterial map={texture} transparent={true} />
-    </mesh>
+    <div className={`${styles.character} ${styles[position]} ${styles[animation]}`}>
+      <div className={styles.name}>{name}</div>
+      <div className={styles.health}>HP: {health}</div>
+      <div className={`${styles.sprite} ${styles[name.toLowerCase()]}`}></div>
+    </div>
   );
 };
 
