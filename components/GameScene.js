@@ -1,96 +1,125 @@
-import React, { useEffect, useState } from 'react';
-import { Stage, Container, Sprite, Text } from '@inlet/react-pixi';
-import useGameStore from '../lib/gameLogic';
-import useAudioStore from '../lib/audioManager';
-import Character from './Character';
+import React, { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useGameStore } from '../lib/gameLogic';
+import { playSound } from '../lib/audioManager';
+import ParticleSystem from './ParticleSystem';
+
+const Character = ({ position, color, isAttacking, spriteSheet }) => {
+  const mesh = useRef();
+
+  useFrame(() => {
+    if (isAttacking) {
+      mesh.current.material.opacity = 0.5;
+    } else {
+      mesh.current.material.opacity = 1;
+    }
+  });
+
+  return (
+    <sprite
+      ref={mesh}
+      position={position}
+      scale={[1, 2, 1]}
+    >
+      <spriteMaterial
+        attach="material"
+        map={spriteSheet}
+        transparent
+      />
+    </sprite>
+  );
+};
+
+const HealthBar = ({ position, health }) => {
+  return (
+    <mesh position={[position[0], position[1] + 1.2, position[2]]}>
+      <planeGeometry args={[1, 0.1]} />
+      <meshBasicMaterial color="red" />
+      <mesh position={[health / 200 - 0.5, 0, 0.1]} scale={[health / 100, 1, 1]}>
+        <planeGeometry args={[1, 0.1]} />
+        <meshBasicMaterial color="green" />
+      </mesh>
+    </mesh>
+  );
+};
 
 const GameScene = ({ selectedCharacters }) => {
-  const { gameState, moveLeft, moveRight, attack } = useGameStore();
-  const { audioManager } = useAudioStore();
-  const [windowSize, setWindowSize] = useState({ width: 800, height: 600 });
+  const { 
+    player1, 
+    player2, 
+    movePlayer, 
+    attack, 
+    takeDamage 
+  } = useGameStore();
+
+  const [showParticles, setShowParticles] = useState({ player1: false, player2: false });
 
   useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize();
-
-    audioManager.loadSound('attack', '/sounds/attack.mp3');
-    audioManager.loadSound('hurt', '/sounds/hurt.mp3');
-    audioManager.loadMusic('/sounds/battle_music.mp3');
-    audioManager.playMusic();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      audioManager.stopMusic();
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKeyPress = (e) => {
+    const handleKeyDown = (e) => {
       switch (e.key.toLowerCase()) {
-        case 'a':
-          moveLeft(1);
-          break;
-        case 'd':
-          moveRight(1);
-          break;
-        case 'h':
-          attack(1);
-          audioManager.playSound('attack');
-          break;
-        case 'j':
-          moveLeft(2);
-          break;
-        case 'l':
-          moveRight(2);
-          break;
-        case 'k':
-          attack(2);
-          audioManager.playSound('attack');
-          break;
+        case 'a': movePlayer(1, -0.1); break;
+        case 'h': movePlayer(1, 0.1); break;
+        case 'd': attack(1); playSound('attack'); break;
+        case 'j': movePlayer(2, -0.1); break;
+        case 'k': movePlayer(2, 0.1); break;
+        case 'l': attack(2); playSound('attack'); break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [moveLeft, moveRight, attack]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [movePlayer, attack]);
 
-  useEffect(() => {
-    if (gameState.player1.health < gameState.player1.prevHealth ||
-        gameState.player2.health < gameState.player2.prevHealth) {
-      audioManager.playSound('hurt');
+  useFrame(() => {
+    if (player1.isAttacking && Math.abs(player1.position - player2.position) < 1) {
+      takeDamage(2, 10);
+      playSound('hurt');
+      setShowParticles(prev => ({ ...prev, player2: true }));
+      setTimeout(() => setShowParticles(prev => ({ ...prev, player2: false })), 1000);
     }
-  }, [gameState.player1.health, gameState.player2.health]);
+    if (player2.isAttacking && Math.abs(player1.position - player2.position) < 1) {
+      takeDamage(1, 10);
+      playSound('hurt');
+      setShowParticles(prev => ({ ...prev, player1: true }));
+      setTimeout(() => setShowParticles(prev => ({ ...prev, player1: false })), 1000);
+    }
+  });
 
   return (
-    <Stage width={windowSize.width} height={windowSize.height}>
-      <Sprite image="/background.jpg" width={windowSize.width} height={windowSize.height} />
-      <Container>
-        <Character
-          x={gameState.player1.x}
-          y={windowSize.height - 200}
-          width={100}
-          height={200}
-          isAttacking={gameState.player1.isAttacking}
-          spriteSheet={`/${selectedCharacters[0].toLowerCase()}_spritesheet.png`}
+    <Canvas>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <Character
+        position={[player1.position, 0, 0]}
+        color="blue"
+        isAttacking={player1.isAttacking}
+        spriteSheet={selectedCharacters[0]}
+      />
+      <Character
+        position={[player2.position, 0, 0]}
+        color="red"
+        isAttacking={player2.isAttacking}
+        spriteSheet={selectedCharacters[1]}
+      />
+      <HealthBar position={[player1.position, 0, 0]} health={player1.health} />
+      <HealthBar position={[player2.position, 0, 0]} health={player2.health} />
+      {showParticles.player1 && (
+        <ParticleSystem
+          position={[player1.position, 0, 0]}
+          color="red"
+          count={20}
+          duration={1000}
         />
-        <Character
-          x={gameState.player2.x}
-          y={windowSize.height - 200}
-          width={100}
-          height={200}
-          isAttacking={gameState.player2.isAttacking}
-          spriteSheet={`/${selectedCharacters[1].toLowerCase()}_spritesheet.png`}
+      )}
+      {showParticles.player2 && (
+        <ParticleSystem
+          position={[player2.position, 0, 0]}
+          color="blue"
+          count={20}
+          duration={1000}
         />
-        <Text text={`P1 Health: ${gameState.player1.health}`} x={10} y={10} style={{ fill: 'white' }} />
-        <Text text={`P2 Health: ${gameState.player2.health}`} x={windowSize.width - 150} y={10} style={{ fill: 'white' }} />
-      </Container>
-    </Stage>
+      )}
+    </Canvas>
   );
 };
 
