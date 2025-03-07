@@ -4,26 +4,60 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #FFF3E0;
+  background-color: #f0f0f0;
   font-family: 'Arial', sans-serif;
 }
 
 .title {
-  font-size: 4rem;
-  color: #FF5722;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 0.5rem;
+  font-size: 3rem;
+  color: #333;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.subtitle {
-  font-size: 1.5rem;
-  color: #E64A19;
+.options {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
 }
 
-.startButton {
+.gameMode,
+.difficulty {
+  margin-bottom: 1.5rem;
+}
+
+.gameMode h2,
+.difficulty h2 {
   font-size: 1.5rem;
-  padding: 15px 30px;
+  color: #444;
+  margin-bottom: 0.5rem;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.radioGroup label {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: #666;
+}
+
+.select {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.startButton {
+  padding: 0.75rem 2rem;
+  font-size: 1.2rem;
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -36,26 +70,18 @@
   background-color: #45a049;
 }
 
-.instructions {
-  margin-top: 2rem;
-  text-align: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 1rem;
-  border-radius: 10px;
-  max-width: 80%;
-}
+/* Responsive design */
+@media (max-width: 600px) {
+  .title {
+    font-size: 2rem;
+  }
 
-.instructions h2 {
-  color: #FF5722;
-  margin-bottom: 1rem;
-}
+  .options {
+    padding: 1rem;
+  }
 
-.instructions ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.instructions li {
-  margin-bottom: 0.5rem;
-  color: #333;
+  .startButton {
+    padding: 0.5rem 1.5rem;
+    font-size: 1rem;
+  }
 }
