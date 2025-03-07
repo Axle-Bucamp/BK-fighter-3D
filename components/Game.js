@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import StartScreen from './StartScreen';
 import GameOverScreen from './GameOverScreen';
-import OptionsMenu from './OptionsMenu';
 import GameEngine from '../lib/gameEngine';
-import styles from '../styles/Game.module.css';
+import { renderGame } from '../lib/renderer';
 
 const Game = () => {
   const [gameState, setGameState] = useState('start');
-  const [showOptions, setShowOptions] = useState(false);
   const [gameEngine, setGameEngine] = useState(null);
 
   useEffect(() => {
@@ -16,86 +14,75 @@ const Game = () => {
 
   const handleStartGame = () => {
     setGameState('playing');
-    gameEngine.resetGame();
   };
 
-  const handleOpenOptions = () => {
-    setShowOptions(true);
-  };
-
-  const handleCloseOptions = () => {
-    setShowOptions(false);
-  };
-
-  const handleAttack = (attackerId, defenderId, damage) => {
-    gameEngine.attack(attackerId, defenderId, damage);
-    const currentState = gameEngine.getGameState();
-    
-    if (currentState.isGameOver) {
-      setGameState('gameOver');
-    } else {
-      setGameState('playing'); // Force a re-render
-    }
+  const handleGameOver = () => {
+    setGameState('gameOver');
   };
 
   const handleRestartGame = () => {
-    gameEngine.resetGame();
+    gameEngine.reset();
     setGameState('playing');
   };
 
-  const handleReturnToMenu = () => {
+  const handleReturnToMain = () => {
+    gameEngine.reset();
     setGameState('start');
   };
 
-  const renderGameContent = () => {
-    if (!gameEngine) return null;
+  const handleKeyPress = useCallback((event) => {
+    if (gameState !== 'playing') return;
 
-    const { players, currentTurn, isGameOver, winner, finalScores } = gameEngine.getGameState();
+    const currentPlayer = gameEngine.getGameState().currentPlayer;
+    let attackType;
 
-    switch (gameState) {
-      case 'start':
-        return (
-          <StartScreen 
-            onStartGame={handleStartGame} 
-            onOpenOptions={handleOpenOptions}
-          />
-        );
-      case 'playing':
-        return (
-          <div className={styles.gamePlay}>
-            <h2>Burger vs. Jean</h2>
-            <div className={styles.playerInfo}>
-              <p>Burger Health: {players[0].health}</p>
-              <p>Jean Health: {players[1].health}</p>
-            </div>
-            <p>Current Turn: {players[currentTurn].name}</p>
-            <button onClick={() => handleAttack(currentTurn, 1 - currentTurn, 10)}>
-              Attack!
-            </button>
-          </div>
-        );
-      case 'gameOver':
-        return (
-          <GameOverScreen 
-            winner={winner}
-            finalScores={finalScores}
-            onRestart={handleRestartGame}
-            onReturnToMenu={handleReturnToMenu}
-          />
-        );
+    switch (event.key) {
+      case 'q':
+        attackType = 'light';
+        break;
+      case 'w':
+        attackType = 'heavy';
+        break;
+      case 'e':
+        attackType = 'special';
+        break;
       default:
-        return null;
+        return;
     }
-  };
 
-  return (
-    <div className={styles.game}>
-      {renderGameContent()}
-      {showOptions && (
-        <OptionsMenu onClose={handleCloseOptions} />
-      )}
-    </div>
-  );
+    const damage = gameEngine.attack(currentPlayer, attackType);
+    renderGame(gameEngine.getGameState(), attackType, damage);
+
+    if (gameEngine.getGameState().gameOver) {
+      handleGameOver();
+    }
+  }, [gameEngine, gameState]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
+  if (gameState === 'start') {
+    return <StartScreen onStartGame={handleStartGame} />;
+  }
+
+  if (gameState === 'gameOver') {
+    const { winner } = gameEngine.getGameState();
+    const finalScores = gameEngine.calculateFinalScores();
+    return (
+      <GameOverScreen
+        winner={winner}
+        scores={finalScores}
+        onRestart={handleRestartGame}
+        onReturnToMain={handleReturnToMain}
+      />
+    );
+  }
+
+  return <div id="game-container"></div>;
 };
 
 export default Game;
