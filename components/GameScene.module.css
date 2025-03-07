@@ -1,0 +1,41 @@
+/* components/GameScene.module.css */
+.gameScene {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f0f0;
+  position: relative;
+}
+
+.comboCounter {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  width: 300px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .comboCounter {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .controls {
+    font-size: 14px;
+  }
+}
