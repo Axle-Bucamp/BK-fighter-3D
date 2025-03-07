@@ -1,10 +1,18 @@
 // components/GameScene.js
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import { getAIMove } from '../lib/aiOpponent';
+import {
+  createCharacter,
+  getWinner,
+} from '../lib/gameLogic';
+import styles from '../styles/GameScene.module.css';
 import Character from './Character';
 import GameOverScreen from './GameOverScreen';
-import { createCharacter, isGameOver, getWinner } from '../lib/gameLogic';
-import { getAIMove } from '../lib/aiOpponent';
-import styles from './GameScene.module.css';
 
 const GameScene = ({ gameMode, onGameEnd }) => {
   const [player1, setPlayer1] = useState(createCharacter('Burger'));

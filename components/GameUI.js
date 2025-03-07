@@ -1,5 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './GameUI.css'; // You'll need to create this CSS file
+import '../styles/GameUI.module.css'; // You'll need to create this CSS file
+
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 const GameUI = ({ gameState, onStartGame, onRestartGame }) => {
   const [showStartScreen, setShowStartScreen] = useState(true);
