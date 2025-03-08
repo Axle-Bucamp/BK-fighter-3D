@@ -1,64 +1,58 @@
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import { initGame, updateGame } from '../lib/gameEngine';
-import { enhanceGraphics } from '../lib/graphicsManager';
+import React, { useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Physics } from '@react-three/cannon';
+import CharacterSelection from './CharacterSelection';
+import Battlefield from './Battlefield';
+import GameUI from './GameUI';
+import { GameEngine } from '../lib/gameEngine';
+import { ArenaManager } from '../lib/arenaManager';
+import { MultiplayerManager } from './MultiplayerManager';
 
-function Game() {
-  const canvasRef = useRef(null);
+const Game = () => {
+  const [gameState, setGameState] = useState('character_selection');
+  const [selectedCharacters, setSelectedCharacters] = useState([]);
+  const [currentArena, setCurrentArena] = useState(null);
+
+  const gameEngine = new GameEngine();
+  const arenaManager = new ArenaManager();
+  const multiplayerManager = new MultiplayerManager();
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas });
+    // Initialize game components
+    gameEngine.init();
+    arenaManager.loadArenas();
+    multiplayerManager.init();
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    enhanceGraphics(scene, renderer);
-
-    const gameState = initGame(scene, camera);
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      updateGame(gameState);
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    const handleTouchStart = (event) => {
-      // Handle touch start events
-    };
-
-    const handleTouchMove = (event) => {
-      // Handle touch move events
-    };
-
-    const handleTouchEnd = (event) => {
-      // Handle touch end events
-    };
-
-    window.addEventListener('resize', handleResize);
-    canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchmove', handleTouchMove);
-    canvas.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
-      // Clean up THREE.js resources
-    };
+    // Set up event listeners for game state changes
   }, []);
 
-  return <canvas ref={canvasRef} />;
-}
+  const startGame = () => {
+    setGameState('fighting');
+    setCurrentArena(arenaManager.getRandomArena());
+  };
+
+  return (
+    <div className="game-container">
+      {gameState === 'character_selection' && (
+        <CharacterSelection
+          onCharacterSelect={(character) => {
+            setSelectedCharacters([...selectedCharacters, character]);
+            if (selectedCharacters.length === 1) startGame();
+          }}
+        />
+      )}
+      {gameState === 'fighting' && (
+        <>
+          <Canvas>
+            <Physics>
+              <Battlefield arena={currentArena} characters={selectedCharacters} />
+            </Physics>
+          </Canvas>
+          <GameUI characters={selectedCharacters} />
+        </>
+      )}
+    </div>
+  );
+};
 
 export default Game;
