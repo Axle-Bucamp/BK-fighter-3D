@@ -1,0 +1,46 @@
+---
+- name: Configure BK-fighter-3D game server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker
+      package:
+        name: docker
+        state: present
+
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: Create project directory
+      file:
+        path: /opt/bk-fighter-3d
+        state: directory
+
+    - name: Copy Docker Compose file
+      copy:
+        src: docker-compose.yml
+        dest: /opt/bk-fighter-3d/docker-compose.yml
+
+    - name: Pull Docker images
+      command: docker-compose pull
+      args:
+        chdir: /opt/bk-fighter-3d
+
+    - name: Start Docker Compose services
+      command: docker-compose up -d
+      args:
+        chdir: /opt/bk-fighter-3d
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
