@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,28 +7,45 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
-
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '14'
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
+    
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-2
 
-    - name: Install dependencies
-      run: npm ci
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Run tests
-      run: npm test
-
-    - name: Build
-      run: npm run build
-
-    # Placeholder for deployment step
-    - name: Deploy
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: bk-fighter-3d
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        echo "Deployment step would go here"
-        # Add actual deployment commands when ready
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Update ECS service
+      run: |
+        aws ecs update-service --cluster bk-fighter-3d-cluster --service bk-fighter-3d-service --force-new-deployment
