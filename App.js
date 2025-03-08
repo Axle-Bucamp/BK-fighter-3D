@@ -146,13 +146,13 @@ const App = () => {
 
   useEffect(() => {
     // Any global game logic that needs to run on component mount
-    const handleBeforeUnload = (event) => {
+    const handleUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleUnload);
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleUnload);
     };
   }, []);
 
