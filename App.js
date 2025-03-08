@@ -145,7 +145,6 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    // Any global game logic that needs to run on component mount
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
