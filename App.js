@@ -10,7 +10,7 @@ import Battlefield from './components/Battlefield';
  * Main App component for the BK-fighter-3D game.
  * Manages game state, multiplayer functionality, and renders the 3D scene.
  *
- * @component
+ * @returns {React.Component} The rendered App component
  */
 const App = () => {
   /**
@@ -61,7 +61,7 @@ const App = () => {
    */
   const handleGameOver = useCallback((winner) => {
     if (winner !== 'burger' && winner !== 'jean') {
-      console.error('Invalid winner specified:', winner);
+      console.error('Invalid winner specified');
       return;
     }
     setGameState(prevState => ({
@@ -99,7 +99,7 @@ const App = () => {
    */
   const handleCollision = useCallback((point) => {
     if (!point || typeof point.x !== 'number' || typeof point.y !== 'number' || typeof point.z !== 'number') {
-      console.error('Invalid collision point:', point);
+      console.error('Invalid collision point');
       return;
     }
     setGameState(prevState => ({
@@ -115,7 +115,7 @@ const App = () => {
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     if (typeof update !== 'object' || update === null) {
-      console.error('Invalid multiplayer update:', update);
+      console.error('Invalid multiplayer update');
       return;
     }
     setMultiplayerState(prevState => ({
@@ -131,11 +131,11 @@ const App = () => {
    */
   const handleCharacterAction = useCallback((character, action) => {
     if (character !== 'burger' && character !== 'jean') {
-      console.error('Invalid character specified:', character);
+      console.error('Invalid character specified');
       return;
     }
     if (typeof action !== 'string' || action.trim() === '') {
-      console.error('Invalid action specified:', action);
+      console.error('Invalid action specified');
       return;
     }
     setGameState(prevState => ({
@@ -146,10 +146,8 @@ const App = () => {
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
-      if (gameState.isGameStarted && !gameState.isGameOver) {
-        event.preventDefault();
-        event.returnValue = 'Are you sure you want to leave? Your game progress will be lost.';
-      }
+      event.preventDefault();
+      event.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -157,7 +155,7 @@ const App = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [gameState.isGameStarted, gameState.isGameOver]);
+  }, []);
 
   // Memoize the Canvas children to prevent unnecessary re-renders
   const canvasChildren = useMemo(() => (
