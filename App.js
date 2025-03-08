@@ -9,8 +9,6 @@ import Battlefield from './components/Battlefield';
 /**
  * Main App component for the BK-fighter-3D game.
  * Manages game state, multiplayer functionality, and renders the 3D scene.
- *
- * @component
  * @returns {JSX.Element} The rendered App component
  */
 const App = () => {
@@ -62,7 +60,7 @@ const App = () => {
    */
   const handleGameOver = useCallback((winner) => {
     if (winner !== 'burger' && winner !== 'jean') {
-      console.error('Invalid winner specified:', winner);
+      console.error('Invalid winner specified');
       return;
     }
     setGameState(prevState => ({
@@ -100,7 +98,7 @@ const App = () => {
    */
   const handleCollision = useCallback((point) => {
     if (!point || typeof point.x !== 'number' || typeof point.y !== 'number' || typeof point.z !== 'number') {
-      console.error('Invalid collision point:', point);
+      console.error('Invalid collision point');
       return;
     }
     setGameState(prevState => ({
@@ -116,7 +114,7 @@ const App = () => {
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     if (typeof update !== 'object' || update === null) {
-      console.error('Invalid multiplayer update:', update);
+      console.error('Invalid multiplayer update');
       return;
     }
     setMultiplayerState(prevState => ({
@@ -132,11 +130,11 @@ const App = () => {
    */
   const handleCharacterAction = useCallback((character, action) => {
     if (character !== 'burger' && character !== 'jean') {
-      console.error('Invalid character specified:', character);
+      console.error('Invalid character specified');
       return;
     }
     if (typeof action !== 'string' || action.trim() === '') {
-      console.error('Invalid action specified:', action);
+      console.error('Invalid action specified');
       return;
     }
     setGameState(prevState => ({
@@ -147,10 +145,8 @@ const App = () => {
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
-      if (gameState.isGameStarted && !gameState.isGameOver) {
-        event.preventDefault();
-        event.returnValue = 'Are you sure you want to leave the game?';
-      }
+      event.preventDefault();
+      event.returnValue = '';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -158,10 +154,9 @@ const App = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [gameState.isGameStarted, gameState.isGameOver]);
+  }, []);
 
-  // Memoize the Canvas children to prevent unnecessary re-renders
-  const canvasChildren = useMemo(() => (
+  const canvasContent = useMemo(() => (
     <>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
@@ -192,7 +187,7 @@ const App = () => {
         onStartGame={handleStartGame}
         onRestartGame={handleRestartGame}
       />
-      <Canvas>{canvasChildren}</Canvas>
+      <Canvas>{canvasContent}</Canvas>
       <MultiplayerManager
         gameState={gameState}
         multiplayerState={multiplayerState}
