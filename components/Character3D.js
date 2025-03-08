@@ -1,29 +1,27 @@
+// components/Character3D.js
 import React, { useRef, useEffect, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useBox, useSphere } from '@react-three/cannon';
+import { useFrame } from '@react-three/fiber';
+import { useSphere, useBox } from '@react-three/cannon';
 import * as THREE from 'three';
+import CharacterManager from '../lib/CharacterManager';
 
-const Character3D = ({ character, position, controls, opponent }) => {
-  const { camera } = useThree();
-  const moveSpeed = 5;
-  const jumpForce = 5;
-  const maxHealth = 100;
-
-  const [health, setHealth] = useState(maxHealth);
+const Character3D = ({ characterName, position, controls, opponent }) => {
+  const character = CharacterManager.getCharacter(characterName);
+  const [health, setHealth] = useState(character.health);
   const [isJumping, setIsJumping] = useState(false);
-  const [isAttacking, setIsAttacking] = useState(false);
+  const [jumpCooldown, setJumpCooldown] = useState(0);
+  const [attackCooldown, setAttackCooldown] = useState(0);
 
-  // Use a compound shape for better physics simulation
   const [bodyRef, bodyApi] = useBox(() => ({
     mass: 1,
     position: position,
-    args: [0.5, 1, 0.3],
+    args: [1, 1.5, 0.5],
   }));
 
   const [feetRef, feetApi] = useSphere(() => ({
     mass: 0.1,
-    position: [position[0], position[1] - 1, position[2]],
-    args: [0.2],
+    position: [position[0], position[1] - 0.75, position[2]],
+    args: [0.25],
   }));
 
   const characterMesh = useRef();
@@ -33,91 +31,75 @@ const Character3D = ({ character, position, controls, opponent }) => {
   }, [bodyApi.velocity]);
 
   const jump = () => {
-    if (!isJumping) {
+    if (!isJumping && jumpCooldown <= 0) {
       setIsJumping(true);
-      bodyApi.velocity.set(0, jumpForce, 0);
-      setTimeout(() => setIsJumping(false), 1000);
+      bodyApi.applyImpulse([0, character.jumpForce, 0], [0, 0, 0]);
+      setJumpCooldown(0.5);
     }
   };
 
   const attack = () => {
-    if (!isAttacking) {
-      setIsAttacking(true);
-      // Apply force in the direction the character is facing
+    if (attackCooldown <= 0) {
       const direction = new THREE.Vector3();
       characterMesh.current.getWorldDirection(direction);
-      bodyApi.applyImpulse([direction.x * 10, 0, direction.z * 10]);
-      setTimeout(() => setIsAttacking(false), 500);
+      bodyApi.applyImpulse([direction.x * 10, direction.y * 10, direction.z * 10], [0, 0, 0]);
+      setAttackCooldown(0.5);
+
+      // Check for collision with opponent
+      const distance = characterMesh.current.position.distanceTo(opponent.current.position);
+      if (distance < 2) {
+        opponent.current.takeDamage(10);
+      }
     }
+  };
+
+  const executeSpecialMove = (moveName) => {
+    const moveEffect = character.executeSpecialMove(moveName);
+    if (moveEffect) {
+      // Implement special move effects here
+      console.log(`Executed ${moveName} with effect:`, moveEffect);
+    }
+  };
+
+  const takeDamage = (amount) => {
+    setHealth(prev => Math.max(0, prev - amount));
   };
 
   useFrame((state, delta) => {
-    if (characterMesh.current) {
-      // Smooth camera follow
-      const idealOffset = new THREE.Vector3(-1, 2, -3);
-      const idealLookat = new THREE.Vector3(0, 0.5, 1);
-      
-      const characterPosition = characterMesh.current.position;
-      const currentPosition = new THREE.Vector3();
-      currentPosition.copy(camera.position);
-      
-      const targetPosition = new THREE.Vector3();
-      targetPosition.copy(characterPosition).add(idealOffset);
-      
-      currentPosition.lerp(targetPosition, 0.1);
-      camera.position.copy(currentPosition);
+    if (controls.left) bodyApi.applyImpulse([-character.speed * delta, 0, 0], [0, 0, 0]);
+    if (controls.right) bodyApi.applyImpulse([character.speed * delta, 0, 0], [0, 0, 0]);
+    if (controls.up) bodyApi.applyImpulse([0, 0, -character.speed * delta], [0, 0, 0]);
+    if (controls.down) bodyApi.applyImpulse([0, 0, character.speed * delta], [0, 0, 0]);
+    if (controls.jump) jump();
+    if (controls.attack) attack();
+    if (controls.special1) executeSpecialMove(character.specialMoves[0].name);
+    if (controls.special2) executeSpecialMove(character.specialMoves[1].name);
 
-      const currentLookAt = new THREE.Vector3();
-      currentLookAt.copy(characterPosition).add(idealLookat);
-      camera.lookAt(currentLookAt);
+    setJumpCooldown(prev => Math.max(0, prev - delta));
+    setAttackCooldown(prev => Math.max(0, prev - delta));
 
-      // Character movement
-      const movement = new THREE.Vector3();
-      if (controls.forward) movement.z -= 1;
-      if (controls.backward) movement.z += 1;
-      if (controls.left) movement.x -= 1;
-      if (controls.right) movement.x += 1;
-
-      if (movement.length() > 0) {
-        movement.normalize().multiplyScalar(moveSpeed * delta);
-        bodyApi.velocity.set(movement.x, movement.y, movement.z);
-        characterMesh.current.lookAt(characterMesh.current.position.clone().add(movement));
-      } else {
-        bodyApi.velocity.set(0, 0, 0);
-      }
-
-      if (controls.jump) jump();
-      if (controls.attack) attack();
-
-      // Collision detection with opponent
-      if (opponent && isAttacking) {
-        const distance = characterMesh.current.position.distanceTo(opponent.position);
-        if (distance < 1.5) {
-          // Collision detected, apply damage
-          opponent.takeDamage(10);
-        }
-      }
-    }
+    // Update camera position
+    state.camera.position.lerp(
+      new THREE.Vector3(
+        characterMesh.current.position.x,
+        characterMesh.current.position.y + 5,
+        characterMesh.current.position.z + 10
+      ),
+      0.05
+    );
+    state.camera.lookAt(characterMesh.current.position);
   });
-
-  const takeDamage = (amount) => {
-    setHealth(Math.max(0, health - amount));
-    if (health <= 0) {
-      // Handle character defeat
-      console.log(`${character.name} has been defeated!`);
-    }
-  };
 
   return (
     <>
       <mesh ref={bodyRef}>
         <mesh ref={characterMesh}>
-          <boxGeometry args={[0.5, 1, 0.3]} />
-          <meshStandardMaterial color={character.color} />
+          <boxGeometry args={[1, 1.5, 0.5]} />
+          <meshStandardMaterial color={character.name === 'Burger King' ? 'orange' : character.name === 'Jean-Claude Van Damme' ? 'blue' : 'red'} />
         </mesh>
       </mesh>
       <mesh ref={feetRef}>
-        <sphereGeometry args={[0.2]} />
+        <sphereGeometry args={[0.25]} />
         <meshStandardMaterial color="black" />
       </mesh>
     </>
