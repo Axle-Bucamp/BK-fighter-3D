@@ -1,57 +1,58 @@
-# Burger vs. Jean Game
+# BK-fighter-3D
 
-Welcome to the Burger vs. Jean game repository! This exciting game pits burgers against jeans in an epic battle of fast food versus fashion.
+Welcome to BK-fighter-3D, an exciting 3D fighting game featuring your favorite fast-food mascots!
+
+## About the Game
+
+BK-fighter-3D is an action-packed 3D fighting game where players can battle it out as iconic fast-food mascots. Experience thrilling combat, stunning 3D graphics, and unique special moves in various fast-food themed arenas.
 
 ## Current Features
 
-- Multiple game modes: Story, Arcade, Survival, and Online Multiplayer
-- Character selection: Choose between Burger and Jean
-- Dynamic gameplay with increasing difficulty
-- Score tracking and high score system
-- Basic AI opponent for single-player modes
-- Responsive design for various screen sizes
+- 3D fighting gameplay with multiple characters
+- Diverse fast-food themed stages
+- Single-player arcade mode
+- Local multiplayer mode
+- Special moves and combos unique to each character
+- Dynamic camera system for optimal viewing angles
+- Basic character customization options
 
 ## Planned Improvements
 
-We have an exciting roadmap for future improvements to the game. Some of the planned features and enhancements include:
+We have an extensive list of planned improvements and new features. For a complete list, please check our [TODO.md](TODO.md) file. Some highlights include:
 
-- Advanced AI opponents with different difficulty levels
-- More playable characters and customization options
-- Additional power-ups and special abilities
-- Enhanced graphics and animations
-- Improved sound effects and background music
-- Leaderboard system for global rankings
-- Achievement system to reward player progress
-
-For a complete list of planned improvements and tasks, please check out our [TODO.md](TODO.md) file.
+- Online multiplayer mode
+- Expanded roster of characters
+- Advanced character customization
+- New game modes (Story mode, Tournament mode)
+- Enhanced graphics and performance optimization
+- Mobile version development
 
 ## How to Contribute
 
-We welcome contributions from the community! If you'd like to contribute to the Burger vs. Jean game, please follow these steps:
+We welcome contributions from the community! Here's how you can get involved:
 
 1. Fork the repository
 2. Create a new branch for your feature or bug fix
-3. Make your changes, ensuring code quality and proper documentation
-4. Test your changes thoroughly
-5. Submit a pull request with a clear description of your changes
+3. Make your changes and commit them with clear, descriptive messages
+4. Push your changes to your fork
+5. Submit a pull request with a detailed description of your changes
 
-Before contributing, please review our [CONTRIBUTING.md](CONTRIBUTING.md) file for more detailed guidelines on code style, commit messages, and the pull request process.
+Please make sure to follow our coding standards and test your changes thoroughly before submitting a pull request.
 
 ## Getting Started
 
 To run the game locally:
 
 1. Clone the repository
-2. Install dependencies with `npm install`
-3. Start the development server with `npm start`
-4. Open your browser and navigate to `http://localhost:3000`
+2. Install the required dependencies (list coming soon)
+3. Run the game using [instructions to be added]
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Contact
 
-If you have any questions or suggestions, please open an issue in this repository or contact the maintainers directly.
+For questions, suggestions, or bug reports, please open an issue on our GitHub repository or contact the maintainers at [email to be added].
 
-Thank you for your interest in the Burger vs. Jean game!
+Thank you for your interest in BK-fighter-3D! We look forward to your contributions and hope you enjoy the game.
