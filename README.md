@@ -1,20 +1,24 @@
 # BK-fighter-3D Game
 
 ## Introduction
-BK-fighter-3D is an exciting 3D fighting game that combines fast-paced action with strategic gameplay. Players can choose from a variety of characters, each with unique abilities and fighting styles, to engage in thrilling battles across diverse 3D environments.
+BK-fighter-3D is an exciting 3D fighting game that brings the classic burger vs. jean rivalry to life in a whole new dimension. Experience intense battles, unique characters, and thrilling gameplay in this action-packed 3D fighter.
 
 ## Current Features
-- Immersive 3D fighting gameplay
-- Diverse character roster including [list of characters to be added]
-- Multiple game modes: Arcade, Versus, and Training
-- Dynamic 3D environments with interactive elements
-- Combo system and special moves unique to each character
+- 3D fighting gameplay with smooth controls and realistic physics
+- Character roster including Burger King, Jean Claude Van Damme, and more to come
+- Multiple fighting arenas with interactive environments
+- Single-player arcade mode
+- Local multiplayer for head-to-head battles
 
 ## Planned Improvements
-See our [TODO.md](TODO.md) file for a complete list of planned improvements, including new game modes, character customization, and enhanced graphics.
+We have big plans for BK-fighter-3D! See our [TODO.md](TODO.md) file for a complete list of planned improvements, including:
+- Online multiplayer mode
+- New characters and arenas
+- Enhanced graphics and special effects
+- Mobile version development
 
 ## How to Contribute
-We welcome contributions to make BK-fighter-3D even better! Here's how you can help:
+We welcome contributions from the community! Here's how you can help:
 
 1. Fork the repository
 2. Create a new branch for your feature or bug fix
@@ -24,8 +28,7 @@ We welcome contributions to make BK-fighter-3D even better! Here's how you can h
 
 ### Development Setup
 To set up the development environment:
-
-1. Clone the repository: `git clone https://github.com/Axle-Bucamp/BK-fighter-3D.git`
+1. Clone the repository: `git clone https://github.com/yourusername/BK-fighter-3D.git`
 2. Install dependencies: `npm install`
 3. Start the development server: `npm start`
 
@@ -42,16 +45,14 @@ Our CI/CD pipeline is managed through GitHub Actions. See `.github/workflows/ci-
 
 ## Getting Started
 To run the game locally:
-
-1. Clone the repository
-2. Install dependencies with `npm install`
-3. Start the game with `npm start`
-4. Open your browser and navigate to `http://localhost:3000`
+1. Ensure you have Node.js and npm installed
+2. Clone the repository: `git clone https://github.com/yourusername/BK-fighter-3D.git`
+3. Install dependencies: `npm install`
+4. Start the game: `npm start`
+5. Open your browser and navigate to `http://localhost:3000`
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
-For questions, suggestions, or bug reports, please open an issue on our GitHub repository or contact the maintainers at [contact email to be added].
-
-We're excited to see your contributions to BK-fighter-3D!
+For questions, suggestions, or support, please open an issue on our GitHub repository or contact the maintainers at bkfighter3d@example.com.
