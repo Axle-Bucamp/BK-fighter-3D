@@ -145,19 +145,16 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    // Any global game logic that needs to run on component mount
     const handleBeforeUnload = (event) => {
-      if (gameState.isGameStarted && !gameState.isGameOver) {
-        event.preventDefault();
-        event.returnValue = 'Are you sure you want to leave the game?';
-      }
+      event.preventDefault();
+      event.returnValue = '';
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [gameState.isGameStarted, gameState.isGameOver]);
+  }, []);
 
   // Memoize the Canvas children to prevent unnecessary re-renders
   const canvasChildren = useMemo(() => (
