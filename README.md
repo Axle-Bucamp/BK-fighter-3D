@@ -27,7 +27,7 @@ We welcome contributions from the community! Here's how you can help:
 
 ## Development Setup
 To set up the development environment:
-1. Clone the repository: `git clone https://github.com/yourusername/BK-fighter-3D.git`
+1. Clone the repository: `git clone https://github.com/Axle-Bucamp/BK-fighter-3D.git`
 2. Install dependencies: `npm install`
 3. Start the development server: `npm start`
 
@@ -44,7 +44,7 @@ Our CI/CD pipeline is managed through GitHub Actions. See `.github/workflows/ci-
 ## Getting Started
 To run the game locally:
 1. Ensure you have Node.js and npm installed
-2. Clone the repository: `git clone https://github.com/yourusername/BK-fighter-3D.git`
+2. Clone the repository: `git clone https://github.com/Axle-Bucamp/BK-fighter-3D.git`
 3. Install dependencies: `npm install`
 4. Start the game: `npm start`
 5. Open your browser and navigate to `http://localhost:3000`
