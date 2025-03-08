@@ -1,51 +1,52 @@
 import io from 'socket.io-client';
 
 class MultiplayerManager {
-  constructor(gameEngine) {
-    this.socket = null;
-    this.gameEngine = gameEngine;
-    this.players = new Map();
-  }
-
-  connect(serverUrl) {
+  constructor(serverUrl) {
     this.socket = io(serverUrl);
-    this.setupEventListeners();
+    this.players = new Map();
+    this.onPlayerJoin = null;
+    this.onPlayerLeave = null;
+    this.onGameStateUpdate = null;
+
+    this.setupSocketListeners();
   }
 
-  setupEventListeners() {
+  setupSocketListeners() {
     this.socket.on('connect', () => {
       console.log('Connected to server');
     });
 
     this.socket.on('playerJoined', (player) => {
       this.players.set(player.id, player);
-      this.gameEngine.addPlayer(player);
+      if (this.onPlayerJoin) this.onPlayerJoin(player);
     });
 
     this.socket.on('playerLeft', (playerId) => {
       this.players.delete(playerId);
-      this.gameEngine.removePlayer(playerId);
+      if (this.onPlayerLeave) this.onPlayerLeave(playerId);
     });
 
-    this.socket.on('gameState', (gameState) => {
-      this.gameEngine.updateGameState(gameState);
+    this.socket.on('gameStateUpdate', (gameState) => {
+      if (this.onGameStateUpdate) this.onGameStateUpdate(gameState);
     });
+  }
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-    });
+  joinGame(playerName) {
+    this.socket.emit('joinGame', { name: playerName });
+  }
+
+  leaveGame() {
+    this.socket.emit('leaveGame');
   }
 
   sendPlayerAction(action) {
     this.socket.emit('playerAction', action);
   }
 
-  joinGame(playerInfo) {
-    this.socket.emit('joinGame', playerInfo);
-  }
-
-  leaveGame() {
-    this.socket.emit('leaveGame');
+  setEventHandlers(onPlayerJoin, onPlayerLeave, onGameStateUpdate) {
+    this.onPlayerJoin = onPlayerJoin;
+    this.onPlayerLeave = onPlayerLeave;
+    this.onGameStateUpdate = onGameStateUpdate;
   }
 }
 
