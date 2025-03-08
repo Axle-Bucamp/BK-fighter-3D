@@ -1,98 +1,76 @@
-import * as THREE from 'three';
-import { CharacterManager } from './characterManager';
-import { ArenaManager } from './arenaManager';
+import CharacterManager from './characterManager';
+import ArenaManager from './arenaManager';
 
 class GameEngine {
-  constructor() {
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer();
+  constructor(multiplayerManager) {
+    this.multiplayerManager = multiplayerManager;
     this.characterManager = new CharacterManager();
     this.arenaManager = new ArenaManager();
     this.players = new Map();
-    this.multiplayerManager = null;
+    this.currentArena = null;
 
-    this.init();
+    this.setupMultiplayerListeners();
   }
 
-  init() {
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(this.renderer.domElement);
-
-    this.camera.position.z = 5;
-
-    this.setupEventListeners();
-    this.animate();
+  setupMultiplayerListeners() {
+    this.multiplayerManager.setEventHandlers(
+      this.onPlayerJoin.bind(this),
+      this.onPlayerLeave.bind(this),
+      this.onGameStateUpdate.bind(this)
+    );
   }
 
-  setupEventListeners() {
-    window.addEventListener('resize', this.onWindowResize.bind(this), false);
+  onPlayerJoin(player) {
+    const character = this.characterManager.createCharacter(player.characterType);
+    this.players.set(player.id, { ...player, character });
+    console.log(`Player ${player.name} joined the game`);
   }
 
-  onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-  animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    this.update();
-    this.render();
-  }
-
-  update() {
-    // Update game logic here
-    this.characterManager.update();
-    this.arenaManager.update();
-  }
-
-  render() {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  setMultiplayerManager(multiplayerManager) {
-    this.multiplayerManager = multiplayerManager;
-  }
-
-  addPlayer(player) {
-    this.players.set(player.id, player);
-    this.characterManager.addCharacter(player.id, player.character);
-  }
-
-  removePlayer(playerId) {
+  onPlayerLeave(playerId) {
     this.players.delete(playerId);
-    this.characterManager.removeCharacter(playerId);
+    console.log(`Player ${playerId} left the game`);
   }
 
-  updateGameState(gameState) {
-    // Update game state based on server information
-    gameState.players.forEach((player) => {
-      if (this.players.has(player.id)) {
-        this.characterManager.updateCharacter(player.id, player.position, player.rotation);
-      } else {
-        this.addPlayer(player);
-      }
-    });
-
-    // Remove players that are no longer in the game
-    this.players.forEach((player, playerId) => {
-      if (!gameState.players.some(p => p.id === playerId)) {
-        this.removePlayer(playerId);
-      }
-    });
-
-    // Update arena state if necessary
-    this.arenaManager.updateState(gameState.arena);
+  onGameStateUpdate(gameState) {
+    this.updatePlayersState(gameState.players);
+    this.updateArenaState(gameState.arena);
   }
 
-  handlePlayerAction(playerId, action) {
-    // Process player action and update game state
-    this.characterManager.handleAction(playerId, action);
+  updatePlayersState(playersState) {
+    for (const [playerId, playerState] of Object.entries(playersState)) {
+      if (this.players.has(playerId)) {
+        const player = this.players.get(playerId);
+        player.character.updateState(playerState);
+      }
+    }
+  }
 
-    // Send action to server if in multiplayer mode
-    if (this.multiplayerManager) {
+  updateArenaState(arenaState) {
+    if (this.currentArena) {
+      this.currentArena.updateState(arenaState);
+    }
+  }
+
+  startGame(arenaType) {
+    this.currentArena = this.arenaManager.createArena(arenaType);
+    console.log(`Starting game in arena: ${arenaType}`);
+  }
+
+  performAction(playerId, action) {
+    if (this.players.has(playerId)) {
+      const player = this.players.get(playerId);
+      player.character.performAction(action);
       this.multiplayerManager.sendPlayerAction({ playerId, action });
+    }
+  }
+
+  update(deltaTime) {
+    // Update game logic here
+    for (const player of this.players.values()) {
+      player.character.update(deltaTime);
+    }
+    if (this.currentArena) {
+      this.currentArena.update(deltaTime);
     }
   }
 }
