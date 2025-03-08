@@ -1,49 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import MultiplayerManager from './multiplayerManager';
 import GameEngine from './gameEngine';
-import GameComponent from './GameComponent';
-import LobbyComponent from './LobbyComponent';
+import LobbyComponent from './components/LobbyComponent';
+import GameComponent from './components/GameComponent';
 
-const SERVER_URL = 'https://your-game-server-url.com'; // Replace with your actual server URL
+const SERVER_URL = 'http://localhost:3001'; // Replace with your actual server URL
 
 function App() {
-  const [multiplayerManager, setMultiplayerManager] = useState(null);
   const [gameEngine, setGameEngine] = useState(null);
-  const [isInGame, setIsInGame] = useState(false);
+  const [gameState, setGameState] = useState('lobby');
+  const [playerName, setPlayerName] = useState('');
 
   useEffect(() => {
-    const mm = new MultiplayerManager(SERVER_URL);
-    setMultiplayerManager(mm);
-
-    const ge = new GameEngine(mm);
-    setGameEngine(ge);
+    const engine = new GameEngine(SERVER_URL);
+    engine.init();
+    setGameEngine(engine);
 
     return () => {
-      mm.leaveGame();
+      engine.leaveGame();
     };
   }, []);
 
-  const handleJoinGame = (playerName) => {
-    if (multiplayerManager) {
-      multiplayerManager.joinGame(playerName);
-      setIsInGame(true);
-    }
+  const handleJoinGame = (name) => {
+    setPlayerName(name);
+    gameEngine.joinGame(name);
+    setGameState('game');
   };
 
   const handleLeaveGame = () => {
-    if (multiplayerManager) {
-      multiplayerManager.leaveGame();
-      setIsInGame(false);
-    }
+    gameEngine.leaveGame();
+    setGameState('lobby');
   };
+
+  if (!gameEngine) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="App">
       <h1>BK-fighter-3D</h1>
-      {!isInGame ? (
+      {gameState === 'lobby' ? (
         <LobbyComponent onJoinGame={handleJoinGame} />
       ) : (
-        <GameComponent gameEngine={gameEngine} onLeaveGame={handleLeaveGame} />
+        <GameComponent
+          gameEngine={gameEngine}
+          playerName={playerName}
+          onLeaveGame={handleLeaveGame}
+        />
       )}
     </div>
   );
