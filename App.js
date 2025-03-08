@@ -11,7 +11,6 @@ import Battlefield from './components/Battlefield';
  * Manages game state, multiplayer functionality, and renders the 3D scene.
  *
  * @component
- * @returns {JSX.Element} The rendered App component
  */
 const App = () => {
   /**
@@ -62,7 +61,7 @@ const App = () => {
    */
   const handleGameOver = useCallback((winner) => {
     if (winner !== 'burger' && winner !== 'jean') {
-      console.error('Invalid winner specified:', winner);
+      console.error('Invalid winner specified');
       return;
     }
     setGameState(prevState => ({
@@ -100,7 +99,7 @@ const App = () => {
    */
   const handleCollision = useCallback((point) => {
     if (!point || typeof point.x !== 'number' || typeof point.y !== 'number' || typeof point.z !== 'number') {
-      console.error('Invalid collision point:', point);
+      console.error('Invalid collision point');
       return;
     }
     setGameState(prevState => ({
@@ -116,7 +115,7 @@ const App = () => {
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     if (typeof update !== 'object' || update === null) {
-      console.error('Invalid multiplayer update:', update);
+      console.error('Invalid multiplayer update');
       return;
     }
     setMultiplayerState(prevState => ({
@@ -132,11 +131,11 @@ const App = () => {
    */
   const handleCharacterAction = useCallback((character, action) => {
     if (character !== 'burger' && character !== 'jean') {
-      console.error('Invalid character specified:', character);
+      console.error('Invalid character specified');
       return;
     }
     if (typeof action !== 'string' || action.trim() === '') {
-      console.error('Invalid action specified:', action);
+      console.error('Invalid action specified');
       return;
     }
     setGameState(prevState => ({
@@ -146,14 +145,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    // Set up event listener for beforeunload
+    // Any global game logic that needs to run on component mount
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Clean up function
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
