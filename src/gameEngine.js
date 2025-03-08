@@ -1,77 +1,49 @@
+import MultiplayerManager from './multiplayerManager';
 import CharacterManager from './characterManager';
 import ArenaManager from './arenaManager';
 
 class GameEngine {
-  constructor(multiplayerManager) {
-    this.multiplayerManager = multiplayerManager;
+  constructor(serverUrl) {
+    this.multiplayerManager = new MultiplayerManager(serverUrl);
     this.characterManager = new CharacterManager();
     this.arenaManager = new ArenaManager();
-    this.players = new Map();
-    this.currentArena = null;
-
-    this.setupMultiplayerListeners();
+    this.gameState = {
+      players: [],
+      arena: null,
+      status: 'waiting'
+    };
   }
 
-  setupMultiplayerListeners() {
-    this.multiplayerManager.setEventHandlers(
-      this.onPlayerJoin.bind(this),
-      this.onPlayerLeave.bind(this),
-      this.onGameStateUpdate.bind(this)
-    );
+  init() {
+    this.multiplayerManager.socket.on('gameStateUpdate', (newState) => {
+      this.updateGameState(newState);
+    });
   }
 
-  onPlayerJoin(player) {
-    const character = this.characterManager.createCharacter(player.characterType);
-    this.players.set(player.id, { ...player, character });
-    console.log(`Player ${player.name} joined the game`);
+  updateGameState(newState) {
+    this.gameState = newState;
+    this.characterManager.updateCharacters(newState.players);
+    this.arenaManager.updateArena(newState.arena);
   }
 
-  onPlayerLeave(playerId) {
-    this.players.delete(playerId);
-    console.log(`Player ${playerId} left the game`);
+  joinGame(playerName) {
+    this.multiplayerManager.joinGame(playerName);
   }
 
-  onGameStateUpdate(gameState) {
-    this.updatePlayersState(gameState.players);
-    this.updateArenaState(gameState.arena);
+  leaveGame() {
+    this.multiplayerManager.leaveGame();
   }
 
-  updatePlayersState(playersState) {
-    for (const [playerId, playerState] of Object.entries(playersState)) {
-      if (this.players.has(playerId)) {
-        const player = this.players.get(playerId);
-        player.character.updateState(playerState);
-      }
-    }
+  performAction(action) {
+    this.multiplayerManager.sendPlayerAction(action);
   }
 
-  updateArenaState(arenaState) {
-    if (this.currentArena) {
-      this.currentArena.updateState(arenaState);
-    }
+  getGameState() {
+    return this.gameState;
   }
 
-  startGame(arenaType) {
-    this.currentArena = this.arenaManager.createArena(arenaType);
-    console.log(`Starting game in arena: ${arenaType}`);
-  }
-
-  performAction(playerId, action) {
-    if (this.players.has(playerId)) {
-      const player = this.players.get(playerId);
-      player.character.performAction(action);
-      this.multiplayerManager.sendPlayerAction({ playerId, action });
-    }
-  }
-
-  update(deltaTime) {
-    // Update game logic here
-    for (const player of this.players.values()) {
-      player.character.update(deltaTime);
-    }
-    if (this.currentArena) {
-      this.currentArena.update(deltaTime);
-    }
+  getPlayers() {
+    return this.multiplayerManager.getPlayers();
   }
 }
 
