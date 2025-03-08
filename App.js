@@ -61,7 +61,7 @@ const App = () => {
    */
   const handleGameOver = useCallback((winner) => {
     if (winner !== 'burger' && winner !== 'jean') {
-      console.error('Invalid winner specified');
+      console.error('Invalid winner specified:', winner);
       return;
     }
     setGameState(prevState => ({
@@ -99,7 +99,7 @@ const App = () => {
    */
   const handleCollision = useCallback((point) => {
     if (!point || typeof point.x !== 'number' || typeof point.y !== 'number' || typeof point.z !== 'number') {
-      console.error('Invalid collision point');
+      console.error('Invalid collision point:', point);
       return;
     }
     setGameState(prevState => ({
@@ -115,7 +115,7 @@ const App = () => {
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     if (typeof update !== 'object' || update === null) {
-      console.error('Invalid multiplayer update');
+      console.error('Invalid multiplayer update:', update);
       return;
     }
     setMultiplayerState(prevState => ({
@@ -131,11 +131,11 @@ const App = () => {
    */
   const handleCharacterAction = useCallback((character, action) => {
     if (character !== 'burger' && character !== 'jean') {
-      console.error('Invalid character specified');
+      console.error('Invalid character specified:', character);
       return;
     }
     if (typeof action !== 'string' || action.trim() === '') {
-      console.error('Invalid action specified');
+      console.error('Invalid action specified:', action);
       return;
     }
     setGameState(prevState => ({
