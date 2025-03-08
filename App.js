@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Game from './components/Game';
 import { BurgerCharacter, JeanCharacter } from './components/CharacterModel';
@@ -8,32 +8,16 @@ import Battlefield from './components/Battlefield';
 
 /**
  * Main App component for the BK-fighter-3D game.
- * Manages game state, rendering, and high-level game logic.
- * 
+ * Manages game state, renders 3D scene, and coordinates game logic.
+ *
  * @component
  */
 const App = () => {
   /**
-   * @typedef {Object} GameState
-   * @property {boolean} isGameStarted - Indicates if the game has started
-   * @property {boolean} isGameOver - Indicates if the game has ended
-   * @property {number} burgerHealth - Health of the Burger character
-   * @property {number} jeanHealth - Health of the Jean character
-   * @property {string|null} winner - The winner of the game, if any
-   * @property {number[]} burgerPosition - 3D position of the Burger character
-   * @property {number[]} jeanPosition - 3D position of the Jean character
-   * @property {string} burgerAction - Current action of the Burger character
-   * @property {string} jeanAction - Current action of the Jean character
+   * Initial game state
+   * @type {Object}
    */
-
-  /**
-   * @typedef {Object} MultiplayerState
-   * @property {boolean} isHost - Indicates if the current player is the host
-   * @property {boolean} isConnected - Indicates if connected to multiplayer
-   * @property {string|null} roomCode - Room code for multiplayer session
-   */
-
-  const [gameState, setGameState] = useState({
+  const initialGameState = useMemo(() => ({
     isGameStarted: false,
     isGameOver: false,
     burgerHealth: 100,
@@ -43,26 +27,24 @@ const App = () => {
     jeanPosition: [2, 0, 0],
     burgerAction: 'idle',
     jeanAction: 'idle'
-  });
+  }), []);
 
-  const [multiplayerState, setMultiplayerState] = useState({
+  /**
+   * Initial multiplayer state
+   * @type {Object}
+   */
+  const initialMultiplayerState = useMemo(() => ({
     isHost: false,
     isConnected: false,
     roomCode: null
-  });
+  }), []);
 
-  // Refs for memoized functions to avoid unnecessary re-renders
-  const gameStateRef = useRef(gameState);
-  const multiplayerStateRef = useRef(multiplayerState);
-
-  useEffect(() => {
-    gameStateRef.current = gameState;
-    multiplayerStateRef.current = multiplayerState;
-  }, [gameState, multiplayerState]);
+  const [gameState, setGameState] = useState(initialGameState);
+  const [multiplayerState, setMultiplayerState] = useState(initialMultiplayerState);
 
   /**
-   * Handles starting a new game.
-   * Resets game state to initial values.
+   * Handles starting the game.
+   * Resets health and clears winner.
    */
   const handleStartGame = useCallback(() => {
     setGameState(prevState => ({
@@ -76,10 +58,14 @@ const App = () => {
   }, []);
 
   /**
-   * Handles game over condition.
-   * @param {string} winner - The winner of the game
+   * Handles game over state.
+   * @param {string} winner - The winner of the game ('burger' or 'jean')
    */
   const handleGameOver = useCallback((winner) => {
+    if (winner !== 'burger' && winner !== 'jean') {
+      console.error('Invalid winner specified');
+      return;
+    }
     setGameState(prevState => ({
       ...prevState,
       isGameOver: true,
@@ -89,41 +75,30 @@ const App = () => {
 
   /**
    * Handles restarting the game.
-   * Resets all game state values to their initial state.
+   * Resets all game state to initial values.
    */
   const handleRestartGame = useCallback(() => {
-    setGameState(prevState => ({
-      ...prevState,
-      isGameStarted: true,
-      isGameOver: false,
-      burgerHealth: 100,
-      jeanHealth: 100,
-      winner: null,
-      burgerPosition: [0, 0, 0],
-      jeanPosition: [2, 0, 0],
-      burgerAction: 'idle',
-      jeanAction: 'idle'
-    }));
-  }, []);
+    setGameState(initialGameState);
+  }, [initialGameState]);
 
   /**
-   * Handles collision between characters or with the environment.
+   * Handles collision between characters.
    * @param {Object} point - The point of collision
-   * @param {number} point.x - X coordinate of the collision point
-   * @param {number} point.y - Y coordinate of the collision point
-   * @param {number} point.z - Z coordinate of the collision point
+   * @param {number} point.x - X coordinate
+   * @param {number} point.y - Y coordinate
+   * @param {number} point.z - Z coordinate
    */
-  const handleCollision = useCallback((point) => {
+  const handleCollision = useCallback(({ x, y, z }) => {
     setGameState(prevState => ({
       ...prevState,
-      burgerPosition: [point.x, point.y, point.z],
-      jeanPosition: [point.x + 2, point.y, point.z]
+      burgerPosition: [x, y, z],
+      jeanPosition: [x + 2, y, z]
     }));
   }, []);
 
   /**
-   * Updates the multiplayer state.
-   * @param {Partial<MultiplayerState>} update - Partial multiplayer state update
+   * Updates multiplayer state.
+   * @param {Object} update - The update to apply to multiplayer state
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     setMultiplayerState(prevState => ({
@@ -133,11 +108,15 @@ const App = () => {
   }, []);
 
   /**
-   * Updates a character's action.
-   * @param {'burger'|'jean'} character - The character to update
-   * @param {string} action - The new action for the character
+   * Updates character action.
+   * @param {string} character - The character to update ('burger' or 'jean')
+   * @param {string} action - The new action
    */
   const handleCharacterAction = useCallback((character, action) => {
+    if (character !== 'burger' && character !== 'jean') {
+      console.error('Invalid character specified');
+      return;
+    }
     setGameState(prevState => ({
       ...prevState,
       [`${character}Action`]: action
@@ -146,19 +125,10 @@ const App = () => {
 
   useEffect(() => {
     // Any global game logic that needs to run on component mount
-    const handleKeyDown = (event) => {
-      // Example of global key handling
-      if (event.key === 'Escape') {
-        // Pause game or open menu
-        console.log('Game paused');
-      }
+    const cleanup = () => {
+      // Any cleanup logic
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return cleanup;
   }, []);
 
   return (
