@@ -9,7 +9,8 @@ import Battlefield from './components/Battlefield';
 /**
  * Main App component for the BK-fighter-3D game.
  * Manages game state, multiplayer functionality, and renders the 3D scene.
- * @returns {JSX.Element} The rendered App component
+ *
+ * @component
  */
 const App = () => {
   /**
@@ -144,19 +145,19 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    // Any global game logic that needs to run on component mount
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
-  const canvasContent = useMemo(() => (
+  // Memoize the Canvas children to prevent unnecessary re-renders
+  const canvasChildren = useMemo(() => (
     <>
       <ambientLight intensity={0.5} />
       <pointLight position={[10, 10, 10]} />
@@ -187,7 +188,7 @@ const App = () => {
         onStartGame={handleStartGame}
         onRestartGame={handleRestartGame}
       />
-      <Canvas>{canvasContent}</Canvas>
+      <Canvas>{canvasChildren}</Canvas>
       <MultiplayerManager
         gameState={gameState}
         multiplayerState={multiplayerState}
