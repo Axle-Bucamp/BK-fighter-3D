@@ -11,6 +11,7 @@ import Battlefield from './components/Battlefield';
  * Manages game state, multiplayer functionality, and renders the 3D scene.
  *
  * @component
+ * @returns {JSX.Element} The rendered App component
  */
 const App = () => {
   /**
