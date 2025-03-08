@@ -1,197 +1,149 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import StartScreen from './components/StartScreen';
-import GameScreen from './components/GameScreen';
-import GameOverScreen from './components/GameOverScreen';
+import React, { useEffect, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 
 /**
- * Main App component for the Burger vs. Jean game
- * @returns {JSX.Element} The rendered game component
+ * Initializes the game state and sets up necessary resources.
+ * @returns {Object} The initial game state
  */
-function App() {
-  const [gameState, setGameState] = useState('start');
-  const [gameMode, setGameMode] = useState('classic');
-  const [difficulty, setDifficulty] = useState('normal');
-  const [score, setScore] = useState({ burger: 0, jean: 0 });
-  const [characters, setCharacters] = useState({
-    burger: { x: 0, y: 0 },
-    jean: { x: 0, y: 0 }
+function initializeGame() {
+  return {
+    players: [
+      { id: 'burger', position: [-2, 0, 0], health: 100 },
+      { id: 'jean', position: [2, 0, 0], health: 100 }
+    ],
+    gameStatus: 'playing', // 'playing', 'paused', 'gameOver'
+  };
+}
+
+/**
+ * Updates the game state based on the current state and any inputs.
+ * @param {Object} currentState - The current game state
+ * @param {Object} input - User input or any other relevant data
+ * @returns {Object} The updated game state
+ */
+function updateGameState(currentState, input) {
+  const newState = { ...currentState };
+
+  // Example: Update player positions based on input
+  newState.players = newState.players.map(player => {
+    if (input[player.id]?.moveLeft) player.position[0] -= 0.1;
+    if (input[player.id]?.moveRight) player.position[0] += 0.1;
+    return player;
   });
 
-  /**
-   * Start the game with the selected mode and difficulty
-   * @param {string} mode - The selected game mode
-   * @param {string} diff - The selected difficulty level
-   */
-  const startGame = useCallback((mode, diff) => {
-    try {
-      setGameMode(mode);
-      setDifficulty(diff);
-      setGameState('playing');
-      setScore({ burger: 0, jean: 0 });
-      setCharacters({
-        burger: { x: 50, y: 50 },
-        jean: { x: 450, y: 450 }
-      });
-    } catch (error) {
-      console.error('Error starting the game:', error);
-      setGameState('start');
+  // TODO: Add collision detection, health updates, etc.
+
+  return newState;
+}
+
+/**
+ * Handles user input and returns an object representing the input state.
+ * @param {KeyboardEvent} event - The input event
+ * @param {string} playerId - The ID of the player ('burger' or 'jean')
+ * @returns {Object} An object representing the current input state
+ */
+function handleUserInput(event, playerId) {
+  const keyActions = {
+    'ArrowLeft': 'moveLeft',
+    'ArrowRight': 'moveRight',
+    'ArrowUp': 'jump',
+    'ArrowDown': 'crouch',
+    ' ': 'attack',
+  };
+
+  const action = keyActions[event.key];
+  if (!action) return null;
+
+  return {
+    [playerId]: {
+      [action]: event.type === 'keydown'
     }
-  }, []);
+  };
+}
 
-  /**
-   * Move a character in the specified direction
-   * @param {string} character - The character to move ('burger' or 'jean')
-   * @param {string} direction - The direction to move ('up', 'down', 'left', 'right')
-   */
-  const moveCharacter = useCallback((character, direction) => {
-    try {
-      setCharacters(prevCharacters => {
-        const newPosition = { ...prevCharacters[character] };
-        const speed = difficulty === 'hard' ? 5 : 3;
+/**
+ * Renders a player in the 3D scene.
+ * @param {Object} props - The properties of the player
+ */
+function Player({ position, color }) {
+  return (
+    <mesh position={position}>
+      <boxGeometry args={[1, 2, 1]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  );
+}
 
-        switch (direction) {
-          case 'up':
-            newPosition.y = Math.max(0, newPosition.y - speed);
-            break;
-          case 'down':
-            newPosition.y = Math.min(500, newPosition.y + speed);
-            break;
-          case 'left':
-            newPosition.x = Math.max(0, newPosition.x - speed);
-            break;
-          case 'right':
-            newPosition.x = Math.min(500, newPosition.x + speed);
-            break;
-          default:
-            throw new Error('Invalid direction');
-        }
+/**
+ * Renders the 3D scene.
+ */
+function Scene({ gameState }) {
+  const sceneRef = useRef();
 
-        return { ...prevCharacters, [character]: newPosition };
-      });
-    } catch (error) {
-      console.error('Error moving character:', error);
-    }
-  }, [difficulty]);
-
-  /**
-   * Check for collisions between characters and update scores
-   */
-  const checkCollision = useCallback(() => {
-    try {
-      const { burger, jean } = characters;
-      const collisionDistance = 30;
-
-      if (
-        Math.abs(burger.x - jean.x) < collisionDistance &&
-        Math.abs(burger.y - jean.y) < collisionDistance
-      ) {
-        setScore(prevScore => ({
-          burger: prevScore.burger + 1,
-          jean: prevScore.jean + 1
-        }));
-
-        // Reset characters to starting positions
-        setCharacters({
-          burger: { x: 50, y: 50 },
-          jean: { x: 450, y: 450 }
-        });
-      }
-    } catch (error) {
-      console.error('Error checking collision:', error);
-    }
-  }, [characters]);
-
-  /**
-   * End the game and transition to the game over screen
-   */
-  const endGame = useCallback(() => {
-    try {
-      setGameState('gameOver');
-    } catch (error) {
-      console.error('Error ending the game:', error);
-    }
-  }, []);
-
-  /**
-   * Handle key press events for character movement
-   * @param {KeyboardEvent} event - The keyboard event
-   */
-  const handleKeyPress = useCallback((event) => {
-    try {
-      if (gameState !== 'playing') return;
-
-      switch (event.key) {
-        case 'w':
-          moveCharacter('burger', 'up');
-          break;
-        case 's':
-          moveCharacter('burger', 'down');
-          break;
-        case 'a':
-          moveCharacter('burger', 'left');
-          break;
-        case 'd':
-          moveCharacter('burger', 'right');
-          break;
-        case 'ArrowUp':
-          moveCharacter('jean', 'up');
-          break;
-        case 'ArrowDown':
-          moveCharacter('jean', 'down');
-          break;
-        case 'ArrowLeft':
-          moveCharacter('jean', 'left');
-          break;
-        case 'ArrowRight':
-          moveCharacter('jean', 'right');
-          break;
-        default:
-          break;
-      }
-    } catch (error) {
-      console.error('Error handling key press:', error);
-    }
-  }, [gameState, moveCharacter]);
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [handleKeyPress]);
-
-  useEffect(() => {
-    if (gameState === 'playing') {
-      const gameLoop = setInterval(() => {
-        checkCollision();
-        if (score.burger >= 10 || score.jean >= 10) {
-          endGame();
-        }
-      }, 100);
-
-      return () => clearInterval(gameLoop);
-    }
-  }, [gameState, checkCollision, score, endGame]);
+  useFrame((state, delta) => {
+    // TODO: Implement frame update logic
+  });
 
   return (
-    <div className="App">
-      {gameState === 'start' && (
-        <StartScreen onStartGame={startGame} />
-      )}
-      {gameState === 'playing' && (
-        <GameScreen
-          characters={characters}
-          score={score}
-          gameMode={gameMode}
-          difficulty={difficulty}
-        />
-      )}
-      {gameState === 'gameOver' && (
-        <GameOverScreen
-          score={score}
-          onRestart={() => setGameState('start')}
-        />
-      )}
+    <group ref={sceneRef}>
+      <Player position={gameState.players[0].position} color="brown" />
+      <Player position={gameState.players[1].position} color="blue" />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+        <planeGeometry args={[10, 10]} />
+        <meshStandardMaterial color="green" />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * Main App component for the BK-fighter-3D game.
+ */
+function App() {
+  const [gameState, setGameState] = useState(initializeGame());
+  const [input, setInput] = useState({});
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const burgerInput = handleUserInput(e, 'burger');
+      const jeanInput = handleUserInput(e, 'jean');
+      if (burgerInput || jeanInput) {
+        setInput(prevInput => ({...prevInput, ...burgerInput, ...jeanInput}));
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      const burgerInput = handleUserInput(e, 'burger');
+      const jeanInput = handleUserInput(e, 'jean');
+      if (burgerInput || jeanInput) {
+        setInput(prevInput => ({...prevInput, ...burgerInput, ...jeanInput}));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    const gameLoop = setInterval(() => {
+      setGameState(prevState => updateGameState(prevState, input));
+    }, 1000 / 60); // 60 FPS
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      clearInterval(gameLoop);
+    };
+  }, []);
+
+  return (
+    <div className="game-container" style={{ width: '100vw', height: '100vh' }}>
+      <Canvas>
+        <PerspectiveCamera makeDefault position={[0, 5, 10]} />
+        <OrbitControls />
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Scene gameState={gameState} />
+      </Canvas>
     </div>
   );
 }
