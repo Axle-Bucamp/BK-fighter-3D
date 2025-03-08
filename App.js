@@ -145,12 +145,13 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    // Any global game logic that needs to run on component mount
+    // Set up event listener to prompt user before leaving the game
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
