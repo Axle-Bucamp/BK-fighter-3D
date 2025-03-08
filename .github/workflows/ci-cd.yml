@@ -14,10 +14,26 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+        node-version: '16'
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Install dependencies
+      run: npm ci
+    - name: Run linter
+      run: npm run lint
+    - name: Run unit tests
+      run: npm test
+    - name: Build
+      run: npm run build --if-present
     
   deploy:
     needs: build-and-test
@@ -49,3 +65,9 @@ jobs:
     - name: Update ECS service
       run: |
         aws ecs update-service --cluster bk-fighter-3d-cluster --service bk-fighter-3d-service --force-new-deployment
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./build
