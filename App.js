@@ -7,14 +7,32 @@ import GameUI from './components/GameUI';
 import Battlefield from './components/Battlefield';
 
 /**
+ * @typedef {Object} GameState
+ * @property {boolean} isGameStarted - Indicates if the game has started
+ * @property {boolean} isGameOver - Indicates if the game is over
+ * @property {number} burgerHealth - Health of the burger character
+ * @property {number} jeanHealth - Health of the jean character
+ * @property {string|null} winner - The winner of the game
+ * @property {[number, number, number]} burgerPosition - Position of the burger character
+ * @property {[number, number, number]} jeanPosition - Position of the jean character
+ * @property {string} burgerAction - Current action of the burger character
+ * @property {string} jeanAction - Current action of the jean character
+ */
+
+/**
+ * @typedef {Object} MultiplayerState
+ * @property {boolean} isHost - Indicates if the current player is the host
+ * @property {boolean} isConnected - Indicates if connected to a multiplayer session
+ * @property {string|null} roomCode - The room code for the multiplayer session
+ */
+
+/**
  * Main App component for the BK-fighter-3D game.
- * This component manages the game state, renders the 3D scene,
- * and coordinates between various game components.
+ * Manages game state, renders the 3D scene, and handles user interactions.
  *
- * @component
+ * @returns {JSX.Element} The rendered App component
  */
 const App = () => {
-  // Game state
   const [gameState, setGameState] = useState({
     isGameStarted: false,
     isGameOver: false,
@@ -27,28 +45,17 @@ const App = () => {
     jeanAction: 'idle'
   });
 
-  // Multiplayer state
   const [multiplayerState, setMultiplayerState] = useState({
     isHost: false,
     isConnected: false,
     roomCode: null
   });
 
-  // Refs for memoized functions to avoid unnecessary re-renders
-  const gameStateRef = useRef(gameState);
-  const multiplayerStateRef = useRef(multiplayerState);
-
-  useEffect(() => {
-    gameStateRef.current = gameState;
-  }, [gameState]);
-
-  useEffect(() => {
-    multiplayerStateRef.current = multiplayerState;
-  }, [multiplayerState]);
+  const gameLoopRef = useRef(null);
 
   /**
-   * Handles starting a new game.
-   * Resets game state to initial values.
+   * Handles starting the game.
+   * Resets game state and starts the game loop.
    */
   const handleStartGame = useCallback(() => {
     setGameState(prevState => ({
@@ -59,11 +66,17 @@ const App = () => {
       jeanHealth: 100,
       winner: null
     }));
+
+    // Start game loop
+    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+    gameLoopRef.current = setInterval(() => {
+      // Implement game loop logic here
+    }, 1000 / 60); // 60 FPS
   }, []);
 
   /**
    * Handles game over state.
-   * @param {string} winner - The winner of the game ('burger' or 'jean')
+   * @param {string} winner - The winner of the game
    */
   const handleGameOver = useCallback((winner) => {
     setGameState(prevState => ({
@@ -71,14 +84,21 @@ const App = () => {
       isGameOver: true,
       winner
     }));
+
+    // Stop game loop
+    if (gameLoopRef.current) {
+      clearInterval(gameLoopRef.current);
+      gameLoopRef.current = null;
+    }
   }, []);
 
   /**
    * Handles restarting the game.
-   * Resets all game state values to their initial state.
+   * Resets game state and restarts the game loop.
    */
   const handleRestartGame = useCallback(() => {
-    setGameState({
+    setGameState(prevState => ({
+      ...prevState,
       isGameStarted: true,
       isGameOver: false,
       burgerHealth: 100,
@@ -88,15 +108,18 @@ const App = () => {
       jeanPosition: [2, 0, 0],
       burgerAction: 'idle',
       jeanAction: 'idle'
-    });
+    }));
+
+    // Restart game loop
+    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+    gameLoopRef.current = setInterval(() => {
+      // Implement game loop logic here
+    }, 1000 / 60); // 60 FPS
   }, []);
 
   /**
-   * Handles collision between characters or with the environment.
-   * @param {Object} point - The point of collision
-   * @param {number} point.x - X coordinate
-   * @param {number} point.y - Y coordinate
-   * @param {number} point.z - Z coordinate
+   * Handles collision between characters.
+   * @param {{x: number, y: number, z: number}} point - The collision point
    */
   const handleCollision = useCallback((point) => {
     setGameState(prevState => ({
@@ -108,7 +131,7 @@ const App = () => {
 
   /**
    * Updates the multiplayer state.
-   * @param {Object} update - The update to apply to the multiplayer state
+   * @param {Partial<MultiplayerState>} update - The multiplayer state update
    */
   const handleMultiplayerUpdate = useCallback((update) => {
     setMultiplayerState(prevState => ({
@@ -119,8 +142,8 @@ const App = () => {
 
   /**
    * Updates a character's action.
-   * @param {string} character - The character to update ('burger' or 'jean')
-   * @param {string} action - The new action for the character
+   * @param {'burger'|'jean'} character - The character to update
+   * @param {string} action - The new action
    */
   const handleCharacterAction = useCallback((character, action) => {
     setGameState(prevState => ({
@@ -130,20 +153,13 @@ const App = () => {
   }, []);
 
   /**
-   * Effect hook for global game logic.
-   * This could include setting up event listeners, initializing game systems, etc.
+   * Cleans up the game loop on component unmount.
    */
   useEffect(() => {
-    // Any global game logic that needs to run on component mount
-    const handleError = (error) => {
-      console.error('An error occurred in the game:', error);
-      // Implement proper error handling, e.g., showing an error message to the user
-    };
-
-    window.addEventListener('error', handleError);
-
     return () => {
-      window.removeEventListener('error', handleError);
+      if (gameLoopRef.current) {
+        clearInterval(gameLoopRef.current);
+      }
     };
   }, []);
 
