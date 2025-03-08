@@ -1,4 +1,4 @@
-# BK-fighter-3D Game
+# BK-fighter-3D
 
 ## Introduction
 BK-fighter-3D is an exciting 3D fighting game that brings the classic burger vs. jean rivalry to life in a whole new dimension. Experience intense battles, unique characters, and thrilling gameplay in this action-packed 3D fighter.
@@ -19,28 +19,26 @@ We have big plans for BK-fighter-3D! See our [TODO.md](TODO.md) file for a compl
 
 ## How to Contribute
 We welcome contributions from the community! Here's how you can help:
-
 1. Fork the repository
 2. Create a new branch for your feature or bug fix
 3. Make your changes, ensuring proper function calls and returns
 4. Add or update tests as necessary
 5. Submit a pull request
 
-### Development Setup
+## Development Setup
 To set up the development environment:
 1. Clone the repository: `git clone https://github.com/yourusername/BK-fighter-3D.git`
 2. Install dependencies: `npm install`
 3. Start the development server: `npm start`
 
-### Running Tests
+## Running Tests
 We use Cypress for end-to-end testing and Jest for unit testing. To run tests:
-
-```bash
+```
 npm run test
 npm run cypress:run
 ```
 
-### DevOps
+## DevOps
 Our CI/CD pipeline is managed through GitHub Actions. See `.github/workflows/ci-cd.yml` for details on our build, test, and deployment processes.
 
 ## Getting Started
