@@ -10,8 +10,7 @@ import Battlefield from './components/Battlefield';
  * Main App component for the BK-fighter-3D game.
  * Manages game state, multiplayer functionality, and renders the 3D scene.
  *
- * @component
- * @returns {JSX.Element} The rendered App component
+ * @returns {React.Component} The main App component
  */
 const App = () => {
   /**
@@ -147,13 +146,13 @@ const App = () => {
 
   useEffect(() => {
     // Any global game logic that needs to run on component mount
-    const handleUnload = (event) => {
+    const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
     };
-    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
