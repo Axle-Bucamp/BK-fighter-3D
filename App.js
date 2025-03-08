@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Game from './components/Game';
 import { BurgerCharacter, JeanCharacter } from './components/CharacterModel';
@@ -7,32 +7,16 @@ import GameUI from './components/GameUI';
 import Battlefield from './components/Battlefield';
 
 /**
- * @typedef {Object} GameState
- * @property {boolean} isGameStarted - Indicates if the game has started
- * @property {boolean} isGameOver - Indicates if the game is over
- * @property {number} burgerHealth - Health of the burger character
- * @property {number} jeanHealth - Health of the jean character
- * @property {string|null} winner - The winner of the game
- * @property {[number, number, number]} burgerPosition - Position of the burger character
- * @property {[number, number, number]} jeanPosition - Position of the jean character
- * @property {string} burgerAction - Current action of the burger character
- * @property {string} jeanAction - Current action of the jean character
- */
-
-/**
- * @typedef {Object} MultiplayerState
- * @property {boolean} isHost - Indicates if the current player is the host
- * @property {boolean} isConnected - Indicates if connected to a multiplayer session
- * @property {string|null} roomCode - The room code for the multiplayer session
- */
-
-/**
  * Main App component for the BK-fighter-3D game.
- * Manages game state, renders the 3D scene, and handles user interactions.
+ * Manages game state, multiplayer functionality, and renders the 3D scene.
  *
- * @returns {JSX.Element} The rendered App component
+ * @component
  */
 const App = () => {
+  /**
+   * Game state containing all relevant information about the current game session.
+   * @type {Object}
+   */
   const [gameState, setGameState] = useState({
     isGameStarted: false,
     isGameOver: false,
@@ -45,17 +29,19 @@ const App = () => {
     jeanAction: 'idle'
   });
 
+  /**
+   * Multiplayer state containing information about the multiplayer session.
+   * @type {Object}
+   */
   const [multiplayerState, setMultiplayerState] = useState({
     isHost: false,
     isConnected: false,
     roomCode: null
   });
 
-  const gameLoopRef = useRef(null);
-
   /**
-   * Handles starting the game.
-   * Resets game state and starts the game loop.
+   * Handles starting a new game.
+   * Resets health, clears winner, and sets game as started.
    */
   const handleStartGame = useCallback(() => {
     setGameState(prevState => ({
@@ -66,39 +52,31 @@ const App = () => {
       jeanHealth: 100,
       winner: null
     }));
-
-    // Start game loop
-    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-    gameLoopRef.current = setInterval(() => {
-      // Implement game loop logic here
-    }, 1000 / 60); // 60 FPS
   }, []);
 
   /**
    * Handles game over state.
-   * @param {string} winner - The winner of the game
+   * Sets the game as over and records the winner.
+   * @param {string} winner - The name of the winning character ('burger' or 'jean')
    */
   const handleGameOver = useCallback((winner) => {
+    if (winner !== 'burger' && winner !== 'jean') {
+      console.error('Invalid winner specified');
+      return;
+    }
     setGameState(prevState => ({
       ...prevState,
       isGameOver: true,
       winner
     }));
-
-    // Stop game loop
-    if (gameLoopRef.current) {
-      clearInterval(gameLoopRef.current);
-      gameLoopRef.current = null;
-    }
   }, []);
 
   /**
    * Handles restarting the game.
-   * Resets game state and restarts the game loop.
+   * Resets all game state to initial values.
    */
   const handleRestartGame = useCallback(() => {
-    setGameState(prevState => ({
-      ...prevState,
+    setGameState({
       isGameStarted: true,
       isGameOver: false,
       burgerHealth: 100,
@@ -108,20 +86,22 @@ const App = () => {
       jeanPosition: [2, 0, 0],
       burgerAction: 'idle',
       jeanAction: 'idle'
-    }));
-
-    // Restart game loop
-    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-    gameLoopRef.current = setInterval(() => {
-      // Implement game loop logic here
-    }, 1000 / 60); // 60 FPS
+    });
   }, []);
 
   /**
    * Handles collision between characters.
-   * @param {{x: number, y: number, z: number}} point - The collision point
+   * Updates character positions based on the collision point.
+   * @param {Object} point - The point of collision
+   * @param {number} point.x - X coordinate of the collision point
+   * @param {number} point.y - Y coordinate of the collision point
+   * @param {number} point.z - Z coordinate of the collision point
    */
   const handleCollision = useCallback((point) => {
+    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number' || typeof point.z !== 'number') {
+      console.error('Invalid collision point');
+      return;
+    }
     setGameState(prevState => ({
       ...prevState,
       burgerPosition: [point.x, point.y, point.z],
@@ -130,10 +110,14 @@ const App = () => {
   }, []);
 
   /**
-   * Updates the multiplayer state.
-   * @param {Partial<MultiplayerState>} update - The multiplayer state update
+   * Handles updates to the multiplayer state.
+   * @param {Object} update - The updated multiplayer state properties
    */
   const handleMultiplayerUpdate = useCallback((update) => {
+    if (typeof update !== 'object' || update === null) {
+      console.error('Invalid multiplayer update');
+      return;
+    }
     setMultiplayerState(prevState => ({
       ...prevState,
       ...update
@@ -141,27 +125,61 @@ const App = () => {
   }, []);
 
   /**
-   * Updates a character's action.
-   * @param {'burger'|'jean'} character - The character to update
-   * @param {string} action - The new action
+   * Handles character action updates.
+   * @param {string} character - The character performing the action ('burger' or 'jean')
+   * @param {string} action - The action being performed
    */
   const handleCharacterAction = useCallback((character, action) => {
+    if (character !== 'burger' && character !== 'jean') {
+      console.error('Invalid character specified');
+      return;
+    }
+    if (typeof action !== 'string' || action.trim() === '') {
+      console.error('Invalid action specified');
+      return;
+    }
     setGameState(prevState => ({
       ...prevState,
       [`${character}Action`]: action
     }));
   }, []);
 
-  /**
-   * Cleans up the game loop on component unmount.
-   */
   useEffect(() => {
+    // Any global game logic that needs to run on component mount
+    const handleUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleUnload);
     return () => {
-      if (gameLoopRef.current) {
-        clearInterval(gameLoopRef.current);
-      }
+      window.removeEventListener('beforeunload', handleUnload);
     };
   }, []);
+
+  // Memoize the Canvas children to prevent unnecessary re-renders
+  const canvasChildren = useMemo(() => (
+    <>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <Battlefield onCollision={handleCollision} />
+      <BurgerCharacter 
+        position={gameState.burgerPosition} 
+        rotation={[0, 0, 0]} 
+        action={gameState.burgerAction} 
+      />
+      <JeanCharacter 
+        position={gameState.jeanPosition} 
+        rotation={[0, Math.PI, 0]} 
+        action={gameState.jeanAction} 
+      />
+      <Game 
+        gameState={gameState}
+        setGameState={setGameState}
+        onGameOver={handleGameOver}
+        onCharacterAction={handleCharacterAction}
+      />
+    </>
+  ), [gameState, handleCollision, handleGameOver, handleCharacterAction]);
 
   return (
     <div className="app-container">
@@ -170,27 +188,7 @@ const App = () => {
         onStartGame={handleStartGame}
         onRestartGame={handleRestartGame}
       />
-      <Canvas>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <Battlefield onCollision={handleCollision} />
-        <BurgerCharacter 
-          position={gameState.burgerPosition} 
-          rotation={[0, 0, 0]} 
-          action={gameState.burgerAction} 
-        />
-        <JeanCharacter 
-          position={gameState.jeanPosition} 
-          rotation={[0, Math.PI, 0]} 
-          action={gameState.jeanAction} 
-        />
-        <Game 
-          gameState={gameState}
-          setGameState={setGameState}
-          onGameOver={handleGameOver}
-          onCharacterAction={handleCharacterAction}
-        />
-      </Canvas>
+      <Canvas>{canvasChildren}</Canvas>
       <MultiplayerManager
         gameState={gameState}
         multiplayerState={multiplayerState}
