@@ -4,9 +4,7 @@ class MultiplayerManager {
   constructor(serverUrl) {
     this.socket = io(serverUrl);
     this.players = new Map();
-    this.onPlayerJoin = null;
-    this.onPlayerLeave = null;
-    this.onGameStateUpdate = null;
+    this.gameState = null;
 
     this.setupSocketListeners();
   }
@@ -18,16 +16,14 @@ class MultiplayerManager {
 
     this.socket.on('playerJoined', (player) => {
       this.players.set(player.id, player);
-      if (this.onPlayerJoin) this.onPlayerJoin(player);
     });
 
     this.socket.on('playerLeft', (playerId) => {
       this.players.delete(playerId);
-      if (this.onPlayerLeave) this.onPlayerLeave(playerId);
     });
 
     this.socket.on('gameStateUpdate', (gameState) => {
-      if (this.onGameStateUpdate) this.onGameStateUpdate(gameState);
+      this.gameState = gameState;
     });
   }
 
@@ -43,10 +39,12 @@ class MultiplayerManager {
     this.socket.emit('playerAction', action);
   }
 
-  setEventHandlers(onPlayerJoin, onPlayerLeave, onGameStateUpdate) {
-    this.onPlayerJoin = onPlayerJoin;
-    this.onPlayerLeave = onPlayerLeave;
-    this.onGameStateUpdate = onGameStateUpdate;
+  getPlayers() {
+    return Array.from(this.players.values());
+  }
+
+  getGameState() {
+    return this.gameState;
   }
 }
 
