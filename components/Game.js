@@ -1,58 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Physics } from '@react-three/cannon';
-import CharacterSelection from './CharacterSelection';
-import Battlefield from './Battlefield';
-import GameUI from './GameUI';
+import React, { useEffect, useRef } from 'react';
 import { GameEngine } from '../lib/gameEngine';
-import { ArenaManager } from '../lib/arenaManager';
-import { MultiplayerManager } from './MultiplayerManager';
+import styles from '../styles/Game.module.css';
 
 const Game = () => {
-  const [gameState, setGameState] = useState('character_selection');
-  const [selectedCharacters, setSelectedCharacters] = useState([]);
-  const [currentArena, setCurrentArena] = useState(null);
-
-  const gameEngine = new GameEngine();
-  const arenaManager = new ArenaManager();
-  const multiplayerManager = new MultiplayerManager();
+  const canvasRef = useRef(null);
+  const gameEngineRef = useRef(null);
 
   useEffect(() => {
-    // Initialize game components
-    gameEngine.init();
-    arenaManager.loadArenas();
-    multiplayerManager.init();
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const gameEngine = new GameEngine();
+    gameEngineRef.current = gameEngine;
 
-    // Set up event listeners for game state changes
+    gameEngine.init();
+
+    const handleKeyDown = (e) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          gameEngine.setInput({ left: true });
+          break;
+        case 'ArrowRight':
+          gameEngine.setInput({ right: true });
+          break;
+        case ' ':
+          gameEngine.setInput({ jump: true });
+          break;
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          gameEngine.setInput({ left: false });
+          break;
+        case 'ArrowRight':
+          gameEngine.setInput({ right: false });
+          break;
+        case ' ':
+          gameEngine.setInput({ jump: false });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    let lastTime = 0;
+    const gameLoop = (timestamp) => {
+      const delta = timestamp - lastTime;
+      lastTime = timestamp;
+
+      gameEngine.update(delta);
+      render(ctx, gameEngine);
+
+      requestAnimationFrame(gameLoop);
+    };
+
+    requestAnimationFrame(gameLoop);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   }, []);
 
-  const startGame = () => {
-    setGameState('fighting');
-    setCurrentArena(arenaManager.getRandomArena());
+  const render = (ctx, gameEngine) => {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+    // Render arena
+    ctx.fillStyle = '#888';
+    for (const part in gameEngine.arena) {
+      const body = gameEngine.arena[part];
+      ctx.fillRect(body.position.x - body.width / 2, body.position.y - body.height / 2, body.width, body.height);
+    }
+
+    // Render characters
+    ctx.fillStyle = '#00f';
+    for (const character of gameEngine.characters) {
+      const body = character.body;
+      ctx.fillRect(body.position.x - body.width / 2, body.position.y - body.height / 2, body.width, body.height);
+    }
   };
 
-  return (
-    <div className="game-container">
-      {gameState === 'character_selection' && (
-        <CharacterSelection
-          onCharacterSelect={(character) => {
-            setSelectedCharacters([...selectedCharacters, character]);
-            if (selectedCharacters.length === 1) startGame();
-          }}
-        />
-      )}
-      {gameState === 'fighting' && (
-        <>
-          <Canvas>
-            <Physics>
-              <Battlefield arena={currentArena} characters={selectedCharacters} />
-            </Physics>
-          </Canvas>
-          <GameUI characters={selectedCharacters} />
-        </>
-      )}
-    </div>
-  );
+  return <canvas ref={canvasRef} className={styles.gameCanvas} width={1000} height={600} />;
 };
 
 export default Game;
