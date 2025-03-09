@@ -1,74 +1,59 @@
-const { v4: uuidv4 } = require('uuid');
-
 class LobbyService {
   constructor() {
     this.lobbies = new Map();
   }
 
-  createLobby(name, hostId) {
-    const lobbyId = uuidv4();
-    const lobby = {
+  createLobby(userId, socket) {
+    const lobbyId = `lobby_${Date.now()}`;
+    this.lobbies.set(lobbyId, {
       id: lobbyId,
-      name,
-      host: hostId,
-      players: [hostId],
-      status: 'waiting',
-    };
-    this.lobbies.set(lobbyId, lobby);
-    return lobby;
+      host: userId,
+      players: [{ userId, socket }],
+      status: 'waiting'
+    });
+    socket.join(lobbyId);
+    console.log(`Lobby created: ${lobbyId} by user ${userId}`);
+    return lobbyId;
   }
 
-  joinLobby(lobbyId, playerId) {
+  joinLobby(userId, lobbyId, socket) {
     const lobby = this.lobbies.get(lobbyId);
-    if (!lobby) {
-      return { success: false, error: 'Lobby not found' };
+    if (lobby && lobby.status === 'waiting' && lobby.players.length < 2) {
+      lobby.players.push({ userId, socket });
+      socket.join(lobbyId);
+      console.log(`User ${userId} joined lobby ${lobbyId}`);
+      return true;
     }
-    if (lobby.players.length >= 2) {
-      return { success: false, error: 'Lobby is full' };
-    }
-    lobby.players.push(playerId);
-    return { success: true, lobby };
+    return false;
   }
 
-  leaveLobby(lobbyId, playerId) {
+  leaveLobby(userId, lobbyId) {
     const lobby = this.lobbies.get(lobbyId);
-    if (!lobby) {
-      return { success: false, error: 'Lobby not found' };
-    }
-    const index = lobby.players.indexOf(playerId);
-    if (index > -1) {
-      lobby.players.splice(index, 1);
+    if (lobby) {
+      lobby.players = lobby.players.filter(player => player.userId !== userId);
+      console.log(`User ${userId} left lobby ${lobbyId}`);
       if (lobby.players.length === 0) {
         this.lobbies.delete(lobbyId);
-      } else if (lobby.host === playerId) {
-        lobby.host = lobby.players[0];
+        console.log(`Lobby ${lobbyId} deleted`);
+      } else if (lobby.host === userId) {
+        lobby.host = lobby.players[0].userId;
+        console.log(`New host of lobby ${lobbyId}: ${lobby.host}`);
       }
-      return { success: true };
     }
-    return { success: false, error: 'Player not in lobby' };
   }
 
-  startGame(lobbyId, playerId) {
+  startGame(lobbyId) {
     const lobby = this.lobbies.get(lobbyId);
-    if (!lobby) {
-      return { success: false, error: 'Lobby not found' };
+    if (lobby && lobby.players.length === 2) {
+      lobby.status = 'in-game';
+      console.log(`Game started in lobby ${lobbyId}`);
+      return true;
     }
-    if (lobby.host !== playerId) {
-      return { success: false, error: 'Only the host can start the game' };
-    }
-    if (lobby.players.length < 2) {
-      return { success: false, error: 'Not enough players to start the game' };
-    }
-    lobby.status = 'playing';
-    // TODO: Initialize game state
-    const gameState = { /* Initialize game state here */ };
-    return { success: true, gameState };
+    return false;
   }
 
-  removePlayerFromAllLobbies(playerId) {
-    for (const [lobbyId, lobby] of this.lobbies.entries()) {
-      this.leaveLobby(lobbyId, playerId);
-    }
+  getLobbyInfo(lobbyId) {
+    return this.lobbies.get(lobbyId);
   }
 }
 
