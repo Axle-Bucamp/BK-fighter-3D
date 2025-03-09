@@ -1,6 +1,6 @@
-import MultiplayerManager from './multiplayerManager';
-import CharacterManager from './characterManager';
 import ArenaManager from './arenaManager';
+import CharacterManager from './characterManager';
+import MultiplayerManager from './multiplayerManager';
 
 class GameEngine {
   constructor(serverUrl) {
@@ -12,6 +12,10 @@ class GameEngine {
       arena: null,
       status: 'waiting'
     };
+  }
+
+  setMultiplayerManager(multiplayerManager) {
+    this.multiplayerManager = multiplayerManager;
   }
 
   init() {

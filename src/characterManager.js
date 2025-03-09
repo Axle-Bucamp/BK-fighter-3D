@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import AIController from './aiController';
+
+import AIController from '../controllers/AIController';
 
 class Character {
   constructor(scene, loader, physicsEngine, characterType, isAI) {

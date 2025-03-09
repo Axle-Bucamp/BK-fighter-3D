@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
 import Head from 'next/head';
-import styles from '../styles/Home.module.css';
+
 import Game from '../components/Game';
 import Menu from '../components/Menu';
 import TutorialScreen from '../components/TutorialScreen';
-import GameStateManager from '../game/GameStateManager';
-import { GAME_STATES } from '../game/constants';
+import { GAME_STATES } from '../src/game/constants';
+import GameStateManager from '../src/game/GameStateManager';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const [gameState, setGameState] = useState(GAME_STATES.MENU);

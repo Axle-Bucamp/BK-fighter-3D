@@ -1,5 +1,10 @@
 import '../styles/globals.css';
-import { useState, useEffect } from 'react';
+
+import {
+  useEffect,
+  useState,
+} from 'react';
+
 import GameEngine from '../src/gameEngine';
 import MultiplayerManager from '../src/multiplayerManager';
 
@@ -18,12 +23,10 @@ export default function App({ Component, pageProps }) {
     setMultiplayerManager(newMultiplayerManager);
 
     return () => {
-      // Clean up resources when component unmounts
-      if (multiplayerManager) {
-        multiplayerManager.leaveGame();
-      }
+      newGameEngine.stop(); // Proper cleanup for the game engine
+      newMultiplayerManager.leaveGame(); // Proper cleanup for multiplayer
     };
-  }, []);
+  }, []); // Ensures this effect runs only once on mount
 
   return (
     <Component

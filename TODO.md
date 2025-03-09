@@ -13,6 +13,12 @@
 - [x] Create custom shaders for improved rendering efficiency
 - [x] Optimize touch input for mobile devices
 
+## fix 
+- [ ] Game system
+- [ ] Generated unconected artefact (src files, pages files, componant files) Ensure developpement logic
+- [ ] Import and dependencies
+- [ ] Main Menue make sure the player arrive on the main menu
+
 ## In Progress
 - [ ] Implement multiplayer functionality
 - [ ] Enhance AI for computer-controlled opponents

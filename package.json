@@ -6,9 +6,15 @@
     "@react-three/drei": "^9.80.1",
     "@react-three/fiber": "^8.13.6",
     "floor": "^0.0.0",
-    "next": "^13.4.12",
+    "next": "^15.2.1",
     "react": "^18.2.0",
     "react-css-modules": "^4.7.11",
+    "socket.io-client": "^4.8.1",
     "three": "^0.154.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   }
 }
