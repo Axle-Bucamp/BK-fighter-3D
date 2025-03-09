@@ -1,55 +1,81 @@
-import React, { useRef, useEffect } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import * as THREE from 'three';
-import { TextureLoader } from 'three/src/loaders/TextureLoader';
+import React, { useEffect, useRef } from 'react';
+import Matter from 'matter-js';
 
-const Battlefield = ({ onCollision }) => {
-  const meshRef = useRef();
-  const depthMap = useLoader(TextureLoader, '/textures/depth_map.png');
+const Battlefield = ({ width, height, onInteraction }) => {
+  const sceneRef = useRef(null);
+  const engineRef = useRef(null);
 
   useEffect(() => {
-    if (meshRef.current) {
-      const geometry = meshRef.current.geometry;
-      const positionAttribute = geometry.getAttribute('position');
-      const vertex = new THREE.Vector3();
+    const { Engine, Render, World, Bodies, Events } = Matter;
 
-      for (let i = 0; i < positionAttribute.count; i++) {
-        vertex.fromBufferAttribute(positionAttribute, i);
-        const depthValue = depthMap.image.data[i * 4] / 255; // Assuming grayscale depth map
-        vertex.z = depthValue * 10; // Scale the depth
-        positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+    // Create engine and renderer
+    const engine = Engine.create();
+    engineRef.current = engine;
+    const render = Render.create({
+      element: sceneRef.current,
+      engine: engine,
+      options: {
+        width,
+        height,
+        wireframes: false,
+        background: '#87CEEB', // Sky blue background
+      },
+    });
+
+    // Create ground
+    const ground = Bodies.rectangle(width / 2, height, width, 60, { isStatic: true });
+
+    // Create platforms
+    const platform1 = Bodies.rectangle(width / 4, height - 120, 200, 20, { isStatic: true });
+    const platform2 = Bodies.rectangle((3 * width) / 4, height - 200, 200, 20, { isStatic: true });
+
+    // Create power-up
+    const powerUp = Bodies.circle(width / 2, height - 300, 15, {
+      isSensor: true,
+      render: { fillStyle: 'yellow' },
+      label: 'powerUp',
+    });
+
+    // Create trap
+    const trap = Bodies.rectangle(width / 2, height - 30, 100, 10, {
+      isSensor: true,
+      render: { fillStyle: 'red' },
+      label: 'trap',
+    });
+
+    // Add all bodies to the world
+    World.add(engine.world, [ground, platform1, platform2, powerUp, trap]);
+
+    // Start the engine and renderer
+    Engine.run(engine);
+    Render.run(render);
+
+    // Handle collisions
+    Events.on(engine, 'collisionStart', (event) => {
+      const pairs = event.pairs;
+      for (let i = 0; i < pairs.length; i++) {
+        const { bodyA, bodyB } = pairs[i];
+        if (bodyA.label === 'powerUp' || bodyB.label === 'powerUp') {
+          onInteraction('powerUp');
+          World.remove(engine.world, bodyA.label === 'powerUp' ? bodyA : bodyB);
+        } else if (bodyA.label === 'trap' || bodyB.label === 'trap') {
+          onInteraction('trap');
+        }
       }
+    });
 
-      positionAttribute.needsUpdate = true;
-      geometry.computeVertexNormals();
-    }
-  }, [depthMap]);
+    return () => {
+      Render.stop(render);
+      World.clear(engine.world);
+      Engine.clear(engine);
+      render.canvas.remove();
+      render.canvas = null;
+      render.context = null;
+      render.textures = {};
+    };
+  }, [width, height, onInteraction]);
 
-  useFrame((state) => {
-    if (meshRef.current) {
-      const raycaster = new THREE.Raycaster();
-      raycaster.ray.origin.set(0, 10, 0); // Start from above the terrain
-      raycaster.ray.direction.set(0, -1, 0); // Cast ray downwards
-
-      const intersects = raycaster.intersectObject(meshRef.current);
-      if (intersects.length > 0) {
-        const point = intersects[0].point;
-        onCollision(point);
-      }
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[100, 100, 128, 128]} />
-      <meshStandardMaterial
-        map={depthMap}
-        displacementMap={depthMap}
-        displacementScale={10}
-        wireframe={false}
-      />
-    </mesh>
-  );
+  return <div ref={sceneRef} />;
 };
 
 export default Battlefield;
