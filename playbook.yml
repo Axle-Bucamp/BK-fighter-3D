@@ -1,10 +1,9 @@
 ---
-- name: Deploy BK-Fighter-3D
+- name: Setup BK-Fighter-3D server
   hosts: all
   become: yes
   vars:
-    app_dir: /opt/bk-fighter-3d
-    node_version: "14.x"
+    app_dir: /var/www/bk-fighter-3d
 
   tasks:
     - name: Update apt cache
@@ -14,10 +13,11 @@
     - name: Install required packages
       apt:
         name:
-          - git
           - nodejs
           - npm
-          - mongodb
+          - git
+          - docker.io
+          - docker-compose
         state: present
 
     - name: Clone the repository
@@ -26,62 +26,26 @@
         dest: "{{ app_dir }}"
         version: main
 
-    - name: Install app dependencies
+    - name: Install npm dependencies
       npm:
         path: "{{ app_dir }}"
 
-    - name: Build the app
+    - name: Build the application
       command: npm run build
       args:
         chdir: "{{ app_dir }}"
 
-    - name: Create systemd service file
-      template:
-        src: bk-fighter-3d.service.j2
-        dest: /etc/systemd/system/bk-fighter-3d.service
-
-    - name: Start and enable the service
-      systemd:
-        name: bk-fighter-3d
-        state: started
-        enabled: yes
-
-    - name: Ensure MongoDB is running
-      systemd:
-        name: mongodb
-        state: started
-        enabled: yes
-
-    - name: Open firewall ports
-      ufw:
-        rule: allow
-        port: "{{ item }}"
-      loop:
-        - "80"
-        - "443"
-        - "5000"
-
-- name: Configure Nginx as reverse proxy
-  hosts: all
-  become: yes
-  tasks:
-    - name: Install Nginx
-      apt:
-        name: nginx
+    - name: Start the application with Docker Compose
+      docker_compose:
+        project_src: "{{ app_dir }}"
         state: present
 
-    - name: Create Nginx config file
-      template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/sites-available/bk-fighter-3d
-
-    - name: Enable Nginx config
-      file:
-        src: /etc/nginx/sites-available/bk-fighter-3d
-        dest: /etc/nginx/sites-enabled/bk-fighter-3d
-        state: link
-
-    - name: Restart Nginx
+    - name: Ensure the application starts on boot
       systemd:
-        name: nginx
-        state: restarted
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Print success message
+      debug:
+        msg: "BK-Fighter-3D server setup complete!"
