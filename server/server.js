@@ -1,60 +1,69 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const mongoose = require('mongoose');
+const Redis = require('ioredis');
 const config = require('../config');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: config.clientUrl,
-    methods: ["GET", "POST"]
-  }
+const io = socketIo(server);
+
+// Create Redis client
+const redis = new Redis(config.redisUrl);
+
+// Middleware
+app.use(express.json());
+
+// Routes
+app.get('/', (req, res) => {
+  res.send('BK-Fighter-3D Server is running');
 });
 
-// Connect to MongoDB
-mongoose.connect(config.mongodbUrl, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('Error connecting to MongoDB:', err));
-
-// Game state
-const rooms = new Map();
-
+// Socket.IO logic
 io.on('connection', (socket) => {
-  console.log('New client connected');
+  console.log('A user connected');
 
-  socket.on('joinRoom', (roomId) => {
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, { players: new Set() });
-    }
-    const room = rooms.get(roomId);
-    room.players.add(socket.id);
+  socket.on('join_room', async (roomId) => {
     socket.join(roomId);
-    io.to(roomId).emit('playerJoined', { playerId: socket.id, playerCount: room.players.size });
+    await redis.sadd(`room:${roomId}`, socket.id);
+    io.to(roomId).emit('user_joined', { userId: socket.id });
   });
 
-  socket.on('updatePosition', (data) => {
-    socket.to(data.roomId).emit('playerMoved', { playerId: socket.id, position: data.position });
+  socket.on('leave_room', async (roomId) => {
+    socket.leave(roomId);
+    await redis.srem(`room:${roomId}`, socket.id);
+    io.to(roomId).emit('user_left', { userId: socket.id });
   });
 
-  socket.on('disconnect', () => {
-    rooms.forEach((room, roomId) => {
-      if (room.players.has(socket.id)) {
-        room.players.delete(socket.id);
-        io.to(roomId).emit('playerLeft', { playerId: socket.id, playerCount: room.players.size });
-        if (room.players.size === 0) {
-          rooms.delete(roomId);
-        }
+  socket.on('game_state', async (data) => {
+    const { roomId, state } = data;
+    await redis.set(`gameState:${roomId}`, JSON.stringify(state));
+    socket.to(roomId).emit('game_state_update', state);
+  });
+
+  socket.on('disconnect', async () => {
+    console.log('A user disconnected');
+    const rooms = Object.keys(socket.rooms);
+    for (const room of rooms) {
+      if (room !== socket.id) {
+        await redis.srem(`room:${room}`, socket.id);
+        io.to(room).emit('user_left', { userId: socket.id });
       }
-    });
-    console.log('Client disconnected');
+    }
   });
 });
 
-server.listen(config.serverPort, config.serverHost, () => {
-  console.log(`Server running on ${config.getServerUrl()}`);
+// Start server
+const PORT = config.serverPort;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    redis.quit();
+  });
 });
