@@ -8,31 +8,31 @@ const LoadingScreen = ({ progress }) => {
       left: 0,
       width: '100%',
       height: '100%',
-      backgroundColor: 'black',
+      backgroundColor: '#000',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      color: 'white',
+      color: '#fff',
       fontSize: '24px'
     }}>
-      <h2>Loading Game Assets</h2>
+      <h1>Loading Burger vs Jean</h1>
       <div style={{
         width: '300px',
-        height: '30px',
-        border: '2px solid white',
-        borderRadius: '15px',
+        height: '20px',
+        backgroundColor: '#333',
+        borderRadius: '10px',
         overflow: 'hidden',
-        marginTop: '20px'
+        margin: '20px 0'
       }}>
         <div style={{
           width: `${progress}%`,
           height: '100%',
-          backgroundColor: 'white',
+          backgroundColor: '#0f0',
           transition: 'width 0.3s ease-in-out'
-        }} />
+        }}></div>
       </div>
-      <p style={{ marginTop: '10px' }}>{Math.round(progress)}%</p>
+      <p>{Math.round(progress)}% loaded</p>
     </div>
   );
 };
