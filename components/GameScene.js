@@ -1,36 +1,81 @@
-// components/GameScene.js
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-
-import { createCharacter } from '../lib/gameLogic';
+import React, { useEffect, useRef, useState } from 'react';
+import { GameEngine } from '../lib/gameEngine';
 import styles from '../styles/GameScene.module.css';
 import Character from './Character';
 import GameOverScreen from './GameOverScreen';
 
 const GameScene = ({ gameMode, onGameEnd }) => {
-  const [player1, setPlayer1] = useState(createCharacter('Burger'));
-  const [player2, setPlayer2] = useState(createCharacter('Jean'));
+  const canvasRef = useRef(null);
+  const gameEngineRef = useRef(null);
+  const [player1Health, setPlayer1Health] = useState(100);
+  const [player2Health, setPlayer2Health] = useState(100);
   const [isGameOver, setIsGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
-  const [isPlayer1Attacking, setIsPlayer1Attacking] = useState(false);
-  const [isPlayer2Attacking, setIsPlayer2Attacking] = useState(false);
-  const [isPlayer1SpecialAttacking, setIsPlayer1SpecialAttacking] = useState(false);
-  const [isPlayer2SpecialAttacking, setIsPlayer2SpecialAttacking] = useState(false);
-  const gameLoopId = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const gameEngine = new GameEngine(canvas.width, canvas.height);
+    gameEngineRef.current = gameEngine;
+
+    gameEngine.init();
+
+    const gameLoop = (timestamp) => {
+      if (!gameEngineRef.current) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      gameEngine.update(16); // Assuming 60 FPS, so each frame is about 16ms
+
+      // Draw characters
+      gameEngine.characters.forEach((character, index) => {
+        const pos = character.getPosition();
+        ctx.fillStyle = index === 0 ? 'red' : 'blue';
+        ctx.fillRect(pos.x - 25, pos.y - 50, 50, 100);
+      });
+
+      // Update health
+      setPlayer1Health(gameEngine.characters[0].health);
+      setPlayer2Health(gameEngine.characters[1].health);
+
+      // Check for game over
+      if (player1Health <= 0 || player2Health <= 0) {
+        setIsGameOver(true);
+        setWinner(player1Health <= 0 ? 'Player 2' : 'Player 1');
+      } else {
+        requestAnimationFrame(gameLoop);
+      }
+    };
+
+    gameLoop();
+
+    return () => {
+      gameEngineRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'a') {
-        attack(player1, player2, setPlayer2, setIsPlayer1Attacking);
-      } else if (e.key === 'l' && gameMode === 'twoPlayer') {
-        attack(player2, player1, setPlayer1, setIsPlayer2Attacking);
-      } else if (e.key === 's') {
-        specialAttack(player1, player2, setPlayer2, setIsPlayer1SpecialAttacking);
-      } else if (e.key === 'k' && gameMode === 'twoPlayer') {
-        specialAttack(player2, player1, setPlayer1, setIsPlayer2SpecialAttacking);
+      if (!gameEngineRef.current) return;
+
+      switch (e.key) {
+        case 'a':
+          gameEngineRef.current.moveCharacter(0, -1);
+          break;
+        case 'd':
+          gameEngineRef.current.moveCharacter(0, 1);
+          break;
+        case 'w':
+          gameEngineRef.current.jumpCharacter(0);
+          break;
+        case 'ArrowLeft':
+          gameEngineRef.current.moveCharacter(1, -1);
+          break;
+        case 'ArrowRight':
+          gameEngineRef.current.moveCharacter(1, 1);
+          break;
+        case 'ArrowUp':
+          gameEngineRef.current.jumpCharacter(1);
+          break;
       }
     };
 
@@ -38,20 +83,7 @@ const GameScene = ({ gameMode, onGameEnd }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [player1, player2, gameMode]);
-
-  useEffect(() => {
-    if (gameMode === 'singlePlayer') {
-      gameLoopId.current = requestAnimationFrame(gameLoop);
-    }
-    return () => {
-      if (gameLoopId.current) {
-        cancelAnimationFrame(gameLoopId.current);
-      }
-    };
-  }, [gameMode]);
-
-  const gameLoop = () => {
+  }, []);
 
   if (isGameOver) {
     return <GameOverScreen winner={winner} onRestart={() => window.location.reload()} />;
@@ -59,31 +91,21 @@ const GameScene = ({ gameMode, onGameEnd }) => {
 
   return (
     <div className={styles.gameScene}>
-      <Character
-        name={player1.name}
-        health={player1.health}
-        position="left"
-        isAttacking={isPlayer1Attacking}
-        isSpecialAttacking={isPlayer1SpecialAttacking}
-      />
-      <Character
-        name={player2.name}
-        health={player2.health}
-        position="right"
-        isAttacking={isPlayer2Attacking}
-        isSpecialAttacking={isPlayer2SpecialAttacking}
-      />
-      <div className={styles.comboCounter}>
-        <div>Player 1 Combo: {player1.comboCount}</div>
-        <div>Player 2 Combo: {player2.comboCount}</div>
+      <canvas ref={canvasRef} width={800} height={600} />
+      <div className={styles.healthBars}>
+        <div className={styles.healthBar}>
+          <div className={styles.healthBarInner} style={{ width: `${player1Health}%` }} />
+        </div>
+        <div className={styles.healthBar}>
+          <div className={styles.healthBarInner} style={{ width: `${player2Health}%` }} />
+        </div>
       </div>
       <div className={styles.controls}>
-        <div>Player 1: 'A' to attack, 'S' for special</div>
-        {gameMode === 'twoPlayer' && <div>Player 2: 'L' to attack, 'K' for special</div>}
+        <div>Player 1: 'A' and 'D' to move, 'W' to jump</div>
+        <div>Player 2: Arrow keys to move and jump</div>
       </div>
     </div>
   );
 };
-}
 
 export default GameScene;
