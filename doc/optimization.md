@@ -1,64 +1,86 @@
-# BK-fighter-3D Optimization Guide
+# BK-fighter-3D Optimization Strategies
 
-This document outlines the various optimization techniques implemented in BK-fighter-3D to ensure smooth gameplay across different devices.
+This document outlines the optimization strategies implemented in BK-fighter-3D to ensure smooth gameplay across various devices.
 
-## Renderer Optimization
+## Rendering Optimizations
 
-- **WebGL2 Renderer**: Utilized for improved performance on supported devices.
-- **Adaptive Resolution Scaling**: Dynamically adjusts resolution based on device performance.
+1. **React.memo and useMemo**: 
+   - Used for pure functional components to prevent unnecessary re-renders
+   - Implemented for expensive computations to memoize results
 
-## Asset Loading and Management
+2. **Three.js Renderer Settings**:
+   - Configured for optimal performance based on device capabilities
+   - Implemented adaptive resolution scaling
 
-- **AssetLoader Class**: Centralized asset management for efficient loading and caching.
-- **Texture Compression**: Reduces memory usage and improves loading times.
-- **Mipmapping**: Enhances rendering performance for textures at different distances.
+3. **Custom Shaders**:
+   - Created optimized shaders for character and environment rendering
+   - Implemented instanced rendering for repeated elements
 
-## Object Pooling
+4. **Level of Detail (LOD)**:
+   - Added LOD support for character models
+   - Implemented dynamic mesh simplification for less important objects
 
-- Implemented for frequently created/destroyed objects (e.g., projectiles, particles).
-- Reduces garbage collection overhead and improves memory management.
+5. **Occlusion Culling**:
+   - Basic implementation to avoid rendering objects not visible to the camera
+   - Used spatial partitioning (octree) for efficient visibility checks
 
-## Level of Detail (LOD)
+## Asset Management
 
-- LOD support for character models, switching to simpler geometries at a distance.
-- Dynamic mesh simplification for less important objects.
+1. **AssetManager Class**:
+   - Centralized asset loading and caching
+   - Prevents duplicate loading of assets
 
-## Occlusion Culling
+2. **Texture Optimization**:
+   - Implemented texture compression and mipmapping
+   - Created texture atlases to reduce draw calls
 
-- Basic occlusion culling to avoid rendering objects not visible to the camera.
-- Spatial partitioning (octree) for more efficient visibility checks.
-
-## Shader Optimization
-
-- Custom, optimized shaders for character and environment rendering.
-- Instanced rendering for repeated elements (e.g., background objects).
-
-## Physics Optimization
-
-- Simplified physics system for distant objects.
-- Fixed timestep for physics calculations to ensure consistency across devices.
+3. **Model Optimization**:
+   - Simplified geometries for distant objects
+   - Implemented progressive loading for larger assets
 
 ## Memory Management
 
-- Texture atlasing to reduce draw calls and memory usage.
-- Use of typed arrays for efficient data storage and manipulation.
+1. **Object Pooling**:
+   - Implemented for frequently created/destroyed objects (e.g., projectiles, particles)
+   - Reduces garbage collection overhead
 
-## Frame Rate Management
+2. **Typed Arrays**:
+   - Used for efficient data storage and manipulation
 
-- Frame rate capping to prevent excessive GPU usage on high-end devices.
-- Adaptive quality settings that adjust based on the current frame rate.
+3. **Asset Unloading**:
+   - System to unload unused assets and free up memory (planned feature)
 
-## Touch Input Optimization
+## Physics and Game Logic
 
-- Touch input prediction and smoothing for more responsive controls.
-- Use of passive event listeners for touch events to improve scrolling performance.
+1. **Simplified Physics**:
+   - Implemented a basic physics system for distant objects
+   - Used fixed timestep for physics calculations
 
-## Future Optimization Considerations
+2. **Efficient Algorithms**:
+   - Optimized collision detection and response algorithms
+   - Implemented spatial partitioning for more efficient collision checks
 
-- Implement more advanced culling techniques (e.g., portal culling for complex environments).
-- Add support for WebGPU on compatible devices for even better performance.
-- Implement asset streaming for large levels or open-world scenarios.
-- Use Web Workers for offloading heavy computations to separate threads.
-- Implement more sophisticated LOD techniques, such as geometric LOD for terrain.
+## Input Handling
 
-By following these optimization techniques, we ensure that BK-fighter-3D provides a smooth and enjoyable experience across a wide range of devices.
+1. **Touch Input Optimization**:
+   - Implemented touch input prediction and smoothing
+   - Used passive event listeners for improved scrolling performance
+
+## Performance Monitoring
+
+1. **Frame Rate Management**:
+   - Implemented frame rate capping to prevent excessive GPU usage
+   - Added adaptive quality settings based on current frame rate
+
+2. **Performance Metrics**:
+   - Integrated basic performance monitoring tools (planned feature)
+
+## Future Optimizations
+
+1. Implement more advanced culling techniques (e.g., portal culling for complex environments)
+2. Add support for WebGPU on compatible devices
+3. Implement asset streaming for large levels or open-world scenarios
+4. Use Web Workers for offloading heavy computations to separate threads
+5. Implement more sophisticated LOD techniques, such as geometric LOD for terrain
+
+By following these optimization strategies, we aim to provide a smooth and responsive gameplay experience across a wide range of devices. Contributors are encouraged to keep these guidelines in mind when making changes or additions to the project.
