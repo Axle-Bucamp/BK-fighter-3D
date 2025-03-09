@@ -1,59 +1,79 @@
 ---
-- name: Deploy BK-fighter-3D
+- name: Deploy BK-Fighter-3D
   hosts: all
   become: yes
   vars:
-    app_dir: /opt/bk-fighter-3d
+    app_dir: /var/www/bk-fighter-3d
+    nodejs_version: "14.x"
+
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
-      when: ansible_os_family == "Debian"
 
-    - name: Install required packages
-      package:
+    - name: Install required system packages
+      apt:
         name:
-          - docker
-          - docker-compose
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+
+    - name: Add NodeJS apt key
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
         state: present
 
-    - name: Ensure Docker service is running
-      service:
-        name: docker
-        state: started
-        enabled: yes
+    - name: Add NodeJS repository
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/node_{{ nodejs_version }} {{ ansible_distribution_release }} main"
+        state: present
 
-    - name: Create project directory
+    - name: Install NodeJS
+      apt:
+        name: nodejs
+        state: present
+
+    - name: Install PM2
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Create app directory
       file:
         path: "{{ app_dir }}"
         state: directory
-
-    - name: Copy Docker Compose file
-      copy:
-        src: docker-compose.yml
-        dest: "{{ app_dir }}/docker-compose.yml"
-
-    - name: Copy Dockerfile
-      copy:
-        src: Dockerfile
-        dest: "{{ app_dir }}/Dockerfile"
-
-    - name: Copy Dockerfile.server
-      copy:
-        src: Dockerfile.server
-        dest: "{{ app_dir }}/Dockerfile.server"
+        mode: '0755'
 
     - name: Copy application files
       copy:
         src: ./
         dest: "{{ app_dir }}"
-        exclude:
-          - .git
-          - node_modules
 
-    - name: Build and start Docker containers
-      docker_compose:
-        project_src: "{{ app_dir }}"
-        build: yes
-        pull: yes
-        state: present
+    - name: Install application dependencies
+      npm:
+        path: "{{ app_dir }}"
+
+    - name: Build application
+      command: npm run build
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Start application with PM2
+      command: pm2 start npm --name "bk-fighter-3d" -- start
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Ensure application starts on reboot
+      command: pm2 startup systemd
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Save PM2 process list
+      command: pm2 save
+      args:
+        chdir: "{{ app_dir }}"
