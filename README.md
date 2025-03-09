@@ -1,58 +1,36 @@
 # BK-fighter-3D
 
-BK-fighter-3D is a 3D fighting game featuring Burger and Jean characters, built with React, Three.js, and React Three Fiber.
+BK-fighter-3D is a 3D fighting game built with React, Three.js, and React Three Fiber. This project aims to create an immersive and performant fighting game experience in the browser.
 
-## Recent Optimizations and Improvements
+## Features
 
-We've recently implemented several optimizations to improve performance and resource management:
+- 3D graphics powered by Three.js and React Three Fiber
+- Responsive design for various screen sizes and devices
+- Optimized performance for smooth gameplay
+- Character selection and customization
+- Dynamic lighting and special effects
+- Multiplayer support (coming soon)
 
-1. **Renderer Optimization:**
-   - WebGL2 renderer for better performance on supported devices
-   - Adaptive resolution scaling based on device performance
+## Performance Optimizations
 
-2. **Asset Loading and Management:**
-   - Efficient AssetLoader class for managing game assets
-   - Texture compression and mipmapping for faster loading and reduced memory usage
+We've implemented several optimizations to ensure smooth gameplay across various devices:
 
-3. **Object Pooling:**
-   - Implemented for frequently created/destroyed objects (e.g., projectiles, particles)
-   - Reduced garbage collection overhead and improved memory management
+1. Efficient rendering using React.memo and useMemo
+2. Object pooling for particles and other frequently created/destroyed objects
+3. Level of Detail (LOD) for character models
+4. Optimized asset loading and management
+5. Adaptive resolution scaling based on device performance
+6. Custom shaders for improved rendering efficiency
+7. Touch input optimization for mobile devices
 
-4. **Level of Detail (LOD):**
-   - LOD support for character models
-   - Dynamic mesh simplification for less important objects
-
-5. **Occlusion Culling:**
-   - Basic occlusion culling to avoid rendering objects not visible to the camera
-   - Spatial partitioning (octree) for more efficient visibility checks
-
-6. **Shader Optimization:**
-   - Custom, optimized shaders for character and environment rendering
-   - Instanced rendering for repeated elements
-
-7. **Physics Optimization:**
-   - Simplified physics system for distant objects
-   - Fixed timestep for physics calculations
-
-8. **Memory Management:**
-   - Texture atlasing to reduce draw calls and memory usage
-   - Efficient data storage using typed arrays
-
-9. **Frame Rate Management:**
-   - Frame rate capping to prevent excessive GPU usage on high-end devices
-   - Adaptive quality settings based on current frame rate
-
-10. **Touch Input Optimization:**
-    - Touch input prediction and smoothing for more responsive controls
-    - Passive event listeners for touch events to improve scrolling performance
-
-These optimizations result in smoother gameplay and better resource management across various devices.
+For more details on our optimization strategies, please see the [optimization documentation](doc/optimization.md).
 
 ## Getting Started
 
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start the development server: `npm start`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Contributing
 
@@ -61,3 +39,8 @@ We welcome contributions! Please see our [CONTRIBUTE.md](CONTRIBUTE.md) file for
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Three.js and React Three Fiber communities for their excellent documentation and examples
+- Our contributors and testers for their valuable input and feedback
