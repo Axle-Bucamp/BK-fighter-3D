@@ -92,4 +92,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-/public/asset/
+asset/
