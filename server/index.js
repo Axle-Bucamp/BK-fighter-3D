@@ -3,18 +3,15 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 
-const MatchmakingService = require('./services/MatchmakingService');
-const LobbyService = require('./services/LobbyService');
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Connect to MongoDB (replace with your MongoDB connection string)
-mongoose.connect('mongodb://localhost/bk-fighter-3d', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+// MongoDB connection (replace with your actual MongoDB URI)
+mongoose.connect('mongodb://localhost/bk-fighter-3d', { useNewUrlParser: true, useUnifiedTopology: true });
+
+const MatchmakingService = require('./services/MatchmakingService');
+const LobbyService = require('./services/LobbyService');
 
 const matchmakingService = new MatchmakingService();
 const lobbyService = new LobbyService();
@@ -22,52 +19,43 @@ const lobbyService = new LobbyService();
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  socket.on('joinMatchmaking', () => {
-    matchmakingService.addToQueue(socket.id);
+  socket.on('joinMatchmaking', (userId) => {
+    matchmakingService.addToQueue(userId, socket);
   });
 
-  socket.on('leaveMatchmaking', () => {
-    matchmakingService.removeFromQueue(socket.id);
+  socket.on('leaveMatchmaking', (userId) => {
+    matchmakingService.removeFromQueue(userId);
   });
 
-  socket.on('createLobby', (lobbyName) => {
-    const lobby = lobbyService.createLobby(lobbyName, socket.id);
-    socket.join(lobby.id);
-    socket.emit('lobbyCreated', lobby);
+  socket.on('createLobby', (userId) => {
+    const lobbyId = lobbyService.createLobby(userId, socket);
+    socket.emit('lobbyCreated', lobbyId);
   });
 
-  socket.on('joinLobby', (lobbyId) => {
-    const result = lobbyService.joinLobby(lobbyId, socket.id);
-    if (result.success) {
-      socket.join(lobbyId);
-      socket.emit('lobbyJoined', result.lobby);
-      io.to(lobbyId).emit('playerJoined', { playerId: socket.id });
+  socket.on('joinLobby', (userId, lobbyId) => {
+    const success = lobbyService.joinLobby(userId, lobbyId, socket);
+    if (success) {
+      socket.emit('lobbyJoined', lobbyId);
     } else {
-      socket.emit('error', result.error);
+      socket.emit('lobbyJoinFailed', 'Unable to join lobby');
     }
   });
 
-  socket.on('leaveLobby', (lobbyId) => {
-    const result = lobbyService.leaveLobby(lobbyId, socket.id);
-    if (result.success) {
-      socket.leave(lobbyId);
-      io.to(lobbyId).emit('playerLeft', { playerId: socket.id });
-    }
+  socket.on('leaveLobby', (userId, lobbyId) => {
+    lobbyService.leaveLobby(userId, lobbyId);
+    socket.emit('lobbyLeft', lobbyId);
   });
 
   socket.on('startGame', (lobbyId) => {
-    const result = lobbyService.startGame(lobbyId, socket.id);
-    if (result.success) {
-      io.to(lobbyId).emit('gameStarted', result.gameState);
-    } else {
-      socket.emit('error', result.error);
+    const gameStarted = lobbyService.startGame(lobbyId);
+    if (gameStarted) {
+      io.to(lobbyId).emit('gameStarted', lobbyId);
     }
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-    matchmakingService.removeFromQueue(socket.id);
-    lobbyService.removePlayerFromAllLobbies(socket.id);
+    // Handle player disconnect (remove from matchmaking, lobbies, etc.)
   });
 });
 
