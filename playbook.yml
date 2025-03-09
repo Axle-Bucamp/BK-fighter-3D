@@ -1,46 +1,54 @@
 ---
-- name: Configure BK-fighter-3D game server
+- name: Deploy BK-fighter-3D
   hosts: all
   become: yes
+  vars:
+    app_dir: /opt/bk-fighter-3d
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
       when: ansible_os_family == "Debian"
 
-    - name: Install Docker
+    - name: Install required packages
       package:
-        name: docker
+        name:
+          - docker
+          - docker-compose
         state: present
-
-    - name: Install Docker Compose
-      get_url:
-        url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}
-        dest: /usr/local/bin/docker-compose
-        mode: '0755'
-
-    - name: Create project directory
-      file:
-        path: /opt/bk-fighter-3d
-        state: directory
-
-    - name: Copy Docker Compose file
-      copy:
-        src: docker-compose.yml
-        dest: /opt/bk-fighter-3d/docker-compose.yml
-
-    - name: Pull Docker images
-      command: docker-compose pull
-      args:
-        chdir: /opt/bk-fighter-3d
-
-    - name: Start Docker Compose services
-      command: docker-compose up -d
-      args:
-        chdir: /opt/bk-fighter-3d
 
     - name: Ensure Docker service is running
       service:
         name: docker
         state: started
         enabled: yes
+
+    - name: Create project directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+
+    - name: Copy Docker Compose file
+      copy:
+        src: docker-compose.yml
+        dest: "{{ app_dir }}/docker-compose.yml"
+
+    - name: Copy Dockerfile
+      copy:
+        src: Dockerfile
+        dest: "{{ app_dir }}/Dockerfile"
+
+    - name: Copy application files
+      copy:
+        src: ./
+        dest: "{{ app_dir }}"
+        exclude:
+          - .git
+          - node_modules
+
+    - name: Build and start Docker containers
+      docker_compose:
+        project_src: "{{ app_dir }}"
+        build: yes
+        pull: yes
+        state: present
