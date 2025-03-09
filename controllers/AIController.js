@@ -4,41 +4,12 @@ class AIController {
   constructor(character, gameState, difficulty = 'normal') {
     this.character = character;
     this.gameState = gameState;
-    this.setDifficulty(difficulty);
-    this.lastDecisionTime = 0;
-    this.currentStrategy = this.chooseStrategy();
-    this.strategyDuration = 5000; // 5 seconds
-    this.lastStrategyChange = 0;
-  }
-
-  setDifficulty(difficulty) {
     this.difficulty = difficulty;
-    switch (difficulty) {
-      case 'easy':
-        this.decisionInterval = 800;
-        this.attackChance = 0.3;
-        this.specialMoveChance = 0.1;
-        this.dodgeChance = 0.2;
-        break;
-      case 'normal':
-        this.decisionInterval = 500;
-        this.attackChance = 0.5;
-        this.specialMoveChance = 0.2;
-        this.dodgeChance = 0.4;
-        break;
-      case 'hard':
-        this.decisionInterval = 300;
-        this.attackChance = 0.7;
-        this.specialMoveChance = 0.3;
-        this.dodgeChance = 0.6;
-        break;
-      case 'expert':
-        this.decisionInterval = 200;
-        this.attackChance = 0.8;
-        this.specialMoveChance = 0.4;
-        this.dodgeChance = 0.7;
-        break;
-    }
+    this.decisionInterval = this.getDecisionInterval();
+    this.lastDecisionTime = 0;
+    this.strategy = this.chooseStrategy();
+    this.specialMoveCounter = 0;
+    this.maxSpecialMoves = this.getMaxSpecialMoves();
   }
 
   update(deltaTime, playerPosition) {
@@ -46,20 +17,16 @@ class AIController {
     if (now - this.lastDecisionTime > this.decisionInterval) {
       this.makeDecision(playerPosition);
       this.lastDecisionTime = now;
+      this.updateStrategy();
     }
     
-    if (now - this.lastStrategyChange > this.strategyDuration) {
-      this.currentStrategy = this.chooseStrategy();
-      this.lastStrategyChange = now;
-    }
-    
-    this.executeDecision(deltaTime, playerPosition);
+    this.executeDecision(deltaTime);
   }
 
   makeDecision(playerPosition) {
     const distanceToPlayer = this.character.position.distanceTo(playerPosition);
     
-    switch (this.currentStrategy) {
+    switch (this.strategy) {
       case 'aggressive':
         this.makeAggressiveDecision(distanceToPlayer);
         break;
@@ -70,48 +37,55 @@ class AIController {
         this.makeBalancedDecision(distanceToPlayer);
         break;
     }
+
+    this.adjustDecisionForDifficulty();
   }
 
   makeAggressiveDecision(distanceToPlayer) {
     if (distanceToPlayer > 5) {
       this.currentDecision = 'move';
-    } else if (Math.random() < this.attackChance) {
-      this.currentDecision = 'attack';
-    } else if (Math.random() < this.specialMoveChance) {
-      this.currentDecision = 'useSpecialAbility';
     } else {
-      this.currentDecision = 'move';
+      this.currentDecision = Math.random() < 0.8 ? 'attack' : 'useSpecialAbility';
     }
   }
 
   makeDefensiveDecision(distanceToPlayer) {
-    if (distanceToPlayer < 3 && Math.random() < this.dodgeChance) {
-      this.currentDecision = 'dodge';
-    } else if (distanceToPlayer < 5 && Math.random() < this.attackChance * 0.5) {
-      this.currentDecision = 'attack';
+    if (distanceToPlayer < 3) {
+      this.currentDecision = Math.random() < 0.6 ? 'dodge' : 'attack';
+    } else if (distanceToPlayer < 7) {
+      this.currentDecision = Math.random() < 0.4 ? 'move' : 'useSpecialAbility';
     } else {
       this.currentDecision = 'move';
     }
   }
 
   makeBalancedDecision(distanceToPlayer) {
-    if (distanceToPlayer > 7) {
+    if (distanceToPlayer > 8) {
       this.currentDecision = 'move';
-    } else if (distanceToPlayer < 3 && Math.random() < this.dodgeChance) {
-      this.currentDecision = 'dodge';
-    } else if (Math.random() < this.attackChance) {
-      this.currentDecision = 'attack';
-    } else if (Math.random() < this.specialMoveChance) {
-      this.currentDecision = 'useSpecialAbility';
+    } else if (distanceToPlayer > 4) {
+      this.currentDecision = Math.random() < 0.6 ? 'move' : 'attack';
     } else {
-      this.currentDecision = 'move';
+      this.currentDecision = Math.random() < 0.5 ? 'attack' : 'useSpecialAbility';
     }
   }
 
-  executeDecision(deltaTime, playerPosition) {
+  adjustDecisionForDifficulty() {
+    if (this.difficulty === 'hard') {
+      if (this.character.health < 30 && this.specialMoveCounter < this.maxSpecialMoves) {
+        this.currentDecision = 'useSpecialAbility';
+        this.specialMoveCounter++;
+      }
+    } else if (this.difficulty === 'easy') {
+      if (Math.random() < 0.3) {
+        this.currentDecision = 'move';
+      }
+    }
+  }
+
+  executeDecision(deltaTime) {
     switch (this.currentDecision) {
       case 'move':
-        this.moveTowardsPlayer(deltaTime, playerPosition);
+        this.moveTowardsPlayer(deltaTime);
         break;
       case 'attack':
         this.attack();
@@ -120,14 +94,14 @@ class AIController {
         this.useSpecialAbility();
         break;
       case 'dodge':
-        this.dodge(playerPosition);
+        this.dodge(deltaTime);
         break;
     }
   }
 
-  moveTowardsPlayer(deltaTime, playerPosition) {
+  moveTowardsPlayer(deltaTime) {
     const direction = new Vector3()
-      .subVectors(playerPosition, this.character.position)
+      .subVectors(this.gameState.playerPosition, this.character.position)
       .normalize();
     const movement = direction.multiplyScalar(this.character.speed * deltaTime);
     this.character.position.add(movement);
@@ -145,17 +119,47 @@ class AIController {
     }
   }
 
-  dodge(playerPosition) {
-    const dodgeDirection = new Vector3()
-      .subVectors(this.character.position, playerPosition)
-      .normalize()
-      .multiplyScalar(2);
-    this.character.position.add(dodgeDirection);
+  dodge(deltaTime) {
+    const dodgeDirection = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
+    const dodgeMovement = dodgeDirection.multiplyScalar(this.character.speed * 1.5 * deltaTime);
+    this.character.position.add(dodgeMovement);
+  }
+
+  updateStrategy() {
+    if (Math.random() < 0.1) {
+      this.strategy = this.chooseStrategy();
+    }
   }
 
   chooseStrategy() {
     const strategies = ['aggressive', 'defensive', 'balanced'];
     return strategies[Math.floor(Math.random() * strategies.length)];
+  }
+
+  getDecisionInterval() {
+    switch (this.difficulty) {
+      case 'easy': return 1000;
+      case 'normal': return 500;
+      case 'hard': return 250;
+      case 'expert': return 100;
+      default: return 500;
+    }
+  }
+
+  getMaxSpecialMoves() {
+    switch (this.difficulty) {
+      case 'easy': return 1;
+      case 'normal': return 2;
+      case 'hard': return 3;
+      case 'expert': return 4;
+      default: return 2;
+    }
+  }
+
+  setDifficulty(difficulty) {
+    this.difficulty = difficulty;
+    this.decisionInterval = this.getDecisionInterval();
+    this.maxSpecialMoves = this.getMaxSpecialMoves();
   }
 }
 
