@@ -1,86 +1,56 @@
-# BK Fighter 3D
+# BK-fighter-3D
 
-A multiplayer 3D fighting game featuring Burger King characters.
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
-- Node.js (v14 or later)
-- Docker and Docker Compose
+- Docker
+- Docker Compose
 
-## Setup and Installation
+### Running the Application
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/BK-fighter-3D.git
+   git clone https://github.com/Axle-Bucamp/BK-fighter-3D.git
    cd BK-fighter-3D
    ```
 
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Create a `.env` file in the root directory and add the following:
-   ```
-   MONGODB_URL=mongodb://localhost:27017/bkfighter3d
-   ```
-
-## Running the Application
-
-### Development Mode
-
-1. Start the development server:
-   ```
-   npm run dev
-   ```
-
-2. Open your browser and navigate to `http://localhost:3000`
-
-### Production Mode
-
-1. Build the application:
-   ```
-   npm run build
-   ```
-
-2. Start the production server:
-   ```
-   npm start
-   ```
-
-3. Open your browser and navigate to `http://localhost:3000`
-
-## Running with Docker Compose
-
-1. Build and start the containers:
+2. Start the application using Docker Compose:
    ```
    docker-compose up --build
    ```
 
-2. Open your browser and navigate to `http://localhost:3000`
+   This will start the frontend, backend server, and MongoDB.
 
-## MongoDB
+3. Access the application at `http://localhost:3000`
 
-The application uses MongoDB as its database. When running with Docker Compose, a MongoDB instance is automatically started and configured.
+### Development
 
-If you want to run MongoDB separately, you can start it using:
+For local development without Docker:
 
-```
-docker run -d -p 27017:27017 --name bkfighter3d-mongo mongo:latest
-```
+1. Install dependencies:
+   ```
+   npm install
+   ```
 
-## Server
+2. Start MongoDB (make sure it's installed and running)
 
-The server runs on `http://localhost:3001`. It handles multiplayer functionality and communicates with the MongoDB database.
+3. Start the backend server:
+   ```
+   node server/server.js
+   ```
+
+4. In a new terminal, start the frontend:
+   ```
+   npm run dev
+   ```
+
+5. Access the application at `http://localhost:3000`
 
 ## Configuration
 
-The `config.js` file in the root directory contains configuration options for the server URL and MongoDB connection. Modify this file to change these settings.
+The `config.js` file in the root directory contains configuration options. You can modify these or set environment variables to override them.
 
-## Contributing
+## Multiplayer
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The multiplayer functionality is handled by the server. Make sure the `SERVER_URL` in the config file or environment variables is set correctly.
