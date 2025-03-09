@@ -1,43 +1,77 @@
-# TODO List for BK-fighter-3D
+# BK-fighter-3D TODO List
 
-## Current Features to Improve
-1. Refine 3D fighting gameplay
-   - Improve smoothness of controls
-   - Enhance realistic physics simulation
-2. Expand character roster
-   - Add more variations to Burger King and Jean-Claude Van Damme characters
-3. Enhance multiple fighting arenas
-   - Add more interactive elements to existing environments
-4. Polish single-player arcade mode
-   - Improve AI difficulty scaling
-   - Add more diverse challenges and opponents
-5. Optimize local multiplayer for head-to-head battles
-   - Improve performance for split-screen gameplay
+This document outlines the planned improvements and features for BK-fighter-3D.
 
-## Upcoming Changes
-1. Implement online multiplayer mode
-   - Develop server-side architecture
-   - Implement matchmaking system
-   - Create lobby system for online games
-2. Add new characters and arenas
-   - Design and implement at least 3 new characters
-   - Create 2-3 new fighting arenas with unique themes
-3. Enhance graphics and special effects
-   - Upgrade to latest Three.js version
-   - Implement advanced lighting and particle systems
-   - Add more dynamic camera angles and movements
-4. Develop mobile version
-   - Optimize game for touch controls
-   - Adjust UI for smaller screens
-   - Ensure cross-platform compatibility
+## Gameplay Enhancements
 
-## Technical Improvements
-1. Refactor codebase for better maintainability
-2. Implement comprehensive unit and integration tests
-3. Optimize performance for smoother gameplay on various devices
-4. Improve asset loading and management system
+- [ ] Implement more advanced character animations
+- [ ] Add new special moves and combos for each character
+- [ ] Develop a story mode with multiple levels and boss fights
+- [ ] Create a training mode with combo challenges and tutorials
 
-## Documentation
-1. Update README.md with latest features and setup instructions
-2. Create detailed documentation for game mechanics and controls
-3. Provide contribution guidelines for open-source collaborators
+## Graphics and Visual Improvements
+
+- [ ] Enhance character models with more detailed textures and animations
+- [ ] Implement dynamic lighting and shadow systems
+- [ ] Add particle effects for impacts and special moves
+- [ ] Create more diverse and interactive battle arenas
+
+## Performance Optimizations
+
+- [ ] Implement advanced culling techniques (e.g., portal culling for complex environments)
+- [ ] Add support for WebGPU on compatible devices
+- [ ] Implement asset streaming for large levels or open-world scenarios
+- [ ] Use Web Workers for offloading heavy computations to separate threads
+- [ ] Implement more sophisticated LOD techniques, such as geometric LOD for terrain
+
+## Audio Improvements
+
+- [ ] Add voice acting for characters
+- [ ] Implement a dynamic music system that reacts to the fight intensity
+- [ ] Create more diverse sound effects for moves and environmental interactions
+
+## User Interface and Experience
+
+- [ ] Design and implement a more polished main menu and character selection screen
+- [ ] Add customization options for characters (e.g., alternate costumes, color variations)
+- [ ] Implement a replay system for watching and sharing fights
+- [ ] Create a spectator mode for online matches
+
+## Multiplayer and Online Features
+
+- [ ] Develop online multiplayer functionality with matchmaking
+- [ ] Implement a ranking system and leaderboards
+- [ ] Create a tournament mode for competitive play
+- [ ] Add cross-platform play support
+
+## Mobile Optimization
+
+- [ ] Further optimize touch controls for mobile devices
+- [ ] Implement adaptive UI layouts for different screen sizes
+- [ ] Develop a mobile-specific control scheme option
+
+## Accessibility
+
+- [ ] Add support for various input devices (e.g., game controllers, keyboard configurations)
+- [ ] Implement colorblind modes and high-contrast options
+- [ ] Add customizable difficulty settings for single-player modes
+
+## Community and Social Features
+
+- [ ] Implement a system for user-generated content (e.g., custom skins, arenas)
+- [ ] Create a community hub for sharing replays and strategies
+- [ ] Develop in-game events and seasonal content
+
+## Documentation and Developer Tools
+
+- [ ] Improve code documentation and comments
+- [ ] Create a comprehensive API reference for modders
+- [ ] Develop tools for easier creation of new characters and moves
+
+## Testing and Quality Assurance
+
+- [ ] Implement automated testing for core game mechanics
+- [ ] Conduct regular performance benchmarks across different devices
+- [ ] Set up a beta testing program for community feedback
+
+This TODO list will be updated regularly as we progress with the development of BK-fighter-3D. Contributions and suggestions for new features or improvements are always welcome!
