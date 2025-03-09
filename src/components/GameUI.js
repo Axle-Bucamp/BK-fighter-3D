@@ -1,26 +1,16 @@
 import React from 'react';
 import styles from '../styles/GameUI.module.css';
 
-const GameUI = ({ gameState }) => {
+const GameUI = ({ player1Health, player2Health }) => {
   return (
     <div className={styles.gameUI}>
-      <div className={styles.playerInfo}>
-        {gameState.players.map((player, index) => (
-          <div key={index} className={styles.player}>
-            <h3>{player.name}</h3>
-            <div className={styles.healthBar}>
-              <div
-                className={styles.healthFill}
-                style={{ width: `${player.health}%` }}
-              ></div>
-            </div>
-            <p>Score: {player.score}</p>
-          </div>
-        ))}
+      <div className={styles.healthBar}>
+        <div className={styles.healthBarInner} style={{ width: `${player1Health}%` }} />
+        <span>Player 1: {player1Health}%</span>
       </div>
-      <div className={styles.gameInfo}>
-        <p>Time: {gameState.timeRemaining}</p>
-        <p>Round: {gameState.currentRound}</p>
+      <div className={styles.healthBar}>
+        <div className={styles.healthBarInner} style={{ width: `${player2Health}%` }} />
+        <span>Player 2: {player2Health}%</span>
       </div>
     </div>
   );
