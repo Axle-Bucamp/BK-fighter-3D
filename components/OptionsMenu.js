@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import AudioManager from '../lib/audioManager';
 import styles from '../styles/OptionsMenu.module.css';
-import { setMasterVolume, setSFXVolume, setMusicVolume, isMuted, toggleMute } from '../lib/audioManager';
 
 const OptionsMenu = ({ isOpen, onClose }) => {
   const [masterVolume, setMasterVolumeState] = useState(100);
@@ -9,7 +13,7 @@ const OptionsMenu = ({ isOpen, onClose }) => {
   const [muted, setMuted] = useState(false);
 
   useEffect(() => {
-    setMuted(isMuted());
+    setMuted(AudioManager.isMuted);
   }, []);
 
   const handleMasterVolumeChange = (e) => {
