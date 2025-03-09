@@ -1,78 +1,61 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Game from './Game';
 import AIController from '../controllers/AIController';
+import CharacterManager from '../src/characterManager';
 
-const opponents = [
-  { name: 'Burger King Classic', type: 'burgerKingClassic', difficulty: 'easy' },
-  { name: 'Burger King Whopper', type: 'burgerKingWhopper', difficulty: 'normal' },
-  { name: 'Burger King Chicken', type: 'burgerKingChicken', difficulty: 'normal' },
-  { name: 'Van Damme Kickboxer', type: 'vanDammeKickboxer', difficulty: 'hard' },
-  { name: 'Van Damme Universal Soldier', type: 'vanDammeUniversalSoldier', difficulty: 'hard' },
-  { name: 'Van Damme Timecop', type: 'vanDammeTimecop', difficulty: 'expert' },
-];
-
-const challenges = [
-  { name: 'Time Attack', description: 'Defeat the opponent within 60 seconds' },
-  { name: 'No Special Moves', description: 'Win without using any special moves' },
-  { name: 'Low Health', description: 'Start with only 50% health' },
-  { name: 'Sudden Death', description: 'Both you and the opponent have only 1 HP' },
-  { name: 'Mirror Match', description: 'Face an opponent with the same character as you' },
-];
-
-const ArcadeMode = ({ playerCharacter }) => {
-  const [currentOpponentIndex, setCurrentOpponentIndex] = useState(0);
-  const [currentChallenge, setCurrentChallenge] = useState(null);
+const ArcadeMode = () => {
+  const router = useRouter();
+  const [currentStage, setCurrentStage] = useState(0);
+  const [playerCharacter, setPlayerCharacter] = useState(null);
   const [score, setScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+
+  const stages = [
+    { opponent: 'BurgerKingClassic', difficulty: 'easy', challenge: 'None' },
+    { opponent: 'VanDammeKickboxer', difficulty: 'normal', challenge: 'TimedMatch' },
+    { opponent: 'BurgerKingWhopper', difficulty: 'normal', challenge: 'HealthHandicap' },
+    { opponent: 'VanDammeUniversalSoldier', difficulty: 'hard', challenge: 'PowerUpRush' },
+    { opponent: 'BurgerKingChicken', difficulty: 'hard', challenge: 'DodgeMaster' },
+    { opponent: 'VanDammeTimecop', difficulty: 'expert', challenge: 'BossRush' },
+  ];
 
   useEffect(() => {
-    if (currentOpponentIndex < opponents.length) {
-      setCurrentChallenge(challenges[Math.floor(Math.random() * challenges.length)]);
-    } else {
-      setGameOver(true);
-    }
-  }, [currentOpponentIndex]);
+    // Initialize player character
+    const characterManager = new CharacterManager();
+    setPlayerCharacter(characterManager.createCharacter('BurgerKingClassic', false));
+  }, []);
 
-  const handleGameEnd = (playerWon) => {
-    if (playerWon) {
-      setScore(score + 1);
-      setCurrentOpponentIndex(currentOpponentIndex + 1);
+  const handleStageComplete = (stageScore) => {
+    setScore(prevScore => prevScore + stageScore);
+    if (currentStage < stages.length - 1) {
+      setCurrentStage(prevStage => prevStage + 1);
     } else {
-      setGameOver(true);
+      // Game completed
+      router.push('/game-over');
     }
   };
 
-  const restartArcadeMode = () => {
-    setCurrentOpponentIndex(0);
-    setScore(0);
-    setGameOver(false);
+  const handleGameOver = () => {
+    router.push('/game-over');
   };
 
-  if (gameOver) {
-    return (
-      <div>
-        <h2>Game Over</h2>
-        <p>Your final score: {score}</p>
-        <button onClick={restartArcadeMode}>Play Again</button>
-      </div>
-    );
+  if (!playerCharacter) {
+    return <div>Loading...</div>;
   }
 
-  const currentOpponent = opponents[currentOpponentIndex];
+  const currentStageData = stages[currentStage];
 
   return (
     <div>
-      <h2>Arcade Mode</h2>
-      <p>Current Opponent: {currentOpponent.name}</p>
-      <p>Current Challenge: {currentChallenge.name}</p>
-      <p>{currentChallenge.description}</p>
+      <h1>Arcade Mode - Stage {currentStage + 1}</h1>
       <p>Score: {score}</p>
       <Game
         playerCharacter={playerCharacter}
-        opponentCharacter={currentOpponent.type}
-        opponentAI={new AIController(null, null, currentOpponent.difficulty)}
-        challenge={currentChallenge}
-        onGameEnd={handleGameEnd}
+        opponent={currentStageData.opponent}
+        difficulty={currentStageData.difficulty}
+        challenge={currentStageData.challenge}
+        onStageComplete={handleStageComplete}
+        onGameOver={handleGameOver}
       />
     </div>
   );
