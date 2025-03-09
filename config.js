@@ -1,6 +1,6 @@
 module.exports = {
-  serverUrl: 'http://localhost:3001',
-  mongoDbUrl: 'mongodb://localhost:27017/bkfighter3d',
-  port: 3001,
-  // Add other configuration options as needed
+  serverUrl: process.env.SERVER_URL || 'http://localhost:3001',
+  mongoDbUrl: process.env.MONGODB_URL || 'mongodb://localhost:27017/bk-fighter-3d',
+  port: process.env.PORT || 3001,
+  // Add other configuration options here
 };
