@@ -1,79 +1,78 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Box, Plane } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useEffect, useRef, useState } from 'react';
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
+import { TextureLoader } from 'three/src/loaders/TextureLoader';
+import { AnimationMixer, Clock } from 'three';
+import { useAnimations, OrbitControls } from '@react-three/drei';
 
-const Character = ({ position, color }) => {
-  const meshRef = useRef();
+const Character = ({ name, position, animationUrl }) => {
+  const objRef = useRef();
+  const [mixer, setMixer] = useState(null);
+  const { scene } = useThree();
+  const clock = new Clock();
 
-  useFrame((state, delta) => {
-    // Add some animation to the character
-    meshRef.current.rotation.y += delta;
+  // Load OBJ and MTL files
+  const materials = useLoader(MTLLoader, `/models/${name}/${name}.mtl`);
+  const obj = useLoader(OBJLoader, `/models/${name}/${name}.obj`, (loader) => {
+    materials.preload();
+    loader.setMaterials(materials);
   });
 
-  return (
-    <Box ref={meshRef} position={position} args={[1, 2, 1]}>
-      <meshStandardMaterial color={color} />
-    </Box>
-  );
-};
-
-const Arena = () => {
-  return (
-    <Plane args={[20, 20]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <meshStandardMaterial color="#555555" />
-    </Plane>
-  );
-};
-
-const Scene = () => {
-  const { camera } = useThree();
+  // Load texture
+  const texture = useLoader(TextureLoader, `/textures/${name}.png`);
 
   useEffect(() => {
-    camera.position.set(0, 5, 10);
-    camera.lookAt(0, 0, 0);
-  }, [camera]);
+    // Apply texture to the model
+    obj.traverse((child) => {
+      if (child.isMesh) {
+        child.material.map = texture;
+      }
+    });
 
-  return (
-    <>
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1} castShadow />
-      <Arena />
-      <Character position={[-2, 1, 0]} color="red" />
-      <Character position={[2, 1, 0]} color="blue" />
-      <OrbitControls />
-    </>
-  );
-};
+    // Set up animation
+    const mixer = new AnimationMixer(obj);
+    setMixer(mixer);
 
-const Game = () => {
-  const [gameState, setGameState] = useState({
-    player1Health: 100,
-    player2Health: 100,
-    roundTime: 60,
+    // Load and play animation
+    fetch(animationUrl)
+      .then((response) => response.json())
+      .then((animationData) => {
+        const animation = AnimationClip.parse(animationData);
+        const action = mixer.clipAction(animation);
+        action.play();
+      });
+
+    return () => {
+      mixer.stopAllAction();
+    };
+  }, [obj, texture, animationUrl]);
+
+  useFrame(() => {
+    if (mixer) {
+      mixer.update(clock.getDelta());
+    }
   });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setGameState((prevState) => ({
-        ...prevState,
-        roundTime: prevState.roundTime > 0 ? prevState.roundTime - 1 : 0,
-      }));
-    }, 1000);
+  return <primitive object={obj} position={position} ref={objRef} />;
+};
 
-    return () => clearInterval(timer);
-  }, []);
-
+const Game = ({ players }) => {
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
-      <Canvas shadows>
-        <Scene />
+      <Canvas camera={{ position: [0, 5, 10] }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        {players.map((player, index) => (
+          <Character
+            key={index}
+            name={player.character}
+            position={[index * 4 - 2, 0, 0]}
+            animationUrl={`/animations/${player.character}_idle.json`}
+          />
+        ))}
+        <OrbitControls />
       </Canvas>
-      <div style={{ position: 'absolute', top: 10, left: 10, color: 'white' }}>
-        <div>Player 1 Health: {gameState.player1Health}</div>
-        <div>Player 2 Health: {gameState.player2Health}</div>
-        <div>Time: {gameState.roundTime}</div>
-      </div>
     </div>
   );
 };
