@@ -1,12 +1,17 @@
-version: '3'
+version: '3.8'
+
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - SERVER_URL=http://server:3001
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongo:27017/bkfighter
     depends_on:
+      - mongo
       - server
 
   server:
@@ -16,7 +21,8 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - MONGODB_URL=mongodb://mongo:27017/bk-fighter-3d
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongo:27017/bkfighter
     depends_on:
       - mongo
 
