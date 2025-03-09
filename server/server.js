@@ -6,64 +6,68 @@ const config = require('../config');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 mongoose.connect(config.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const rooms = new Map();
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('New client connected');
 
-  socket.on('join_game', (data) => {
-    const { roomId, playerName } = data;
-    
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, { players: new Set(), gameStarted: false });
+  socket.on('joinGame', (playerName) => {
+    let room;
+    for (const [roomId, players] of rooms.entries()) {
+      if (players.size < config.maxPlayers) {
+        room = roomId;
+        break;
+      }
     }
 
-    const room = rooms.get(roomId);
-
-    if (room.players.size >= config.maxPlayers) {
-      socket.emit('room_full');
-      return;
+    if (!room) {
+      room = `room_${Date.now()}`;
+      rooms.set(room, new Set());
     }
 
-    socket.join(roomId);
-    room.players.add(socket.id);
-    socket.emit('joined_game', { roomId, playerId: socket.id });
-    io.to(roomId).emit('player_list', Array.from(room.players));
-  });
+    rooms.get(room).add({ id: socket.id, name: playerName });
+    socket.join(room);
 
-  socket.on('start_game', (roomId) => {
-    const room = rooms.get(roomId);
-    if (room && room.players.size >= 2) {
-      room.gameStarted = true;
-      io.to(roomId).emit('game_started');
+    if (rooms.get(room).size === config.maxPlayers) {
+      io.to(room).emit('gameStart', Array.from(rooms.get(room)));
+    } else {
+      io.to(room).emit('playerJoined', Array.from(rooms.get(room)));
     }
   });
 
-  socket.on('game_action', (data) => {
-    const { roomId, action } = data;
-    socket.to(roomId).emit('game_update', { playerId: socket.id, action });
+  socket.on('gameAction', (action) => {
+    const room = Array.from(socket.rooms)[1]; // Get the room this socket is in
+    if (room) {
+      socket.to(room).emit('gameAction', action);
+    }
   });
 
   socket.on('disconnect', () => {
-    rooms.forEach((room, roomId) => {
-      if (room.players.has(socket.id)) {
-        room.players.delete(socket.id);
-        io.to(roomId).emit('player_list', Array.from(room.players));
-        if (room.players.size === 0) {
+    console.log('Client disconnected');
+    for (const [roomId, players] of rooms.entries()) {
+      if (players.has(socket.id)) {
+        players.delete(socket.id);
+        if (players.size === 0) {
           rooms.delete(roomId);
+        } else {
+          io.to(roomId).emit('playerLeft', socket.id);
         }
+        break;
       }
-    });
-    console.log('A user disconnected');
+    }
   });
 });
 
-server.listen(config.serverPort, () => {
-  console.log(`Server running on port ${config.serverPort}`);
-});
+const port = config.serverPort;
+server.listen(port, () => console.log(`Server running on port ${port}`));
