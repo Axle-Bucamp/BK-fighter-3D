@@ -8,48 +8,53 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: config.clientUrl,
     methods: ["GET", "POST"]
   }
 });
 
-mongoose.connect(config.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+// Connect to MongoDB
+mongoose.connect(config.mongodbUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('Error connecting to MongoDB:', err));
 
+// Game state
 const rooms = new Map();
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('New client connected');
 
   socket.on('joinRoom', (roomId) => {
     if (!rooms.has(roomId)) {
-      rooms.set(roomId, new Set());
+      rooms.set(roomId, { players: new Set() });
     }
-    rooms.get(roomId).add(socket.id);
+    const room = rooms.get(roomId);
+    room.players.add(socket.id);
     socket.join(roomId);
-    socket.emit('roomJoined', roomId);
-    io.to(roomId).emit('playerJoined', { playerId: socket.id, playerCount: rooms.get(roomId).size });
+    io.to(roomId).emit('playerJoined', { playerId: socket.id, playerCount: room.players.size });
   });
 
-  socket.on('gameAction', (data) => {
-    const { roomId, action } = data;
-    socket.to(roomId).emit('gameActionUpdate', { playerId: socket.id, action });
+  socket.on('updatePosition', (data) => {
+    socket.to(data.roomId).emit('playerMoved', { playerId: socket.id, position: data.position });
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
-    rooms.forEach((players, roomId) => {
-      if (players.has(socket.id)) {
-        players.delete(socket.id);
-        io.to(roomId).emit('playerLeft', { playerId: socket.id, playerCount: players.size });
-        if (players.size === 0) {
+    rooms.forEach((room, roomId) => {
+      if (room.players.has(socket.id)) {
+        room.players.delete(socket.id);
+        io.to(roomId).emit('playerLeft', { playerId: socket.id, playerCount: room.players.size });
+        if (room.players.size === 0) {
           rooms.delete(roomId);
         }
       }
     });
+    console.log('Client disconnected');
   });
 });
 
-const PORT = config.serverPort || 4000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(config.serverPort, config.serverHost, () => {
+  console.log(`Server running on ${config.getServerUrl()}`);
 });
