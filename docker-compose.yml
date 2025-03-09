@@ -5,10 +5,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - SERVER_URL=http://server:3001
     depends_on:
       - server
-      - mongodb
 
   server:
     build:
@@ -17,12 +16,11 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - MONGODB_URL=mongodb://mongodb:27017/bkfighter3d
+      - MONGODB_URL=mongodb://mongo:27017/bk-fighter-3d
     depends_on:
-      - mongodb
+      - mongo
 
-  mongodb:
+  mongo:
     image: mongo:latest
     ports:
       - "27017:27017"
