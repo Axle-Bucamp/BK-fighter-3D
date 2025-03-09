@@ -2,7 +2,12 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const Redis = require('ioredis');
-const config = require('../config');
+const config = {
+  serverUrl: 'http://localhost:3000',
+  serverPort : 3000
+  // Other configuration options...
+};
+
 
 const app = express();
 const server = http.createServer(app);
