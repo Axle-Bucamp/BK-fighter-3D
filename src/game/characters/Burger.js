@@ -1,15 +1,14 @@
-import BaseCharacter from './BaseCharacter';
-import { CHARACTERS } from '../constants';
+import Character from './Character';
 
-class Burger extends BaseCharacter {
-  constructor() {
-    super(CHARACTERS.BURGER, 100, 1.5);
-    this.specialMove = 'Patty Slam';
+class Burger extends Character {
+  constructor(x, y) {
+    super(x, y, 100); // 100 is the initial health
+    this.specialMove = 'Burger Flip';
   }
 
-  performSpecialMove() {
-    console.log(`${this.name} performs ${this.specialMove}!`);
-    // Implement special move logic here
+  useSpecialMove() {
+    console.log(`Burger uses ${this.specialMove}!`);
+    // Implement special move logic
   }
 }
 
