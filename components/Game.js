@@ -1,75 +1,77 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import React, {
+  useEffect,
+  useRef,
+} from 'react';
+
+import {
+  AnimationMixer,
+  Clock,
+  TextureLoader,
+} from 'three';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { TextureLoader } from 'three/src/loaders/TextureLoader';
-import { AnimationMixer, Clock } from 'three';
-import { useAnimations, OrbitControls } from '@react-three/drei';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
-const Character = ({ name, position, animationUrl }) => {
+import { OrbitControls } from '@react-three/drei';
+import {
+  Canvas,
+  useFrame,
+  useLoader,
+  useThree,
+} from '@react-three/fiber';
+
+const Character = ({ name, position }) => {
   const objRef = useRef();
-  const [mixer, setMixer] = useState(null);
+  const mixerRef = useRef(null);
+  const clockRef = useRef(new Clock()); // Ensure the clock persists
   const { scene } = useThree();
-  const clock = new Clock();
 
-  // Load OBJ and MTL files
-  const materials = useLoader(MTLLoader, `/models/${name}/${name}.mtl`);
-  const obj = useLoader(OBJLoader, `/models/${name}/${name}.obj`, (loader) => {
-    materials.preload();
-    loader.setMaterials(materials);
-  });
+  // Load MTL file
+  const materials = useLoader(MTLLoader, `/assets/${name}/${name}.mtl`);
+
+  // Load OBJ file after materials are loaded
+  const obj = useLoader(OBJLoader, `/assets/${name}/${name}.obj`);
 
   // Load texture
   const texture = useLoader(TextureLoader, `/textures/${name}.png`);
 
   useEffect(() => {
-    // Apply texture to the model
+    if (!obj || !materials) return;
+
+    materials.preload();
     obj.traverse((child) => {
       if (child.isMesh) {
+        child.material = materials.materials[child.name] || materials.materials.default;
         child.material.map = texture;
       }
     });
 
-    // Set up animation
-    const mixer = new AnimationMixer(obj);
-    setMixer(mixer);
-
-    // Load and play animation
-    fetch(animationUrl)
-      .then((response) => response.json())
-      .then((animationData) => {
-        const animation = AnimationClip.parse(animationData);
-        const action = mixer.clipAction(animation);
-        action.play();
-      });
+    // Set up animation mixer
+    mixerRef.current = new AnimationMixer(obj);
 
     return () => {
-      mixer.stopAllAction();
+      if (mixerRef.current) {
+        mixerRef.current.stopAllAction();
+      }
     };
-  }, [obj, texture, animationUrl]);
+  }, [obj, materials, texture]);
 
   useFrame(() => {
-    if (mixer) {
-      mixer.update(clock.getDelta());
+    if (mixerRef.current) {
+      mixerRef.current.update(clockRef.current.getDelta());
     }
   });
 
   return <primitive object={obj} position={position} ref={objRef} />;
 };
 
-const Game = ({ players }) => {
+const Game = ({ players = [] }) => { // Default to empty array
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
       <Canvas camera={{ position: [0, 5, 10] }}>
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
         {players.map((player, index) => (
-          <Character
-            key={index}
-            name={player.character}
-            position={[index * 4 - 2, 0, 0]}
-            animationUrl={`/animations/${player.character}_idle.json`}
-          />
+          <Character key={index} name={player.character} position={[index * 4 - 2, 0, 0]} />
         ))}
         <OrbitControls />
       </Canvas>

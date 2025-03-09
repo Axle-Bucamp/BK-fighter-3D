@@ -93,3 +93,4 @@ dist
 .pnp.*
 
 asset/
+node_modules/
