@@ -1,15 +1,14 @@
-import BaseCharacter from './BaseCharacter';
-import { CHARACTERS } from '../constants';
+import Character from './Character';
 
-class Jean extends BaseCharacter {
-  constructor() {
-    super(CHARACTERS.JEAN, 100, 2);
+class Jean extends Character {
+  constructor(x, y) {
+    super(x, y, 100); // 100 is the initial health
     this.specialMove = 'Denim Dash';
   }
 
-  performSpecialMove() {
-    console.log(`${this.name} performs ${this.specialMove}!`);
-    // Implement special move logic here
+  useSpecialMove() {
+    console.log(`Jean uses ${this.specialMove}!`);
+    // Implement special move logic
   }
 }
 
