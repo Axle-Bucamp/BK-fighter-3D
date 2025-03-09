@@ -1,28 +1,28 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
+provider "aws" {
+  region = "us-west-2"  # Change this to your desired region
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+  
+  tags = {
+    Name = "BK-Fighter-VPC"
   }
 }
 
-provider "aws" {
-  region = "us-west-2"  # or your preferred region
-}
-
-resource "aws_instance" "app_server" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (HVM), SSD Volume Type
-  instance_type = "t2.micro"
-
+resource "aws_subnet" "main" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.1.0/24"
+  
   tags = {
-    Name = "BK-Fighter-3D-Server"
+    Name = "BK-Fighter-Subnet"
   }
 }
 
 resource "aws_security_group" "allow_web" {
   name        = "allow_web_traffic"
   description = "Allow inbound web traffic"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "HTTPS"
@@ -40,14 +40,6 @@ resource "aws_security_group" "allow_web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Custom App Port"
-    from_port   = 5000
-    to_port     = 5000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -60,24 +52,20 @@ resource "aws_security_group" "allow_web" {
   }
 }
 
-resource "aws_db_instance" "mongodb" {
-  identifier           = "bkfighter-mongodb"
-  engine               = "mongodb"
-  engine_version       = "5.0"
-  instance_class       = "db.t3.micro"
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  username             = "admin"
-  password             = "changeme"  # Change this and use a secret manager in production
-  parameter_group_name = "default.mongodb5.0"
-  skip_final_snapshot  = true
+resource "aws_instance" "app_server" {
+  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (HVM), SSD Volume Type
+  instance_type = "t2.micro"
+  
+  subnet_id                   = aws_subnet.main.id
+  vpc_security_group_ids      = [aws_security_group.allow_web.id]
+  associate_public_ip_address = true
 
   tags = {
-    Name = "BK-Fighter-3D-MongoDB"
+    Name = "BK-Fighter-Server"
   }
 }
 
-output "app_server_public_ip" {
+output "instance_public_ip" {
   description = "Public IP address of the EC2 instance"
   value       = aws_instance.app_server.public_ip
 }
