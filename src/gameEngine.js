@@ -1,53 +1,47 @@
-import ArenaManager from './arenaManager';
-import CharacterManager from './characterManager';
-import MultiplayerManager from './multiplayerManager';
+import { Scene, PerspectiveCamera, WebGLRenderer } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 class GameEngine {
-  constructor(serverUrl) {
-    this.multiplayerManager = new MultiplayerManager(serverUrl);
-    this.characterManager = new CharacterManager();
-    this.arenaManager = new ArenaManager();
-    this.gameState = {
-      players: [],
-      arena: null,
-      status: 'waiting'
-    };
-  }
+  constructor() {
+    this.scene = new Scene();
+    this.camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.renderer = new WebGLRenderer();
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-  setMultiplayerManager(multiplayerManager) {
-    this.multiplayerManager = multiplayerManager;
+    this.init();
   }
 
   init() {
-    this.multiplayerManager.socket.on('gameStateUpdate', (newState) => {
-      this.updateGameState(newState);
-    });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(this.renderer.domElement);
+
+    this.camera.position.z = 5;
+
+    window.addEventListener('resize', () => this.onWindowResize(), false);
   }
 
-  updateGameState(newState) {
-    this.gameState = newState;
-    this.characterManager.updateCharacters(newState.players);
-    this.arenaManager.updateArena(newState.arena);
+  onWindowResize() {
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  joinGame(playerName) {
-    this.multiplayerManager.joinGame(playerName);
+  update() {
+    // Add game update logic here
   }
 
-  leaveGame() {
-    this.multiplayerManager.leaveGame();
+  render() {
+    this.renderer.render(this.scene, this.camera);
   }
 
-  performAction(action) {
-    this.multiplayerManager.sendPlayerAction(action);
-  }
-
-  getGameState() {
-    return this.gameState;
-  }
-
-  getPlayers() {
-    return this.multiplayerManager.getPlayers();
+  start() {
+    const animate = () => {
+      requestAnimationFrame(animate);
+      this.update();
+      this.controls.update();
+      this.render();
+    };
+    animate();
   }
 }
 
