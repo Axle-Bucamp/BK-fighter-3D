@@ -1,108 +1,98 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Html, Sky, Stars, useTexture } from '@react-three/drei';
+import { OrbitControls, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import styles from '../styles/Game.module.css';
 
-const Character = ({ position, color }) => {
+function Player({ position, color }) {
   return (
     <mesh position={position}>
       <boxGeometry args={[1, 2, 1]} />
       <meshStandardMaterial color={color} />
     </mesh>
   );
-};
+}
 
-const Arena = () => {
-  const texture = useTexture('/textures/arena_floor.jpg');
+function Arena() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[20, 20]} />
-      <meshStandardMaterial map={texture} />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
+      <planeGeometry args={[10, 10]} />
+      <meshStandardMaterial color="green" />
     </mesh>
   );
-};
+}
 
-const CameraController = () => {
-  const { camera } = useThree();
-  const [cameraPosition, setCameraPosition] = useState(new THREE.Vector3(0, 5, 10));
-  const targetPosition = useRef(new THREE.Vector3(0, 5, 10));
+function GameScene({ playerPosition, opponentPosition }) {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <Player position={playerPosition} color="red" />
+      <Player position={opponentPosition} color="blue" />
+      <Arena />
+    </>
+  );
+}
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      targetPosition.current.set(
-        Math.random() * 10 - 5,
-        Math.random() * 5 + 3,
-        Math.random() * 10 + 5
-      );
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+export default function Game({ onReturnToMenu }) {
+  const [playerPosition, setPlayerPosition] = useState([0, 0, 0]);
+  const [opponentPosition] = useState([0, 0, 3]);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
-  useFrame(() => {
-    cameraPosition.lerp(targetPosition.current, 0.02);
-    camera.position.copy(cameraPosition);
-    camera.lookAt(0, 0, 0);
-  });
-
-  return null;
-};
-
-const TouchControls = ({ onMove }) => {
-  const handleTouchMove = (e) => {
-    const touch = e.touches[0];
-    const x = (touch.clientX / window.innerWidth) * 2 - 1;
-    const y = -(touch.clientY / window.innerHeight) * 2 + 1;
-    onMove(x, y);
+  const handleTouchStart = (e) => {
+    setTouchStart({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    });
   };
 
-  return (
-    <div
-      className={styles.touchControls}
-      onTouchMove={handleTouchMove}
-      onTouchStart={handleTouchMove}
-    />
-  );
-};
+  const handleTouchMove = (e) => {
+    if (!touchStart) return;
 
-const Game = ({ onReturnToMenu }) => {
-  const [playerPosition, setPlayerPosition] = useState([0, 1, 0]);
+    setTouchEnd({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    });
+  };
 
-  const handleMove = (x, y) => {
-    setPlayerPosition([x * 5, 1, -y * 5]);
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const deltaX = touchEnd.x - touchStart.x;
+    const deltaY = touchEnd.y - touchStart.y;
+
+    const moveSpeed = 0.1;
+    setPlayerPosition((prev) => [
+      prev[0] + deltaX * moveSpeed,
+      prev[1],
+      prev[2] + deltaY * moveSpeed,
+    ]);
+
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   return (
     <div className={styles.gameContainer}>
-      <Canvas shadows camera={{ position: [0, 5, 10], fov: 60 }}>
-        <CameraController />
-        <ambientLight intensity={0.5} />
-        <directionalLight
-          position={[10, 10, 5]}
-          intensity={1}
-          castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-        />
-        <Sky />
-        <Stars />
-        <Arena />
-        <Character position={playerPosition} color="red" />
-        <Character position={[0, 1, 3]} color="blue" />
-        <OrbitControls enablePan={false} enableZoom={false} />
+      <Canvas
+        className={styles.gameCanvas}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <OrbitControls enableZoom={false} enablePan={false} />
+        <GameScene playerPosition={playerPosition} opponentPosition={opponentPosition} />
       </Canvas>
-      <TouchControls onMove={handleMove} />
       <div className={styles.uiOverlay}>
         <button className={styles.menuButton} onClick={onReturnToMenu}>
           Menu
         </button>
         <div className={styles.healthBars}>
-          <div className={styles.healthBar}>Player 1</div>
-          <div className={styles.healthBar}>Player 2</div>
+          <div className={styles.healthBar}>Player</div>
+          <div className={styles.healthBar}>Opponent</div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Game;
+}
