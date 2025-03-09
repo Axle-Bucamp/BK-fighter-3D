@@ -2,21 +2,19 @@ import React, { useState } from 'react';
 import Menu from '../components/Menu';
 import Game from '../components/Game';
 import OptionsMenu from '../components/OptionsMenu';
+import TutorialScreen from '../components/TutorialScreen';
 
 const Home = () => {
   const [currentView, setCurrentView] = useState('menu');
-  const [gameState, setGameState] = useState({
-    player1: { name: 'Player 1', health: 100 },
-    player2: { name: 'Player 2', health: 100 },
-    roundTime: 99,
-    gameMode: 'versus'
-  });
+  const [gameMode, setGameMode] = useState(null);
 
-  const handleStartGame = (mode) => {
-    setGameState(prevState => ({
-      ...prevState,
-      gameMode: mode
-    }));
+  const handleStartSinglePlayer = () => {
+    setGameMode('single');
+    setCurrentView('game');
+  };
+
+  const handleStartTwoPlayer = () => {
+    setGameMode('two');
     setCurrentView('game');
   };
 
@@ -24,15 +22,12 @@ const Home = () => {
     setCurrentView('options');
   };
 
-  const handleReturnToMenu = () => {
-    setCurrentView('menu');
+  const handleShowTutorial = () => {
+    setCurrentView('tutorial');
   };
 
-  const handleGameStateUpdate = (newState) => {
-    setGameState(prevState => ({
-      ...prevState,
-      ...newState
-    }));
+  const handleReturnToMenu = () => {
+    setCurrentView('menu');
   };
 
   const renderView = () => {
@@ -40,27 +35,20 @@ const Home = () => {
       case 'menu':
         return (
           <Menu
-            onStartSinglePlayer={() => handleStartGame('single')}
-            onStartTwoPlayer={() => handleStartGame('versus')}
+            onStartSinglePlayer={handleStartSinglePlayer}
+            onStartTwoPlayer={handleStartTwoPlayer}
             onShowOptions={handleShowOptions}
+            onShowTutorial={handleShowTutorial}
           />
         );
       case 'game':
-        return (
-          <Game
-            gameState={gameState}
-            onGameStateUpdate={handleGameStateUpdate}
-            onReturnToMenu={handleReturnToMenu}
-          />
-        );
+        return <Game mode={gameMode} onExit={handleReturnToMenu} />;
       case 'options':
-        return (
-          <OptionsMenu
-            onReturnToMenu={handleReturnToMenu}
-          />
-        );
+        return <OptionsMenu onBack={handleReturnToMenu} />;
+      case 'tutorial':
+        return <TutorialScreen onBack={handleReturnToMenu} />;
       default:
-        return null;
+        return <div>Error: Unknown view</div>;
     }
   };
 
@@ -72,8 +60,9 @@ const Home = () => {
         body {
           padding: 0;
           margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-            Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+            sans-serif;
         }
         * {
           box-sizing: border-box;
@@ -82,8 +71,6 @@ const Home = () => {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          justify-content: center;
-          align-items: center;
         }
       `}</style>
     </div>
