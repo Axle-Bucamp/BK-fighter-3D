@@ -8,44 +8,39 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: config.clientUrl,
     methods: ["GET", "POST"]
   }
 });
 
-mongoose.connect(config.mongoDbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(config.mongoUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', function() {
+db.once('open', () => {
   console.log('Connected to MongoDB');
 });
-
-const players = new Map();
 
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  socket.on('join', (playerData) => {
-    players.set(socket.id, playerData);
-    io.emit('playerJoined', { id: socket.id, ...playerData });
-    socket.emit('players', Array.from(players));
+  socket.on('joinGame', (data) => {
+    // Handle joining a game
   });
 
-  socket.on('move', (moveData) => {
-    io.emit('playerMoved', { id: socket.id, ...moveData });
-  });
-
-  socket.on('attack', (attackData) => {
-    io.emit('playerAttacked', { id: socket.id, ...attackData });
+  socket.on('gameAction', (data) => {
+    // Handle game actions
   });
 
   socket.on('disconnect', () => {
-    players.delete(socket.id);
-    io.emit('playerLeft', socket.id);
     console.log('Client disconnected');
   });
 });
 
-const PORT = config.port;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const PORT = config.serverPort || 3001;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
