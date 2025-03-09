@@ -1,68 +1,33 @@
 provider "aws" {
-  region = "us-west-2"  # Change this to your desired region
-}
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
-  
-  tags = {
-    Name = "BK-Fighter-VPC"
-  }
-}
-
-resource "aws_subnet" "main" {
-  vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
-  
-  tags = {
-    Name = "BK-Fighter-Subnet"
-  }
-}
-
-resource "aws_security_group" "allow_web" {
-  name        = "allow_web_traffic"
-  description = "Allow inbound web traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "allow_web"
-  }
+  region = "us-west-2"
 }
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (HVM), SSD Volume Type
+  ami           = "ami-0c55b159cbfafe1f0"
   instance_type = "t2.micro"
-  
-  subnet_id                   = aws_subnet.main.id
-  vpc_security_group_ids      = [aws_security_group.allow_web.id]
-  associate_public_ip_address = true
 
   tags = {
-    Name = "BK-Fighter-Server"
+    Name = "BK-Fighter-3D-Server"
   }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "export SERVER_URL=${var.server_url}" >> /etc/environment
+              echo "export SERVER_PORT=${var.server_port}" >> /etc/environment
+              echo "export MONGODB_URL=${var.mongodb_url}" >> /etc/environment
+              EOF
+}
+
+variable "server_url" {
+  default = "http://localhost:4000"
+}
+
+variable "server_port" {
+  default = 4000
+}
+
+variable "mongodb_url" {
+  default = "mongodb://localhost:27017/bkfighter"
 }
 
 output "instance_public_ip" {
