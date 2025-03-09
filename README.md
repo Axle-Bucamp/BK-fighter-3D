@@ -1,13 +1,15 @@
 # BK-Fighter-3D
 
+A 3D fighting game built with React, Three.js, and Socket.IO.
+
+## Prerequisites
+
+- Node.js (v14 or later)
+- Docker and Docker Compose (for containerized deployment)
+
 ## Getting Started
 
-### Prerequisites
-
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Starting the Application
+### Local Development
 
 1. Clone the repository:
    ```
@@ -15,50 +17,69 @@
    cd BK-fighter-3D
    ```
 
-2. Start the application using Docker Compose:
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Start the development server:
+   ```
+   npm run dev
+   ```
+
+4. Open [http://localhost:3001](http://localhost:3001) in your browser.
+
+### Using Docker Compose
+
+1. Build and start the containers:
    ```
    docker-compose up -d
    ```
 
-   This command will start the frontend, backend server, and MongoDB database.
+2. The app will be available at [http://localhost:3001](http://localhost:3001).
 
-3. Access the application:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-
-### Stopping the Application
-
-To stop the application, run:
-```
-docker-compose down
-```
-
-## Development
-
-For development, you can start the services individually:
-
-1. Start MongoDB:
+3. To stop the containers:
    ```
-   docker-compose up -d mongodb
-   ```
-
-2. Start the backend server:
-   ```
-   cd server
-   npm install
-   npm run dev
-   ```
-
-3. Start the frontend application:
-   ```
-   npm install
-   npm run dev
+   docker-compose down
    ```
 
 ## Configuration
 
-The application configuration is managed through the `config.js` file. You can modify server URLs, database connections, and other settings in this file.
+The `config.js` file in the root directory contains all the configuration options. You can modify these settings or override them using environment variables.
 
-## Documentation
+## Server
 
-For more detailed information about the MongoDB setup and server configuration, please refer to the `docs` folder in the repository.
+The multiplayer server is located in `server/server.js`. It uses Socket.IO for real-time communication and MongoDB for data storage.
+
+To start the server separately:
+
+1. Navigate to the server directory:
+   ```
+   cd server
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
+
+3. Start the server:
+   ```
+   npm start
+   ```
+
+The server will run on [http://localhost:3000](http://localhost:3000) by default.
+
+## MongoDB
+
+MongoDB is used as the database for this project. When using Docker Compose, a MongoDB instance is automatically started and configured.
+
+If you're running the project locally without Docker, make sure you have MongoDB installed and running on your machine.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
