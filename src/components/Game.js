@@ -1,65 +1,70 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Physics } from '@react-three/cannon';
-import AssetManager from '../game/AssetManager';
-import LoadingScreen from './LoadingScreen';
-import Arena from './Arena';
+import { useThree, useFrame } from '@react-three/fiber';
+import { OrbitControls, Sky } from '@react-three/drei';
+import Battlefield from './Battlefield';
 import Character from './Character';
-import GameLogic from '../game/GameLogic';
+import GameUI from './GameUI';
+import { GAME_MODES } from '../game/constants';
+import styles from '../styles/Game.module.css';
+import { useGameLogic } from '../game/GameLogic';
+import { useGameState } from '../game/GameState';
+import { useAssetManager } from '../game/AssetManager';
+import { useAdaptiveResolution } from '../game/utils/adaptiveResolution';
 
-const assetManifest = {
-  burgerTexture: { type: 'texture', url: '/assets/burger_texture.png' },
-  jeanTexture: { type: 'texture', url: '/assets/jean_texture.png' },
-  arenaModel: { type: 'model', url: '/assets/arena.glb' },
-  backgroundMusic: { type: 'audio', url: '/assets/background_music.mp3' },
-  // Add more assets as needed
-};
-
-const Game = () => {
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const assetManagerRef = useRef(new AssetManager());
-  const gameLogicRef = useRef(null);
-
+const Game = ({ players, gameMode }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const { gameState, dispatch } = useGameState(players, gameMode);
+  const { handlePlayerAction, updateGameState } = useGameLogic(gameState, dispatch);
+  const { loadAssets } = useAssetManager();
+  
   useEffect(() => {
-    const loadAssets = async () => {
-      const totalAssets = Object.keys(assetManifest).length;
-      let loadedAssets = 0;
-
-      for (const [key, asset] of Object.entries(assetManifest)) {
-        await assetManagerRef.current.loadAll({ [key]: asset });
-        loadedAssets++;
-        setLoadingProgress((loadedAssets / totalAssets) * 100);
-      }
-
-      setAssetsLoaded(true);
-      gameLogicRef.current = new GameLogic(assetManagerRef.current);
+    const loadGameAssets = async () => {
+      await loadAssets();
+      setIsLoading(false);
     };
-
-    loadAssets();
+    loadGameAssets();
   }, []);
 
-  if (!assetsLoaded) {
-    return <LoadingScreen progress={loadingProgress} />;
+  const AdaptiveResolutionCanvas = useAdaptiveResolution(Canvas);
+
+  const SceneContent = () => {
+    const { scene } = useThree();
+    useFrame(() => updateGameState(scene));
+
+    return (
+      <>
+        <Sky />
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Battlefield>
+          {gameState.players.map((player, index) => (
+            <Character
+              key={index}
+              player={player}
+              onAction={(action) => handlePlayerAction(index, action)}
+            />
+          ))}
+        </Battlefield>
+      </>
+    );
+  };
+
+  const MemoizedSceneContent = useMemo(() => <SceneContent />, [gameState]);
+
+  if (isLoading) {
+    return <div className={styles.loading}>Loading...</div>;
   }
 
   return (
-    <Canvas>
-      <Physics>
-        <Arena assetManager={assetManagerRef.current} />
-        <Character
-          name="Burger"
-          position={[0, 1, 0]}
-          assetManager={assetManagerRef.current}
-        />
-        <Character
-          name="Jean"
-          position={[0, 1, 2]}
-          assetManager={assetManagerRef.current}
-        />
-      </Physics>
-    </Canvas>
+    <div className={styles.gameContainer}>
+      <AdaptiveResolutionCanvas>
+        <OrbitControls />
+        {MemoizedSceneContent}
+      </AdaptiveResolutionCanvas>
+      <GameUI gameState={gameState} />
+    </div>
   );
 };
 
-export default Game;
+export default React.memo(Game);
