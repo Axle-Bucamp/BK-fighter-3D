@@ -3,16 +3,15 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useSphere } from '@react-three/cannon';
 import * as THREE from 'three';
 import CharacterManager from '../lib/CharacterManager';
-import config from '../config';
 
 const Character = ({ name, position, isPlayer, controls }) => {
   const character = CharacterManager.getCharacter(name);
   const { camera } = useThree();
-  
+
   const [ref, api] = useSphere(() => ({
     mass: 1,
     position: position,
-    args: [0.5],
+    args: [0.5], // Radius of the sphere
     type: 'Dynamic',
     linearDamping: 0.9,
   }));
@@ -20,36 +19,27 @@ const Character = ({ name, position, isPlayer, controls }) => {
   const velocity = useRef([0, 0, 0]);
   useEffect(() => api.velocity.subscribe((v) => (velocity.current = v)), [api.velocity]);
 
-  const isJumping = useRef(false);
-  const jumpCooldown = useRef(0);
-  const attackCooldown = useRef(0);
+  const jumpState = useRef({ canJump: true, cooldown: 0 });
+  const attackState = useRef({ canAttack: true, cooldown: 0 });
 
   const jump = () => {
-    if (!isJumping.current && jumpCooldown.current <= 0) {
-      isJumping.current = true;
+    if (jumpState.current.canJump && jumpState.current.cooldown <= 0) {
       api.velocity.set(velocity.current[0], character.jumpForce, velocity.current[2]);
-      jumpCooldown.current = config.jumpCooldown;
+      jumpState.current.canJump = false;
+      jumpState.current.cooldown = 0.5; // 0.5 second cooldown
     }
   };
 
   const attack = () => {
-    if (attackCooldown.current <= 0) {
+    if (attackState.current.canAttack && attackState.current.cooldown <= 0) {
       console.log(`${name} attacks!`);
-      attackCooldown.current = config.attackCooldown;
-    }
-  };
-
-  const executeSpecialMove = (moveName) => {
-    const moveEffect = character.executeSpecialMove(moveName);
-    if (moveEffect) {
-      console.log(`${name} executes ${moveName}!`);
+      attackState.current.canAttack = false;
+      attackState.current.cooldown = 0.5; // 0.5 second cooldown
     }
   };
 
   useFrame((state, delta) => {
-    if (!isPlayer) return;  // Only update player-controlled characters
-
-    const { left, right, up, down, jump: jumpControl, attack: attackControl, special1, special2 } = controls;
+    const { left, right, up, down, jump: jumpControl, attack: attackControl } = controls;
 
     // Calculate movement direction
     const movement = new THREE.Vector3(
@@ -65,42 +55,28 @@ const Character = ({ name, position, isPlayer, controls }) => {
       movement.z + velocity.current[2] * 0.9
     );
 
-    // Rotate character to face movement direction
-    if (movement.length() > 0) {
-      const angle = Math.atan2(movement.x, movement.z);
-      ref.current.rotation.y = angle;
-    }
-
     if (jumpControl) jump();
     if (attackControl) attack();
-    if (special1) executeSpecialMove(character.specialMoves[0].name);
-    if (special2) executeSpecialMove(character.specialMoves[1].name);
 
-    jumpCooldown.current = Math.max(0, jumpCooldown.current - delta);
-    attackCooldown.current = Math.max(0, attackCooldown.current - delta);
+    // Update jump and attack cooldowns
+    jumpState.current.cooldown = Math.max(0, jumpState.current.cooldown - delta);
+    attackState.current.cooldown = Math.max(0, attackState.current.cooldown - delta);
 
-    // Check if character is on the ground
-    if (Math.abs(velocity.current[1]) < 0.1) {
-      isJumping.current = false;
+    // Reset jump state if on the ground
+    if (Math.abs(velocity.current[1]) < 0.01) {
+      jumpState.current.canJump = true;
     }
 
     // Update camera position for player character
     if (isPlayer) {
-      camera.position.lerp(
-        new THREE.Vector3(
-          ref.current.position.x,
-          ref.current.position.y + 5,
-          ref.current.position.z + 10
-        ),
-        0.05
-      );
+      camera.position.copy(ref.current.position).add(new THREE.Vector3(0, 5, 10));
       camera.lookAt(ref.current.position);
     }
   });
 
   return (
     <mesh ref={ref}>
-      <boxGeometry args={[1, 2, 1]} />
+      <boxGeometry args={[1, 2, 1]} /> {/* Using a box for better visibility */}
       <meshStandardMaterial color={isPlayer ? 'blue' : 'red'} />
     </mesh>
   );
