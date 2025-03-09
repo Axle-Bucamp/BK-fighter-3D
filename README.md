@@ -1,14 +1,13 @@
 # BK-Fighter-3D
 
-BK-Fighter-3D is a 3D fighting game built with React, Three.js, and Socket.IO for multiplayer functionality.
+## Getting Started
 
-## Prerequisites
+### Prerequisites
 
-- Node.js (v14 or later)
-- npm (v6 or later)
-- Docker and Docker Compose (for easy deployment)
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Setup
+### Starting the Application
 
 1. Clone the repository:
    ```
@@ -16,64 +15,50 @@ BK-Fighter-3D is a 3D fighting game built with React, Three.js, and Socket.IO fo
    cd BK-fighter-3D
    ```
 
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-## Running the Application
-
-### Development Mode
-
-1. Start the development server:
-   ```
-   npm run dev
-   ```
-
-2. Open your browser and navigate to `http://localhost:3000`
-
-### Production Mode
-
-1. Build the application:
-   ```
-   npm run build
-   ```
-
-2. Start the production server:
-   ```
-   npm start
-   ```
-
-## Using Docker Compose
-
-To run the entire application stack (frontend, backend, and MongoDB) using Docker Compose:
-
-1. Make sure you have Docker and Docker Compose installed on your system.
-
-2. From the project root directory, run:
+2. Start the application using Docker Compose:
    ```
    docker-compose up -d
    ```
 
-This will start the frontend, backend server, and MongoDB database.
+   This command will start the frontend, backend server, and MongoDB database.
 
-- The frontend will be available at `http://localhost:80`
-- The backend server will be running on `http://localhost:3000`
-- MongoDB will be accessible on `localhost:27017`
+3. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
 
-To stop the services:
+### Stopping the Application
+
+To stop the application, run:
 ```
 docker-compose down
 ```
 
+## Development
+
+For development, you can start the services individually:
+
+1. Start MongoDB:
+   ```
+   docker-compose up -d mongodb
+   ```
+
+2. Start the backend server:
+   ```
+   cd server
+   npm install
+   npm run dev
+   ```
+
+3. Start the frontend application:
+   ```
+   npm install
+   npm run dev
+   ```
+
 ## Configuration
 
-The application uses a `config.js` file for centralized configuration. You can modify this file to change various settings such as server port, database URL, and game parameters.
+The application configuration is managed through the `config.js` file. You can modify server URLs, database connections, and other settings in this file.
 
-## Contributing
+## Documentation
 
-Please read the CONTRIBUTING.md file for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+For more detailed information about the MongoDB setup and server configuration, please refer to the `docs` folder in the repository.
