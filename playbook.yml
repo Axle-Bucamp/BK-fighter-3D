@@ -38,6 +38,11 @@
         src: Dockerfile
         dest: "{{ app_dir }}/Dockerfile"
 
+    - name: Copy Dockerfile.server
+      copy:
+        src: Dockerfile.server
+        dest: "{{ app_dir }}/Dockerfile.server"
+
     - name: Copy application files
       copy:
         src: ./
