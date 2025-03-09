@@ -5,13 +5,10 @@
   overflow: hidden;
 }
 
-.touchControls {
-  position: absolute;
-  top: 0;
-  left: 0;
+.gameCanvas {
   width: 100%;
   height: 100%;
-  z-index: 10;
+  touch-action: none;
 }
 
 .uiOverlay {
@@ -19,48 +16,58 @@
   top: 0;
   left: 0;
   width: 100%;
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  z-index: 20;
+  height: 100%;
+  pointer-events: none;
 }
 
 .menuButton {
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #f0f0f0;
   border: none;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
+  border-radius: 5px;
   cursor: pointer;
-  border-radius: 4px;
+  pointer-events: auto;
 }
 
 .healthBars {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .healthBar {
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  width: 150px;
+  height: 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #000;
+  border-radius: 5px;
+  text-align: center;
+  line-height: 20px;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
-  .uiOverlay {
-    flex-direction: column;
-    align-items: stretch;
+  .menuButton {
+    font-size: 14px;
+    padding: 8px 16px;
   }
 
   .healthBars {
-    margin-top: 1rem;
+    top: 5px;
+    right: 5px;
   }
 
-  .menuButton,
   .healthBar {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
+    width: 100px;
+    height: 15px;
+    font-size: 12px;
+    line-height: 15px;
   }
 }
