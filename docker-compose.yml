@@ -1,32 +1,45 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - MONGO_URL=mongodb://mongodb:27017/bkfighter
-    depends_on:
-      - mongodb
-      - server
-
-  server:
-    build: ./server
-    ports:
-      - "4000:4000"
-    environment:
-      - MONGO_URL=mongodb://mongodb:27017/bkfighter
-    depends_on:
-      - mongodb
-
   mongodb:
     image: mongo:latest
+    container_name: bk-fighter-3d-mongodb
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - bk-fighter-network
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: bk-fighter-3d-server
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017/bk-fighter-3d
+    networks:
+      - bk-fighter-network
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: bk-fighter-3d-client
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    networks:
+      - bk-fighter-network
+
+networks:
+  bk-fighter-network:
+    driver: bridge
 
 volumes:
   mongodb_data:
