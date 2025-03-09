@@ -1,17 +1,16 @@
 import React from 'react';
 import Game from '../components/Game';
-import { GAME_MODES, CHARACTERS } from '../src/game/constants';
 
 const GamePage = () => {
   const players = [
-    { name: CHARACTERS.BURGER_KING_CLASSIC },
-    { name: CHARACTERS.VAN_DAMME_KICKBOXER },
+    { id: 1, character: 'burger_king_classic' },
+    { id: 2, character: 'van_damme_kickboxer' },
   ];
 
   return (
     <div>
       <h1>Battle Royale</h1>
-      <Game players={players} gameMode={GAME_MODES.TIMED} />
+      <Game players={players} />
     </div>
   );
 };
