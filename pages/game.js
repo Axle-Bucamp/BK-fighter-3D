@@ -1,19 +1,19 @@
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/router';
+import React from 'react';
+import Game from '../components/Game';
+import { GAME_MODES, CHARACTERS } from '../src/game/constants';
 
-const GameScene = dynamic(() => import('../components/GameScene'), { ssr: false });
-
-export default function GamePage() {
-  const router = useRouter();
-  const { player1, player2 } = router.query;
-
-  if (!player1 || !player2) {
-    return <div>Loading...</div>;
-  }
+const GamePage = () => {
+  const players = [
+    { name: CHARACTERS.BURGER_KING_CLASSIC },
+    { name: CHARACTERS.VAN_DAMME_KICKBOXER },
+  ];
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <GameScene player1Character={player1} player2Character={player2} />
+    <div>
+      <h1>Battle Royale</h1>
+      <Game players={players} gameMode={GAME_MODES.TIMED} />
     </div>
   );
-}
+};
+
+export default GamePage;
