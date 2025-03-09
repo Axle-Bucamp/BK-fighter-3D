@@ -8,51 +8,47 @@ import { VanDammeUniversalSoldier } from './VanDammeUniversalSoldier';
 import { VanDammeTimecop } from './VanDammeTimecop';
 
 const characters = [
-  { id: 'bk_classic', name: 'Classic Burger King', component: BurgerKingClassic },
-  { id: 'bk_whopper', name: 'Whopper King', component: BurgerKingWhopper },
-  { id: 'bk_chicken', name: 'Chicken Royale', component: BurgerKingChicken },
-  { id: 'vd_kickboxer', name: 'JCVD Kickboxer', component: VanDammeKickboxer },
-  { id: 'vd_universal', name: 'Universal Soldier', component: VanDammeUniversalSoldier },
-  { id: 'vd_timecop', name: 'Timecop', component: VanDammeTimecop },
+  { name: 'Burger King Classic', class: BurgerKingClassic, image: '/images/bk_classic.png' },
+  { name: 'Burger King Whopper', class: BurgerKingWhopper, image: '/images/bk_whopper.png' },
+  { name: 'Burger King Chicken', class: BurgerKingChicken, image: '/images/bk_chicken.png' },
+  { name: 'Van Damme Kickboxer', class: VanDammeKickboxer, image: '/images/vd_kickboxer.png' },
+  { name: 'Van Damme Universal Soldier', class: VanDammeUniversalSoldier, image: '/images/vd_universalsoldier.png' },
+  { name: 'Van Damme Timecop', class: VanDammeTimecop, image: '/images/vd_timecop.png' },
 ];
 
 const CharacterSelection = ({ onCharacterSelect }) => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
 
-  const handleSelect = (character) => {
+  const handleCharacterClick = (character) => {
     setSelectedCharacter(character);
   };
 
-  const handleConfirm = () => {
+  const handleConfirmSelection = () => {
     if (selectedCharacter) {
-      onCharacterSelect(selectedCharacter);
+      onCharacterSelect(selectedCharacter.class);
     }
   };
 
   return (
-    <div className={styles.characterSelection}>
-      <h2>Select Your Fighter</h2>
+    <div className={styles.characterSelectionContainer}>
+      <h2>Select Your Character</h2>
       <div className={styles.characterGrid}>
         {characters.map((character) => (
           <div
-            key={character.id}
-            className={`${styles.characterCard} ${
-              selectedCharacter === character ? styles.selected : ''
-            }`}
-            onClick={() => handleSelect(character)}
+            key={character.name}
+            className={`${styles.characterCard} ${selectedCharacter === character ? styles.selected : ''}`}
+            onClick={() => handleCharacterClick(character)}
           >
-            <img
-              src={`/images/${character.id}.png`}
-              alt={character.name}
-              className={styles.characterImage}
-            />
-            <p className={styles.characterName}>{character.name}</p>
+            <img src={character.image} alt={character.name} />
+            <h3>{character.name}</h3>
+            <p>Strength: {character.class.prototype.strength}</p>
+            <p>Speed: {character.class.prototype.speed}</p>
           </div>
         ))}
       </div>
       <button
         className={styles.confirmButton}
-        onClick={handleConfirm}
+        onClick={handleConfirmSelection}
         disabled={!selectedCharacter}
       >
         Confirm Selection
