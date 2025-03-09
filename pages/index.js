@@ -6,7 +6,7 @@ import Menu from '../components/Menu';
 import TutorialScreen from '../components/TutorialScreen';
 
 export default function Home() {
-  const [gameState, setGameState] = useState('menu'); // Possible states: 'menu', 'game', 'tutorial'
+  const [gameState, setGameState] = useState('menu');
 
   const startGame = () => setGameState('game');
   const showTutorial = () => setGameState('tutorial');
@@ -15,15 +15,18 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>BK Fighter 3D</title>
-        <meta name="description" content="An epic 3D fighting game" />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Burger vs. Jean</title>
+        <meta name="description" content="An epic fighting game featuring Burger and Jean" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className={styles.main}>
         {gameState === 'menu' && (
-          <Menu onStartGame={startGame} onShowTutorial={showTutorial} />
+          <>
+            <h1 className={styles.title}>Burger vs. Jean</h1>
+            <Menu onStartGame={startGame} onShowTutorial={showTutorial} />
+          </>
         )}
 
         {gameState === 'game' && (
@@ -36,7 +39,7 @@ export default function Home() {
       </main>
 
       <footer className={styles.footer}>
-        <p>&copy; 2023 BK Fighter 3D. All rights reserved.</p>
+        <p>&copy; 2023 Burger vs. Jean. All rights reserved.</p>
       </footer>
     </div>
   );
