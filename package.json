@@ -1,28 +1,21 @@
 {
-  "name": "battle-royale-game",
+  "name": "bk-fighter-3d",
   "version": "1.0.0",
-  "description": "A multiplayer battle royale game",
-  "main": "index.js",
-  "type": "module",
+  "description": "A 3D fighting game",
+  "main": "pages/index.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start"
   },
   "dependencies": {
-    "@react-three/drei": "^7.27.5",
-    "@react-three/fiber": "^7.0.24",
-    "express": "^4.21.2",
-    "ioredis": "^5.6.0",
-    "next": "^12.0.0",
+    "next": "^12.3.4",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.3.2",
-    "three": "^0.135.0"
+    "react-dom": "^17.0.2"
   },
   "devDependencies": {
-    "eslint": "^8.2.0"
+    "@types/node": "^14.14.31",
+    "@types/react": "^17.0.2",
+    "typescript": "^4.3.2"
   }
 }
