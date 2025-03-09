@@ -1,88 +1,76 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameEngine } from '../lib/gameEngine';
 import styles from '../styles/Game.module.css';
 
-const Game = () => {
+const Game = ({ onReturnToMenu }) => {
   const canvasRef = useRef(null);
-  const gameEngineRef = useRef(null);
+  const [gameEngine, setGameEngine] = useState(null);
+  const [player1, setPlayer1] = useState(null);
+  const [player2, setPlayer2] = useState(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const gameEngine = new GameEngine();
-    gameEngineRef.current = gameEngine;
+    const engine = new GameEngine(canvas.width, canvas.height);
 
-    gameEngine.init();
+    // Add platforms
+    engine.addPlatform(400, 500, 800, 20);
+    engine.addPlatform(200, 300, 200, 20);
+    engine.addPlatform(600, 300, 200, 20);
 
-    const handleKeyDown = (e) => {
-      switch (e.key) {
-        case 'ArrowLeft':
-          gameEngine.setInput({ left: true });
-          break;
-        case 'ArrowRight':
-          gameEngine.setInput({ right: true });
-          break;
-        case ' ':
-          gameEngine.setInput({ jump: true });
-          break;
-      }
+    // Add characters
+    const char1 = engine.addCharacter(200, 100, 50, 80, { color: 'blue' });
+    const char2 = engine.addCharacter(600, 100, 50, 80, { color: 'green' });
+
+    setGameEngine(engine);
+    setPlayer1(char1);
+    setPlayer2(char2);
+
+    // Game loop
+    let animationFrameId;
+    const render = () => {
+      engine.update();
+      engine.render(ctx);
+      animationFrameId = window.requestAnimationFrame(render);
     };
+    render();
 
-    const handleKeyUp = (e) => {
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!gameEngine || !player1 || !player2) return;
+
       switch (e.key) {
-        case 'ArrowLeft':
-          gameEngine.setInput({ left: false });
-          break;
-        case 'ArrowRight':
-          gameEngine.setInput({ right: false });
-          break;
-        case ' ':
-          gameEngine.setInput({ jump: false });
-          break;
+        // Player 1 controls
+        case 'a': gameEngine.moveLeft(player1); break;
+        case 'd': gameEngine.moveRight(player1); break;
+        case 'w': gameEngine.jump(player1); break;
+
+        // Player 2 controls
+        case 'ArrowLeft': gameEngine.moveLeft(player2); break;
+        case 'ArrowRight': gameEngine.moveRight(player2); break;
+        case 'ArrowUp': gameEngine.jump(player2); break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    let lastTime = 0;
-    const gameLoop = (timestamp) => {
-      const delta = timestamp - lastTime;
-      lastTime = timestamp;
-
-      gameEngine.update(delta);
-      render(ctx, gameEngine);
-
-      requestAnimationFrame(gameLoop);
-    };
-
-    requestAnimationFrame(gameLoop);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [gameEngine, player1, player2]);
 
-  const render = (ctx, gameEngine) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-    // Render arena
-    ctx.fillStyle = '#888';
-    for (const part in gameEngine.arena) {
-      const body = gameEngine.arena[part];
-      ctx.fillRect(body.position.x - body.width / 2, body.position.y - body.height / 2, body.width, body.height);
-    }
-
-    // Render characters
-    ctx.fillStyle = '#00f';
-    for (const character of gameEngine.characters) {
-      const body = character.body;
-      ctx.fillRect(body.position.x - body.width / 2, body.position.y - body.height / 2, body.width, body.height);
-    }
-  };
-
-  return <canvas ref={canvasRef} className={styles.gameCanvas} width={1000} height={600} />;
+  return (
+    <div className={styles.gameContainer}>
+      <canvas ref={canvasRef} width={800} height={600} className={styles.gameCanvas} />
+      <button className={styles.menuButton} onClick={onReturnToMenu}>
+        Return to Menu
+      </button>
+    </div>
+  );
 };
 
 export default Game;
