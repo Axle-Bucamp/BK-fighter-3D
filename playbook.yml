@@ -1,51 +1,52 @@
 ---
-- name: Setup BK-Fighter-3D server
-  hosts: all
+- hosts: all
   become: yes
   vars:
-    app_dir: /var/www/bk-fighter-3d
-
+    app_dir: /opt/bk-fighter-3d
   tasks:
     - name: Update apt cache
-      apt:
-        update_cache: yes
+      apt: update_cache=yes
 
-    - name: Install required packages
+    - name: Install Node.js and npm
       apt:
-        name:
+        name: 
           - nodejs
           - npm
-          - git
-          - docker.io
-          - docker-compose
         state: present
 
-    - name: Clone the repository
-      git:
-        repo: 'https://github.com/Axle-Bucamp/BK-fighter-3D.git'
-        dest: "{{ app_dir }}"
-        version: main
+    - name: Install MongoDB
+      apt:
+        name: mongodb
+        state: present
 
-    - name: Install npm dependencies
+    - name: Start MongoDB service
+      service:
+        name: mongodb
+        state: started
+        enabled: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+
+    - name: Copy application files
+      copy:
+        src: ./
+        dest: "{{ app_dir }}"
+
+    - name: Install app dependencies
       npm:
         path: "{{ app_dir }}"
 
-    - name: Build the application
-      command: npm run build
-      args:
-        chdir: "{{ app_dir }}"
+    - name: Install PM2
+      npm:
+        name: pm2
+        global: yes
 
-    - name: Start the application with Docker Compose
-      docker_compose:
-        project_src: "{{ app_dir }}"
-        state: present
-
-    - name: Ensure the application starts on boot
-      systemd:
-        name: docker
-        enabled: yes
-        state: started
-
-    - name: Print success message
-      debug:
-        msg: "BK-Fighter-3D server setup complete!"
+    - name: Start the application with PM2
+      command: pm2 start {{ app_dir }}/server/server.js
+      environment:
+        SERVER_URL: "{{ lookup('env', 'SERVER_URL') }}"
+        SERVER_PORT: "{{ lookup('env', 'SERVER_PORT') }}"
+        MONGODB_URL: "{{ lookup('env', 'MONGODB_URL') }}"
