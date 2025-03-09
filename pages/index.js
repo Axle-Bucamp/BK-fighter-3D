@@ -1,63 +1,93 @@
-import React, {
-  useEffect,
-  useState,
-} from 'react';
-
-import Head from 'next/head';
-
-import Game from '../components/Game';
+import React, { useState } from 'react';
 import Menu from '../components/Menu';
-import TutorialScreen from '../components/TutorialScreen';
-import { GAME_STATES } from '../src/game/constants';
-import GameStateManager from '../src/game/GameStateManager';
-import styles from '../styles/Home.module.css';
+import Game from '../components/Game';
+import OptionsMenu from '../components/OptionsMenu';
 
-export default function Home() {
-  const [gameState, setGameState] = useState(GAME_STATES.MENU);
+const Home = () => {
+  const [currentView, setCurrentView] = useState('menu');
+  const [gameState, setGameState] = useState({
+    player1: { name: 'Player 1', health: 100 },
+    player2: { name: 'Player 2', health: 100 },
+    roundTime: 99,
+    gameMode: 'versus'
+  });
 
-  useEffect(() => {
-    const handleStateChange = (newState) => {
-      setGameState(newState);
-    };
+  const handleStartGame = (mode) => {
+    setGameState(prevState => ({
+      ...prevState,
+      gameMode: mode
+    }));
+    setCurrentView('game');
+  };
 
-    GameStateManager.addListener(handleStateChange);
+  const handleShowOptions = () => {
+    setCurrentView('options');
+  };
 
-    return () => {
-      GameStateManager.removeListener(handleStateChange);
-    };
-  }, []);
+  const handleReturnToMenu = () => {
+    setCurrentView('menu');
+  };
 
-  const startGame = () => GameStateManager.setState(GAME_STATES.GAME);
-  const showTutorial = () => GameStateManager.setState(GAME_STATES.TUTORIAL);
-  const returnToMenu = () => GameStateManager.setState(GAME_STATES.MENU);
+  const handleGameStateUpdate = (newState) => {
+    setGameState(prevState => ({
+      ...prevState,
+      ...newState
+    }));
+  };
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'menu':
+        return (
+          <Menu
+            onStartSinglePlayer={() => handleStartGame('single')}
+            onStartTwoPlayer={() => handleStartGame('versus')}
+            onShowOptions={handleShowOptions}
+          />
+        );
+      case 'game':
+        return (
+          <Game
+            gameState={gameState}
+            onGameStateUpdate={handleGameStateUpdate}
+            onReturnToMenu={handleReturnToMenu}
+          />
+        );
+      case 'options':
+        return (
+          <OptionsMenu
+            onReturnToMenu={handleReturnToMenu}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Burger vs. Jean</title>
-        <meta name="description" content="An epic fighting game featuring Burger and Jean" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>Burger vs. Jean</h1>
-
-        {gameState === GAME_STATES.MENU && (
-          <Menu onStartGame={startGame} onShowTutorial={showTutorial} />
-        )}
-
-        {gameState === GAME_STATES.GAME && (
-          <Game onReturnToMenu={returnToMenu} />
-        )}
-
-        {gameState === GAME_STATES.TUTORIAL && (
-          <TutorialScreen onReturnToMenu={returnToMenu} />
-        )}
-      </main>
-
-      <footer className={styles.footer}>
-        <p>&copy; 2023 Burger vs. Jean. All rights reserved.</p>
-      </footer>
+    <div className="container">
+      {renderView()}
+      <style jsx global>{`
+        html,
+        body {
+          padding: 0;
+          margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+            Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        .container {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+      `}</style>
     </div>
   );
-}
+};
+
+export default Home;
