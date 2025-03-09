@@ -6,27 +6,24 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - MONGO_URL=mongodb://mongo:27017/bkfighter
+      - "80:80"
     depends_on:
-      - mongo
       - server
+    environment:
+      - REACT_APP_SERVER_URL=http://server:3000
 
   server:
     build:
-      context: .
-      dockerfile: Dockerfile.server
+      context: ./server
+      dockerfile: Dockerfile
     ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - MONGO_URL=mongodb://mongo:27017/bkfighter
+      - "3000:3000"
     depends_on:
-      - mongo
+      - mongodb
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/bkfighter3d
 
-  mongo:
+  mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
