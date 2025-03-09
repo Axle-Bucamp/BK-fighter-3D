@@ -1,46 +1,38 @@
-import { detectCollision, resolveCollision } from './utils/collisionDetection';
+import { GAME_MODES } from './constants';
 
-class GameLogic {
-  update(gameState) {
-    const { player1, player2 } = gameState;
+export const initializeGame = (players, gameMode) => {
+  return {
+    characters: players.map((player, index) => ({
+      name: player.name,
+      health: 100,
+      position: { x: index * 200 + 100, y: 300 },
+      score: 0,
+      isPlayer: index === 0,
+    })),
+    timeRemaining: gameMode === GAME_MODES.TIMED ? 99 : Infinity,
+    gameMode,
+  };
+};
 
-    // Update character positions based on their current state
-    if (player1.movingLeft) player1.moveLeft();
-    if (player1.movingRight) player1.moveRight();
-    if (player2.movingLeft) player2.moveLeft();
-    if (player2.movingRight) player2.moveRight();
+export const updateGameState = (currentState) => {
+  // This is a placeholder for the actual game logic
+  // In a real implementation, this would handle character movements, collisions, etc.
+  const newState = { ...currentState };
 
-    // Check for collisions
-    if (detectCollision(player1, player2)) {
-      resolveCollision(player1, player2);
-    }
-
-    // Check for victory conditions
-    if (player1.health <= 0 || player2.health <= 0) {
-      gameState.gameOver = true;
-    }
-
-    return { ...gameState, player1, player2 };
+  // Update time remaining
+  if (newState.gameMode === GAME_MODES.TIMED) {
+    newState.timeRemaining = Math.max(0, newState.timeRemaining - 1/60);
   }
 
-  handleInput(gameState, key, isKeyDown) {
-    switch (key) {
-      case 'ArrowLeft':
-        gameState.player1.movingLeft = isKeyDown;
-        break;
-      case 'ArrowRight':
-        gameState.player1.movingRight = isKeyDown;
-        break;
-      case 'a':
-        gameState.player2.movingLeft = isKeyDown;
-        break;
-      case 'd':
-        gameState.player2.movingRight = isKeyDown;
-        break;
-      // Add more input handlers as needed
-    }
-    return gameState;
-  }
-}
+  // Example: random health decrease
+  newState.characters = newState.characters.map(char => ({
+    ...char,
+    health: Math.max(0, char.health - Math.random() * 0.5),
+  }));
 
-export default GameLogic;
+  return newState;
+};
+
+export const isGameOver = (gameState) => {
+  return gameState.timeRemaining <= 0 || gameState.characters.some(char => char.health <= 0);
+};
