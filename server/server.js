@@ -15,59 +15,51 @@ const io = socketIo(server, {
 
 mongoose.connect(config.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => console.error('Could not connect to MongoDB', err));
 
 const rooms = new Map();
 
 io.on('connection', (socket) => {
-  console.log('New client connected');
+  console.log('A user connected');
 
-  socket.on('joinGame', (playerName) => {
-    let room;
-    for (const [roomId, players] of rooms.entries()) {
-      if (players.size < config.maxPlayers) {
-        room = roomId;
-        break;
-      }
+  socket.on('joinRoom', (roomId) => {
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, new Set());
     }
-
-    if (!room) {
-      room = `room_${Date.now()}`;
-      rooms.set(room, new Set());
+    
+    const room = rooms.get(roomId);
+    
+    if (room.size >= config.maxPlayers) {
+      socket.emit('roomFull');
+      return;
     }
-
-    rooms.get(room).add({ id: socket.id, name: playerName });
-    socket.join(room);
-
-    if (rooms.get(room).size === config.maxPlayers) {
-      io.to(room).emit('gameStart', Array.from(rooms.get(room)));
-    } else {
-      io.to(room).emit('playerJoined', Array.from(rooms.get(room)));
+    
+    room.add(socket.id);
+    socket.join(roomId);
+    socket.emit('joinedRoom', roomId);
+    
+    if (room.size === config.maxPlayers) {
+      io.to(roomId).emit('gameStart');
     }
   });
 
-  socket.on('gameAction', (action) => {
-    const room = Array.from(socket.rooms)[1]; // Get the room this socket is in
-    if (room) {
-      socket.to(room).emit('gameAction', action);
-    }
+  socket.on('gameAction', (data) => {
+    socket.to(data.roomId).emit('gameUpdate', data);
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
-    for (const [roomId, players] of rooms.entries()) {
-      if (players.has(socket.id)) {
-        players.delete(socket.id);
-        if (players.size === 0) {
+    rooms.forEach((room, roomId) => {
+      if (room.has(socket.id)) {
+        room.delete(socket.id);
+        if (room.size === 0) {
           rooms.delete(roomId);
-        } else {
-          io.to(roomId).emit('playerLeft', socket.id);
         }
-        break;
       }
-    }
+    });
+    console.log('A user disconnected');
   });
 });
 
-const port = config.serverPort;
-server.listen(port, () => console.log(`Server running on port ${port}`));
+server.listen(config.serverPort, () => {
+  console.log(`Server is running on port ${config.serverPort}`);
+});
