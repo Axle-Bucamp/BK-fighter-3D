@@ -13,9 +13,7 @@ const io = socketIo(server, {
   }
 });
 
-mongoose.connect(config.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Could not connect to MongoDB', err));
+mongoose.connect(config.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const rooms = new Map();
 
@@ -26,40 +24,32 @@ io.on('connection', (socket) => {
     if (!rooms.has(roomId)) {
       rooms.set(roomId, new Set());
     }
-    
-    const room = rooms.get(roomId);
-    
-    if (room.size >= config.maxPlayers) {
-      socket.emit('roomFull');
-      return;
-    }
-    
-    room.add(socket.id);
+    rooms.get(roomId).add(socket.id);
     socket.join(roomId);
-    socket.emit('joinedRoom', roomId);
-    
-    if (room.size === config.maxPlayers) {
-      io.to(roomId).emit('gameStart');
-    }
+    socket.emit('roomJoined', roomId);
+    io.to(roomId).emit('playerJoined', { playerId: socket.id, playerCount: rooms.get(roomId).size });
   });
 
   socket.on('gameAction', (data) => {
-    socket.to(data.roomId).emit('gameUpdate', data);
+    const { roomId, action } = data;
+    socket.to(roomId).emit('gameActionUpdate', { playerId: socket.id, action });
   });
 
   socket.on('disconnect', () => {
-    rooms.forEach((room, roomId) => {
-      if (room.has(socket.id)) {
-        room.delete(socket.id);
-        if (room.size === 0) {
+    console.log('A user disconnected');
+    rooms.forEach((players, roomId) => {
+      if (players.has(socket.id)) {
+        players.delete(socket.id);
+        io.to(roomId).emit('playerLeft', { playerId: socket.id, playerCount: players.size });
+        if (players.size === 0) {
           rooms.delete(roomId);
         }
       }
     });
-    console.log('A user disconnected');
   });
 });
 
-server.listen(config.serverPort, () => {
-  console.log(`Server is running on port ${config.serverPort}`);
+const PORT = config.serverPort || 4000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
