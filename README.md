@@ -1,16 +1,14 @@
 # BK-Fighter-3D
 
-BK-Fighter-3D is a multiplayer fighting game featuring iconic Burger King characters.
+BK-Fighter-3D is a 3D fighting game built with React, Three.js, and Socket.IO for multiplayer functionality.
 
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - Node.js (v14 or later)
-- Docker
-- Docker Compose
+- npm (v6 or later)
+- Docker and Docker Compose (for easy deployment)
 
-### Installation
+## Setup
 
 1. Clone the repository:
    ```
@@ -23,9 +21,9 @@ BK-Fighter-3D is a multiplayer fighting game featuring iconic Burger King charac
    npm install
    ```
 
-### Running the Application
+## Running the Application
 
-#### Development Mode
+### Development Mode
 
 1. Start the development server:
    ```
@@ -34,7 +32,7 @@ BK-Fighter-3D is a multiplayer fighting game featuring iconic Burger King charac
 
 2. Open your browser and navigate to `http://localhost:3000`
 
-#### Production Mode
+### Production Mode
 
 1. Build the application:
    ```
@@ -46,36 +44,36 @@ BK-Fighter-3D is a multiplayer fighting game featuring iconic Burger King charac
    npm start
    ```
 
-### Running with Docker Compose
+## Using Docker Compose
 
-1. Build and start the containers:
+To run the entire application stack (frontend, backend, and MongoDB) using Docker Compose:
+
+1. Make sure you have Docker and Docker Compose installed on your system.
+
+2. From the project root directory, run:
    ```
-   docker-compose up --build
-   ```
-
-2. Open your browser and navigate to `http://localhost:3000`
-
-## Server and Backend
-
-The server and backend are now configured to run on localhost. To start them:
-
-1. Ensure MongoDB is running (it will be started automatically if you're using Docker Compose)
-
-2. Start the server:
-   ```
-   node server/server.js
+   docker-compose up -d
    ```
 
-The server will be available at `http://localhost:3001` by default.
+This will start the frontend, backend server, and MongoDB database.
+
+- The frontend will be available at `http://localhost:80`
+- The backend server will be running on `http://localhost:3000`
+- MongoDB will be accessible on `localhost:27017`
+
+To stop the services:
+```
+docker-compose down
+```
 
 ## Configuration
 
-The server URL and other configuration options can be set in the `config.js` file.
+The application uses a `config.js` file for centralized configuration. You can modify this file to change various settings such as server port, database URL, and game parameters.
 
 ## Contributing
 
-Please read [CONTRIBUTE.md](CONTRIBUTE.md) for details on our code of conduct and the process for submitting pull requests.
+Please read the CONTRIBUTING.md file for details on our code of conduct and the process for submitting pull requests.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
