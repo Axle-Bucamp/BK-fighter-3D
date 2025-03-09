@@ -1,70 +1,49 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sky } from '@react-three/drei';
-import Battlefield from './Battlefield';
+import { OrbitControls } from '@react-three/drei';
 import Character from './Character';
+import Battlefield from './Battlefield';
 import GameUI from './GameUI';
-import { GAME_MODES } from '../game/constants';
 import styles from '../styles/Game.module.css';
-import { useGameLogic } from '../game/GameLogic';
-import { useGameState } from '../game/GameState';
-import { useAssetManager } from '../game/AssetManager';
-import { useAdaptiveResolution } from '../game/utils/adaptiveResolution';
 
-const Game = ({ players, gameMode }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { gameState, dispatch } = useGameState(players, gameMode);
-  const { handlePlayerAction, updateGameState } = useGameLogic(gameState, dispatch);
-  const { loadAssets } = useAssetManager();
-  
-  useEffect(() => {
-    const loadGameAssets = async () => {
-      await loadAssets();
-      setIsLoading(false);
-    };
-    loadGameAssets();
-  }, []);
+const Game = () => {
+  const [player1Health, setPlayer1Health] = useState(100);
+  const [player2Health, setPlayer2Health] = useState(100);
+  const player1Ref = useRef();
+  const player2Ref = useRef();
 
-  const AdaptiveResolutionCanvas = useAdaptiveResolution(Canvas);
-
-  const SceneContent = () => {
-    const { scene } = useThree();
-    useFrame(() => updateGameState(scene));
-
-    return (
-      <>
-        <Sky />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <Battlefield>
-          {gameState.players.map((player, index) => (
-            <Character
-              key={index}
-              player={player}
-              onAction={(action) => handlePlayerAction(index, action)}
-            />
-          ))}
-        </Battlefield>
-      </>
-    );
+  const handleAttack = (attacker, defender) => {
+    const damage = Math.floor(Math.random() * 10) + 1;
+    if (defender === 'player1') {
+      setPlayer1Health(prev => Math.max(0, prev - damage));
+    } else {
+      setPlayer2Health(prev => Math.max(0, prev - damage));
+    }
   };
-
-  const MemoizedSceneContent = useMemo(() => <SceneContent />, [gameState]);
-
-  if (isLoading) {
-    return <div className={styles.loading}>Loading...</div>;
-  }
 
   return (
     <div className={styles.gameContainer}>
-      <AdaptiveResolutionCanvas>
+      <Canvas className={styles.gameCanvas}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} />
+        <Battlefield />
+        <Character
+          ref={player1Ref}
+          position={[-2, 0, 0]}
+          color="red"
+          onAttack={() => handleAttack('player1', 'player2')}
+        />
+        <Character
+          ref={player2Ref}
+          position={[2, 0, 0]}
+          color="blue"
+          onAttack={() => handleAttack('player2', 'player1')}
+        />
         <OrbitControls />
-        {MemoizedSceneContent}
-      </AdaptiveResolutionCanvas>
-      <GameUI gameState={gameState} />
+      </Canvas>
+      <GameUI player1Health={player1Health} player2Health={player2Health} />
     </div>
   );
 };
 
-export default React.memo(Game);
+export default Game;
