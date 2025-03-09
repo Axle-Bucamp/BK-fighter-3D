@@ -4,20 +4,18 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - SERVER_URL=http://server:5000
+      - SERVER_URL=http://server:3000
     depends_on:
       - server
 
   server:
     build: ./server
     ports:
-      - "5000:5000"
+      - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongodb:27017/bkfighter
+      - MONGODB_URL=mongodb://mongodb:27017/bk-fighter
     depends_on:
       - mongodb
 
