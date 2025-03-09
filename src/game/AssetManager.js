@@ -2,67 +2,89 @@ import { TextureLoader, AudioLoader, GLTFLoader } from 'three';
 
 class AssetManager {
   constructor() {
-    this.textures = new Map();
-    this.audio = new Map();
-    this.models = new Map();
     this.textureLoader = new TextureLoader();
     this.audioLoader = new AudioLoader();
     this.modelLoader = new GLTFLoader();
+    this.assets = new Map();
+    this.loadingPromises = new Map();
   }
 
   async loadTexture(key, url) {
-    if (this.textures.has(key)) {
-      return this.textures.get(key);
-    }
-    const texture = await this.textureLoader.loadAsync(url);
-    texture.anisotropy = 16; // Improve texture quality
-    this.textures.set(key, texture);
-    return texture;
+    if (this.assets.has(key)) return this.assets.get(key);
+    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
+
+    const promise = new Promise((resolve, reject) => {
+      this.textureLoader.load(url, 
+        (texture) => {
+          this.assets.set(key, texture);
+          resolve(texture);
+        },
+        undefined,
+        (error) => reject(`Error loading texture ${key}: ${error.message}`)
+      );
+    });
+
+    this.loadingPromises.set(key, promise);
+    return promise;
   }
 
   async loadAudio(key, url) {
-    if (this.audio.has(key)) {
-      return this.audio.get(key);
-    }
-    const buffer = await this.audioLoader.loadAsync(url);
-    this.audio.set(key, buffer);
-    return buffer;
+    if (this.assets.has(key)) return this.assets.get(key);
+    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
+
+    const promise = new Promise((resolve, reject) => {
+      this.audioLoader.load(url, 
+        (buffer) => {
+          this.assets.set(key, buffer);
+          resolve(buffer);
+        },
+        undefined,
+        (error) => reject(`Error loading audio ${key}: ${error.message}`)
+      );
+    });
+
+    this.loadingPromises.set(key, promise);
+    return promise;
   }
 
   async loadModel(key, url) {
-    if (this.models.has(key)) {
-      return this.models.get(key);
-    }
-    const gltf = await this.modelLoader.loadAsync(url);
-    this.models.set(key, gltf.scene);
-    return gltf.scene;
+    if (this.assets.has(key)) return this.assets.get(key);
+    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
+
+    const promise = new Promise((resolve, reject) => {
+      this.modelLoader.load(url, 
+        (gltf) => {
+          this.assets.set(key, gltf);
+          resolve(gltf);
+        },
+        undefined,
+        (error) => reject(`Error loading model ${key}: ${error.message}`)
+      );
+    });
+
+    this.loadingPromises.set(key, promise);
+    return promise;
   }
 
-  getTexture(key) {
-    return this.textures.get(key);
+  getAsset(key) {
+    return this.assets.get(key);
   }
 
-  getAudio(key) {
-    return this.audio.get(key);
-  }
-
-  getModel(key) {
-    return this.models.get(key);
-  }
-
-  async preloadAssets(assetManifest) {
+  async loadAll(assetManifest) {
     const loadPromises = [];
-    for (const asset of assetManifest) {
+    for (const [key, asset] of Object.entries(assetManifest)) {
       switch (asset.type) {
         case 'texture':
-          loadPromises.push(this.loadTexture(asset.key, asset.url));
+          loadPromises.push(this.loadTexture(key, asset.url));
           break;
         case 'audio':
-          loadPromises.push(this.loadAudio(asset.key, asset.url));
+          loadPromises.push(this.loadAudio(key, asset.url));
           break;
         case 'model':
-          loadPromises.push(this.loadModel(asset.key, asset.url));
+          loadPromises.push(this.loadModel(key, asset.url));
           break;
+        default:
+          console.warn(`Unknown asset type for ${key}`);
       }
     }
     await Promise.all(loadPromises);
