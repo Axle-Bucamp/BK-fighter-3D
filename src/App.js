@@ -1,54 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import GameEngine from './gameEngine';
-import LobbyComponent from './components/LobbyComponent';
-import GameComponent from './components/GameComponent';
+import React, { useState } from 'react';
+import MainMenu from './components/MainMenu';
+import CharacterSelection from './components/CharacterSelection';
+import Game from './components/Game';
+import { GAME_MODES } from './game/constants';
 
-const SERVER_URL = 'http://localhost:3001'; // Replace with your actual server URL
+const App = () => {
+  const [gameState, setGameState] = useState('menu');
+  const [players, setPlayers] = useState([]);
+  const [gameMode, setGameMode] = useState(null);
 
-function App() {
-  const [gameEngine, setGameEngine] = useState(null);
-  const [gameState, setGameState] = useState('lobby');
-  const [playerName, setPlayerName] = useState('');
-
-  useEffect(() => {
-    const engine = new GameEngine(SERVER_URL);
-    engine.init();
-    setGameEngine(engine);
-
-    return () => {
-      engine.leaveGame();
-    };
-  }, []);
-
-  const handleJoinGame = (name) => {
-    setPlayerName(name);
-    gameEngine.joinGame(name);
-    setGameState('game');
+  const handleStartGame = (mode) => {
+    setGameMode(mode);
+    setGameState('characterSelection');
   };
 
-  const handleLeaveGame = () => {
-    gameEngine.leaveGame();
-    setGameState('lobby');
+  const handleCharacterSelect = (character) => {
+    if (players.length < 2) {
+      setPlayers([...players, { name: character.name, character }]);
+      if (players.length === 1) {
+        setGameState('game');
+      }
+    }
   };
 
-  if (!gameEngine) {
-    return <div>Loading...</div>;
-  }
+  const renderCurrentScreen = () => {
+    switch (gameState) {
+      case 'menu':
+        return <MainMenu onStartGame={handleStartGame} />;
+      case 'characterSelection':
+        return <CharacterSelection onCharacterSelect={handleCharacterSelect} />;
+      case 'game':
+        return <Game players={players} gameMode={gameMode} />;
+      default:
+        return <MainMenu onStartGame={handleStartGame} />;
+    }
+  };
 
   return (
-    <div className="App">
-      <h1>BK-fighter-3D</h1>
-      {gameState === 'lobby' ? (
-        <LobbyComponent onJoinGame={handleJoinGame} />
-      ) : (
-        <GameComponent
-          gameEngine={gameEngine}
-          playerName={playerName}
-          onLeaveGame={handleLeaveGame}
-        />
-      )}
+    <div className="app">
+      {renderCurrentScreen()}
     </div>
   );
-}
+};
 
 export default App;
