@@ -5,8 +5,8 @@ const config = {
   serverPort: process.env.SERVER_PORT || 3000,
   serverHost: process.env.SERVER_HOST || 'localhost',
 
-  // Database configuration
-  mongodbUrl: process.env.MONGODB_URL || 'mongodb://localhost:27017/bk-fighter-3d',
+  // Redis configuration
+  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
 
   // Game configuration
   maxPlayers: 4,
