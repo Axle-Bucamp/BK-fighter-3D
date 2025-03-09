@@ -13,44 +13,39 @@ const io = socketIo(server, {
   }
 });
 
-mongoose.connect(config.mongoDbUrl, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Could not connect to MongoDB', err));
+mongoose.connect(config.mongoDbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 
-const LobbyService = require('./services/LobbyService');
-const MatchmakingService = require('./services/MatchmakingService');
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', function() {
+  console.log('Connected to MongoDB');
+});
 
-const lobbyService = new LobbyService(io);
-const matchmakingService = new MatchmakingService(io);
+const players = new Map();
 
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  socket.on('joinLobby', (username) => {
-    lobbyService.addPlayer(socket.id, username);
+  socket.on('join', (playerData) => {
+    players.set(socket.id, playerData);
+    io.emit('playerJoined', { id: socket.id, ...playerData });
+    socket.emit('players', Array.from(players));
   });
 
-  socket.on('leaveLobby', () => {
-    lobbyService.removePlayer(socket.id);
+  socket.on('move', (moveData) => {
+    io.emit('playerMoved', { id: socket.id, ...moveData });
   });
 
-  socket.on('startMatchmaking', () => {
-    matchmakingService.addToQueue(socket.id);
-  });
-
-  socket.on('cancelMatchmaking', () => {
-    matchmakingService.removeFromQueue(socket.id);
+  socket.on('attack', (attackData) => {
+    io.emit('playerAttacked', { id: socket.id, ...attackData });
   });
 
   socket.on('disconnect', () => {
+    players.delete(socket.id);
+    io.emit('playerLeft', socket.id);
     console.log('Client disconnected');
-    lobbyService.removePlayer(socket.id);
-    matchmakingService.removeFromQueue(socket.id);
   });
 });
 
-server.listen(config.port, () => {
-  console.log(`Server running on port ${config.port}`);
-});
-
-module.exports = server;
+const PORT = config.port;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
