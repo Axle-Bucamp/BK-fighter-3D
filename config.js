@@ -1,8 +1,7 @@
-// config.js
-const config = {
+module.exports = {
   // Server configuration
-  serverUrl: process.env.SERVER_URL || 'http://localhost:3001',
-  serverPort: process.env.SERVER_PORT || 3001,
+  serverUrl: process.env.SERVER_URL || 'http://localhost',
+  serverPort: process.env.SERVER_PORT || 3000,
 
   // Database configuration
   mongodbUrl: process.env.MONGODB_URL || 'mongodb://localhost:27017/bk-fighter-3d',
@@ -12,7 +11,7 @@ const config = {
   tickRate: 60,
 
   // Client configuration
-  clientPort: process.env.CLIENT_PORT || 3000,
+  clientPort: process.env.CLIENT_PORT || 80,
 
   // Development mode
   isDevelopment: process.env.NODE_ENV !== 'production',
@@ -23,13 +22,11 @@ const config = {
   // Authentication (if implemented)
   jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
 
-  // Game balance settings (example)
+  // Game balance
   defaultHealth: 100,
   defaultSpeed: 5,
 
   // Feature flags
   enableMultiplayer: true,
-  enableAIOpponents: false,
+  enableAI: false,
 };
-
-module.exports = config;
