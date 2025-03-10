@@ -1,26 +1,33 @@
-# TODO List for BK Fighter 3D
+# BK Fighter 3D - TODO List
 
 ## High Priority
-- [x] Implement character selection menu
-- [ ] Integrate WebSocket for real-time multiplayer functionality
-- [ ] Implement game logic for different modes (Single Player, Multiplayer, Practice)
-- [ ] Create more diverse character models and animations
+- [x] Create pages/index.js with character selection menu and main menu integration
+- [ ] Implement CharacterSelect component
+- [ ] Implement MainMenu component
+- [ ] Update Game component to handle different game modes
+- [ ] Implement basic gameplay mechanics
+- [ ] Add WebSocket support for multiplayer functionality
 
 ## Medium Priority
-- [ ] Implement AI opponents for single-player mode
+- [ ] Implement character animations
 - [ ] Add sound effects and background music
-- [ ] Create a ranking system for multiplayer mode
-- [ ] Implement character customization options
+- [ ] Create multiple arenas/stages
+- [ ] Implement a scoring system
+- [ ] Add special moves for each character
 
 ## Low Priority
-- [ ] Add more arenas with unique themes
-- [ ] Implement spectator mode for multiplayer matches
-- [ ] Create a replay system to review past matches
-- [ ] Add achievements and unlockables
+- [ ] Implement an AI opponent for single-player mode
+- [ ] Add customization options for characters
+- [ ] Create a tutorial mode
+- [ ] Implement leaderboards
+- [ ] Add achievements system
 
 ## Ongoing
-- [ ] Optimize performance and reduce loading times
-- [ ] Fix bugs and improve game stability
-- [ ] Enhance graphics and visual effects
+- [ ] Optimize performance
+- [ ] Fix bugs as they are reported
+- [ ] Improve graphics and visual effects
 
-Remember to update this list as tasks are completed or new priorities arise.
+## Future Considerations
+- [ ] Mobile version
+- [ ] Cross-platform multiplayer
+- [ ] VR support
