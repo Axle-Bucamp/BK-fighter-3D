@@ -1,40 +1,63 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Game from './components/Game';
+import React, { useState } from 'react';
 import MainMenu from './components/MainMenu';
-import OptionsMenu from './components/OptionsMenu';
+import CharacterSelect from './components/CharacterSelect';
+import Game from './components/Game';
 import LobbyRoom from './components/LobbyRoom';
-import './styles/globals.css';
 
-function App({ gameEngine, multiplayerManager }) {
+const App = () => {
+  const [currentScreen, setCurrentScreen] = useState('mainMenu');
+  const [selectedGameMode, setSelectedGameMode] = useState(null);
+  const [selectedCharacters, setSelectedCharacters] = useState({});
+
+  const handleGameModeSelect = (mode) => {
+    setSelectedGameMode(mode);
+    setCurrentScreen('characterSelect');
+  };
+
+  const handleCharacterSelect = (player, character) => {
+    setSelectedCharacters({...selectedCharacters, [player]: character});
+    if (Object.keys(selectedCharacters).length === (selectedGameMode === 'multiplayer' ? 2 : 1)) {
+      if (selectedGameMode === 'multiplayer') {
+        setCurrentScreen('lobby');
+      } else {
+        setCurrentScreen('game');
+      }
+    }
+  };
+
+  const handleReturnToMenu = () => {
+    setCurrentScreen('mainMenu');
+    setSelectedGameMode(null);
+    setSelectedCharacters({});
+  };
+
   return (
-    <Router>
-      <div className="app">
-        <Switch>
-          <Route exact path="/">
-            <MainMenu multiplayerManager={multiplayerManager} />
-          </Route>
-          <Route path="/game">
-            <Game gameEngine={gameEngine} multiplayerManager={multiplayerManager} />
-          </Route>
-          <Route path="/options">
-            <OptionsMenu />
-          </Route>
-          <Route path="/lobby">
-            <LobbyRoom
-              multiplayerManager={multiplayerManager}
-              onStartGame={() => {
-                // Handle start game logic
-              }}
-              onLeaveLobby={() => {
-                // Handle leave lobby logic
-              }}
-            />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+    <div className="app">
+      {currentScreen === 'mainMenu' && (
+        <MainMenu onGameModeSelect={handleGameModeSelect} />
+      )}
+      {currentScreen === 'characterSelect' && (
+        <CharacterSelect 
+          onCharacterSelect={handleCharacterSelect}
+          selectedGameMode={selectedGameMode}
+        />
+      )}
+      {currentScreen === 'lobby' && (
+        <LobbyRoom 
+          selectedCharacters={selectedCharacters}
+          onGameStart={() => setCurrentScreen('game')}
+          onCancel={handleReturnToMenu}
+        />
+      )}
+      {currentScreen === 'game' && (
+        <Game 
+          gameMode={selectedGameMode}
+          selectedCharacters={selectedCharacters}
+          onGameOver={handleReturnToMenu}
+        />
+      )}
+    </div>
   );
-}
+};
 
 export default App;
