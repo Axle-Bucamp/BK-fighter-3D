@@ -1,43 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import MultiplayerManager from '../services/MultiplayerManager';
+import MultiplayerManager from './MultiplayerManager';
 
 const LobbyRoom = ({ onGameStart }) => {
   const [players, setPlayers] = useState([]);
-  const [isReady, setIsReady] = useState(false);
+  const [lobbyName, setLobbyName] = useState('');
+  const [isHost, setIsHost] = useState(false);
 
   useEffect(() => {
-    MultiplayerManager.connect();
-    MultiplayerManager.onPlayersUpdate = setPlayers;
-    MultiplayerManager.onGameStart = onGameStart;
+    MultiplayerManager.on('lobbyUpdate', handleLobbyUpdate);
+    MultiplayerManager.on('gameStarted', handleGameStarted);
 
     return () => {
-      MultiplayerManager.leaveLobby();
+      MultiplayerManager.removeListener('lobbyUpdate', handleLobbyUpdate);
+      MultiplayerManager.removeListener('gameStarted', handleGameStarted);
     };
-  }, [onGameStart]);
+  }, []);
 
-  const handleReady = () => {
-    setIsReady(!isReady);
-    MultiplayerManager.setReady(!isReady);
+  const handleLobbyUpdate = (updatedPlayers) => {
+    setPlayers(updatedPlayers);
   };
 
-  const handleStartGame = () => {
-    MultiplayerManager.startGame();
+  const handleGameStarted = () => {
+    onGameStart();
+  };
+
+  const createLobby = () => {
+    MultiplayerManager.createLobby(lobbyName);
+    setIsHost(true);
+  };
+
+  const joinLobby = () => {
+    MultiplayerManager.joinLobby(lobbyName);
+  };
+
+  const leaveLobby = () => {
+    MultiplayerManager.leaveLobby();
+    setIsHost(false);
+    setPlayers([]);
+  };
+
+  const startGame = () => {
+    if (isHost) {
+      MultiplayerManager.startGame();
+    }
   };
 
   return (
-    <div>
-      <h2>Lobby</h2>
+    <div className="lobby-room">
+      <h2>Lobby Room</h2>
+      <input
+        type="text"
+        value={lobbyName}
+        onChange={(e) => setLobbyName(e.target.value)}
+        placeholder="Enter lobby name"
+      />
+      <button onClick={createLobby}>Create Lobby</button>
+      <button onClick={joinLobby}>Join Lobby</button>
+      <button onClick={leaveLobby}>Leave Lobby</button>
+      {isHost && <button onClick={startGame}>Start Game</button>}
+      <h3>Players:</h3>
       <ul>
-        {players.map((player) => (
-          <li key={player.id}>
-            {player.name} - {player.ready ? 'Ready' : 'Not Ready'}
-          </li>
+        {players.map((player, index) => (
+          <li key={index}>{player}</li>
         ))}
       </ul>
-      <button onClick={handleReady}>{isReady ? 'Not Ready' : 'Ready'}</button>
-      {players.length > 1 && players.every((player) => player.ready) && (
-        <button onClick={handleStartGame}>Start Game</button>
-      )}
     </div>
   );
 };
