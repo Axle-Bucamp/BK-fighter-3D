@@ -11,12 +11,26 @@ const LobbyRoom = ({ multiplayerManager, onStartGame, onLeaveLobby }) => {
     };
 
     updateLobbyData();
-    multiplayerManager.gameEngine.onLobbyUpdate = updateLobbyData;
+    multiplayerManager.onLobbyUpdate = updateLobbyData;
 
     return () => {
-      multiplayerManager.gameEngine.onLobbyUpdate = null;
+      multiplayerManager.onLobbyUpdate = null;
     };
   }, [multiplayerManager]);
+
+  const handleCreateLobby = () => {
+    const lobbyName = prompt('Enter lobby name:');
+    if (lobbyName) {
+      multiplayerManager.createLobby(lobbyName);
+    }
+  };
+
+  const handleJoinLobby = () => {
+    const lobbyId = prompt('Enter lobby ID:');
+    if (lobbyId) {
+      multiplayerManager.joinLobby(lobbyId);
+    }
+  };
 
   const handleStartGame = () => {
     multiplayerManager.startGame();
@@ -29,7 +43,13 @@ const LobbyRoom = ({ multiplayerManager, onStartGame, onLeaveLobby }) => {
   };
 
   if (!lobbyData) {
-    return <div>Loading lobby data...</div>;
+    return (
+      <div className={styles.lobbyRoom}>
+        <h2>Multiplayer Lobby</h2>
+        <button onClick={handleCreateLobby}>Create Lobby</button>
+        <button onClick={handleJoinLobby}>Join Lobby</button>
+      </div>
+    );
   }
 
   return (
