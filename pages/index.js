@@ -4,11 +4,11 @@ import CharacterSelect from '../components/CharacterSelect';
 import Game from '../components/Game';
 
 const IndexPage = () => {
-  const [gameState, setGameState] = useState('mainMenu');
+  const [gameState, setGameState] = useState('menu');
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [gameMode, setGameMode] = useState(null);
 
-  const handleGameModeSelect = (mode) => {
+  const handleStartGame = (mode) => {
     setGameMode(mode);
     setGameState('characterSelect');
   };
@@ -18,25 +18,25 @@ const IndexPage = () => {
     setGameState('game');
   };
 
-  const handleReturnToMainMenu = () => {
-    setGameState('mainMenu');
+  const handleReturnToMenu = () => {
+    setGameState('menu');
     setSelectedCharacter(null);
     setGameMode(null);
   };
 
   return (
     <div>
-      {gameState === 'mainMenu' && (
-        <MainMenu onGameModeSelect={handleGameModeSelect} />
+      {gameState === 'menu' && (
+        <MainMenu onStartGame={handleStartGame} />
       )}
       {gameState === 'characterSelect' && (
-        <CharacterSelect onCharacterSelect={handleCharacterSelect} onBack={handleReturnToMainMenu} />
+        <CharacterSelect onSelect={handleCharacterSelect} onBack={handleReturnToMenu} />
       )}
       {gameState === 'game' && (
         <Game
+          character={selectedCharacter}
           gameMode={gameMode}
-          selectedCharacter={selectedCharacter}
-          onReturnToMainMenu={handleReturnToMainMenu}
+          onExit={handleReturnToMenu}
         />
       )}
     </div>
