@@ -3,25 +3,23 @@ import styles from '../styles/CharacterSelect.module.css';
 import CharacterPreview from './CharacterPreview';
 import { loadCustomCharacter } from '../lib/CharacterManager';
 
-const CharacterSelect = ({ onSelectCharacter }) => {
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [customCharacter, setCustomCharacter] = useState(null);
+const CharacterSelect = ({ onCharacterSelect, selectedGameMode }) => {
+  const [selectedCharacters, setSelectedCharacters] = useState({});
+  const [customCharacters, setCustomCharacters] = useState([]);
   const fileInputRef = useRef(null);
 
-  const characters = [
-    { id: 'burger', name: 'Burger' },
-    { id: 'jean', name: 'Jean' },
-    // Add more default characters here
+  const defaultCharacters = [
+    { id: 'burger', name: 'Burger King Classic' },
+    { id: 'whopper', name: 'Burger King Whopper' },
+    { id: 'chicken', name: 'Burger King Chicken' },
+    { id: 'kickboxer', name: 'Van Damme Kickboxer' },
+    { id: 'universal', name: 'Van Damme Universal Soldier' },
+    { id: 'timecop', name: 'Van Damme Timecop' },
   ];
 
-  const handleSelect = (character) => {
-    setSelectedCharacter(character);
-  };
-
-  const handleConfirm = () => {
-    if (selectedCharacter) {
-      onSelectCharacter(selectedCharacter);
-    }
+  const handleSelect = (character, player) => {
+    setSelectedCharacters({...selectedCharacters, [player]: character});
+    onCharacterSelect(player, character);
   };
 
   const handleFileUpload = async (event) => {
@@ -29,8 +27,7 @@ const CharacterSelect = ({ onSelectCharacter }) => {
     if (files.length > 0) {
       try {
         const customChar = await loadCustomCharacter(files);
-        setCustomCharacter(customChar);
-        setSelectedCharacter(customChar);
+        setCustomCharacters([...customCharacters, customChar]);
       } catch (error) {
         console.error('Error loading custom character:', error);
         alert('Failed to load custom character. Please try again.');
@@ -38,34 +35,40 @@ const CharacterSelect = ({ onSelectCharacter }) => {
     }
   };
 
+  const renderCharacterGrid = (player) => (
+    <div className={styles.charactersGrid}>
+      {[...defaultCharacters, ...customCharacters].map((character) => (
+        <div
+          key={character.id}
+          className={`${styles.characterCard} ${
+            selectedCharacters[player] === character ? styles.selected : ''
+          }`}
+          onClick={() => handleSelect(character, player)}
+        >
+          <CharacterPreview characterId={character.id} />
+          <p className={styles.characterName}>{character.name}</p>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className={styles.characterSelectContainer}>
-      <h2 className={styles.title}>Select Your Character</h2>
-      <div className={styles.charactersContainer}>
-        {characters.map((character) => (
-          <div
-            key={character.id}
-            className={`${styles.characterCard} ${
-              selectedCharacter === character ? styles.selected : ''
-            }`}
-            onClick={() => handleSelect(character)}
-          >
-            <CharacterPreview characterId={character.id} />
-            <p className={styles.characterName}>{character.name}</p>
+      <h2 className={styles.title}>Select Your Character{selectedGameMode === 'multiplayer' ? 's' : ''}</h2>
+      {selectedGameMode === 'multiplayer' ? (
+        <>
+          <div className={styles.playerSection}>
+            <h3>Player 1</h3>
+            {renderCharacterGrid('player1')}
           </div>
-        ))}
-        {customCharacter && (
-          <div
-            className={`${styles.characterCard} ${
-              selectedCharacter === customCharacter ? styles.selected : ''
-            }`}
-            onClick={() => handleSelect(customCharacter)}
-          >
-            <CharacterPreview character={customCharacter} />
-            <p className={styles.characterName}>{customCharacter.name}</p>
+          <div className={styles.playerSection}>
+            <h3>Player 2</h3>
+            {renderCharacterGrid('player2')}
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        renderCharacterGrid('player1')
+      )}
       <div className={styles.uploadContainer}>
         <input
           type="file"
@@ -82,13 +85,6 @@ const CharacterSelect = ({ onSelectCharacter }) => {
           Upload Custom Character
         </button>
       </div>
-      <button
-        className={styles.confirmButton}
-        onClick={handleConfirm}
-        disabled={!selectedCharacter}
-      >
-        Confirm Selection
-      </button>
     </div>
   );
 };
