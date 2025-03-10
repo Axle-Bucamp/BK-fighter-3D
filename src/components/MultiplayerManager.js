@@ -1,98 +1,97 @@
-import EventEmitter from 'events';
+import { io } from 'socket.io-client';
 
-class MultiplayerManager extends EventEmitter {
-  constructor() {
-    super();
+class MultiplayerManager {
+  constructor(gameEngine) {
     this.socket = null;
-    this.connected = false;
-    this.lobby = null;
+    this.gameEngine = gameEngine;
+    this.lobbyId = null;
+    this.playerId = null;
+    this.players = [];
+    this.onLobbyUpdate = null;
   }
 
-  connect(url) {
-    this.socket = new WebSocket(url);
+  connect(serverUrl) {
+    this.socket = io(serverUrl);
 
-    this.socket.onopen = () => {
-      console.log('Connected to WebSocket server');
-      this.connected = true;
-      this.emit('connected');
-    };
+    this.socket.on('connect', () => {
+      console.log('Connected to server');
+      this.playerId = this.socket.id;
+    });
 
-    this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      this.handleMessage(data);
-    };
+    this.socket.on('lobbyCreated', (lobbyData) => {
+      this.lobbyId = lobbyData.id;
+      this.updateLobbyData(lobbyData);
+    });
 
-    this.socket.onclose = () => {
-      console.log('Disconnected from WebSocket server');
-      this.connected = false;
-      this.emit('disconnected');
-    };
+    this.socket.on('lobbyJoined', (lobbyData) => {
+      this.lobbyId = lobbyData.id;
+      this.updateLobbyData(lobbyData);
+    });
 
-    this.socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      this.emit('error', error);
-    };
-  }
+    this.socket.on('lobbyUpdated', (lobbyData) => {
+      this.updateLobbyData(lobbyData);
+    });
 
-  handleMessage(data) {
-    switch (data.type) {
-      case 'lobby_update':
-        this.lobby = data.players;
-        this.emit('lobbyUpdate', data.players);
-        break;
-      case 'game_started':
-        this.emit('gameStarted');
-        break;
-      case 'game_update':
-        this.emit('gameUpdate', data);
-        break;
-      case 'error':
-        console.error('Server error:', data.message);
-        this.emit('error', data.message);
-        break;
-      default:
-        console.log('Unknown message type:', data.type);
-    }
+    this.socket.on('gameStarted', () => {
+      this.gameEngine.startGame();
+    });
+
+    this.socket.on('gameUpdate', (gameState) => {
+      this.gameEngine.updateGameState(gameState);
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('Disconnected from server');
+    });
   }
 
   createLobby(lobbyName) {
-    this.sendMessage({ type: 'create_lobby', lobbyName });
+    this.socket.emit('createLobby', { name: lobbyName });
   }
 
-  joinLobby(lobbyName) {
-    this.sendMessage({ type: 'join_lobby', lobbyName });
+  joinLobby(lobbyId) {
+    this.socket.emit('joinLobby', { lobbyId });
   }
 
   leaveLobby() {
-    if (this.lobby) {
-      this.sendMessage({ type: 'leave_lobby', lobbyName: this.lobby });
-      this.lobby = null;
+    if (this.lobbyId) {
+      this.socket.emit('leaveLobby', { lobbyId: this.lobbyId });
+      this.lobbyId = null;
+      this.updateLobbyData(null);
     }
   }
 
   startGame() {
-    if (this.lobby) {
-      this.sendMessage({ type: 'start_game', lobbyName: this.lobby });
+    if (this.lobbyId) {
+      this.socket.emit('startGame', { lobbyId: this.lobbyId });
     }
   }
 
-  sendGameUpdate(updateData) {
-    this.sendMessage({ type: 'game_update', ...updateData });
+  sendGameUpdate(gameState) {
+    if (this.lobbyId) {
+      this.socket.emit('gameUpdate', { lobbyId: this.lobbyId, gameState });
+    }
   }
 
-  sendMessage(data) {
-    if (this.connected) {
-      this.socket.send(JSON.stringify(data));
-    } else {
-      console.error('Not connected to WebSocket server');
+  updateLobbyData(lobbyData) {
+    this.players = lobbyData ? lobbyData.players : [];
+    if (this.onLobbyUpdate) {
+      this.onLobbyUpdate(lobbyData);
     }
+  }
+
+  getLobbyData() {
+    return {
+      id: this.lobbyId,
+      players: this.players,
+    };
   }
 
   disconnect() {
     if (this.socket) {
-      this.socket.close();
+      this.socket.disconnect();
     }
   }
 }
 
-export default new MultiplayerManager();
+export default MultiplayerManager;
