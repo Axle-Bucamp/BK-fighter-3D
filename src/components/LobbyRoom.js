@@ -1,60 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import MultiplayerManager from '../lib/MultiplayerManager';
+import { MultiplayerManager } from '../utils/MultiplayerManager';
+import styles from '../styles/LobbyRoom.module.css';
 
-const LobbyRoom = ({ onStartGame, onReturnToMenu }) => {
+const LobbyRoom = ({ characters, onStartGame }) => {
   const [players, setPlayers] = useState([]);
   const [isReady, setIsReady] = useState(false);
+  const [multiplayerManager, setMultiplayerManager] = useState(null);
 
   useEffect(() => {
-    // Initialize connection to multiplayer server
-    MultiplayerManager.connect();
+    const manager = new MultiplayerManager();
+    setMultiplayerManager(manager);
 
-    // Listen for player updates
-    MultiplayerManager.onPlayersUpdate((updatedPlayers) => {
+    manager.onPlayersUpdate((updatedPlayers) => {
       setPlayers(updatedPlayers);
     });
 
-    // Clean up on component unmount
+    manager.onGameStart(() => {
+      onStartGame();
+    });
+
     return () => {
-      MultiplayerManager.disconnect();
+      manager.disconnect();
     };
-  }, []);
+  }, [onStartGame]);
 
   const handleReady = () => {
     setIsReady(!isReady);
-    MultiplayerManager.setReady(!isReady);
-  };
-
-  const handleStartGame = () => {
-    if (players.length >= 2 && players.every(player => player.isReady)) {
-      MultiplayerManager.startGame();
-      onStartGame();
-    }
+    multiplayerManager.setReady(!isReady);
   };
 
   return (
-    <div className="lobby-room">
+    <div className={styles.lobbyRoom}>
       <h2>Multiplayer Lobby</h2>
-      <div className="player-list">
+      <div className={styles.playerList}>
         {players.map((player, index) => (
-          <div key={index} className="player-item">
-            {player.name} - {player.isReady ? 'Ready' : 'Not Ready'}
+          <div key={player.id} className={styles.playerItem}>
+            <img src={characters[index].thumbnail} alt={characters[index].name} />
+            <p>{player.name}</p>
+            <span className={player.ready ? styles.ready : styles.notReady}>
+              {player.ready ? 'Ready' : 'Not Ready'}
+            </span>
           </div>
         ))}
       </div>
-      <button onClick={handleReady}>{isReady ? 'Not Ready' : 'Ready'}</button>
-      <button onClick={handleStartGame} disabled={!isReady || players.length < 2 || !players.every(player => player.isReady)}>
-        Start Game
+      <button
+        className={`${styles.readyButton} ${isReady ? styles.ready : ''}`}
+        onClick={handleReady}
+      >
+        {isReady ? 'Ready' : 'Not Ready'}
       </button>
-      <button onClick={onReturnToMenu}>Return to Main Menu</button>
+      <p className={styles.waitingMessage}>
+        Waiting for all players to be ready...
+      </p>
     </div>
   );
-};
-
-LobbyRoom.propTypes = {
-  onStartGame: PropTypes.func.isRequired,
-  onReturnToMenu: PropTypes.func.isRequired,
 };
 
 export default LobbyRoom;
