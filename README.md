@@ -14,28 +14,19 @@ BK Fighter 3D is an exciting 3D fighting game built with React, Three.js, and We
 
 ```
 BK-fighter-3D/
-│
 ├── components/
 │   ├── CharacterSelect.js
 │   ├── Game.js
 │   ├── LobbyRoom.js
 │   ├── MainMenu.js
 │   └── MultiplayerManager.js
-│
 ├── pages/
-│   ├── index.js
-│   └── game.js
-│
+│   └── index.js
 ├── server/
-│   ├── server.js
 │   └── websocketServer.js
-│
 ├── styles/
-│   └── globals.css
-│
 ├── public/
-│   └── assets/
-│
+├── package.json
 ├── README.md
 └── TODO.md
 ```
