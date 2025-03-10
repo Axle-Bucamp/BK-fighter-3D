@@ -1,30 +1,28 @@
 import React from 'react';
-import styles from '../styles/Menu.module.css';
+import styles from '../styles/MainMenu.module.css';
 
-const MainMenu = ({ onGameModeSelect }) => {
+const MainMenu = ({ onSelectGameMode }) => {
+  const handleGameModeSelection = (mode) => {
+    onSelectGameMode(mode);
+  };
+
   return (
-    <div className={styles.menuContainer}>
-      <h1 className={styles.title}>Burger King Fighter 3D</h1>
-      <nav className={styles.menuNav}>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('arcade')}>
+    <div className={styles.mainMenu}>
+      <h1>BK Fighter 3D</h1>
+      <div className={styles.menuOptions}>
+        <button onClick={() => handleGameModeSelection('singleplayer')}>
+          Single Player
+        </button>
+        <button onClick={() => handleGameModeSelection('multiplayer')}>
+          Multiplayer
+        </button>
+        <button onClick={() => handleGameModeSelection('arcade')}>
           Arcade Mode
         </button>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('story')}>
-          Story Mode
-        </button>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('versus')}>
-          Versus Mode
-        </button>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('multiplayer')}>
-          Online Multiplayer
-        </button>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('options')}>
-          Options
-        </button>
-        <button className={styles.menuButton} onClick={() => onGameModeSelect('tutorial')}>
+        <button onClick={() => handleGameModeSelection('tutorial')}>
           Tutorial
         </button>
-      </nav>
+      </div>
     </div>
   );
 };
