@@ -1,7 +1,16 @@
-import React, { useRef, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { useSphere } from '@react-three/cannon';
+import React, {
+  useEffect,
+  useRef,
+} from 'react';
+
 import * as THREE from 'three';
+
+import { useSphere } from '@react-three/cannon';
+import {
+  useFrame,
+  useThree,
+} from '@react-three/fiber';
+
 import CharacterManager from '../lib/CharacterManager';
 
 const Character = ({ name, position, isPlayer, controls }) => {

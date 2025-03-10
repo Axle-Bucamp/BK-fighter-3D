@@ -1,66 +1,65 @@
-import React, { useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { AnimateAnything } from 'animate-anything';
-import * as THREE from 'three';
+import React, {
+  useEffect,
+  useRef,
+} from 'react';
 
-const CharacterModel = ({ character, position, rotation, action }) => {
-  const meshRef = useRef();
-  const animateRef = useRef();
+import { AnimationMixer } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { TextureLoader } from 'three/src/loaders/TextureLoader';
+
+import {
+  useFrame,
+  useLoader,
+} from '@react-three/fiber';
+
+const CharacterModel = ({ character, position, rotation, action = 'idle' }) => {
+  const groupRef = useRef();
+  const mixerRef = useRef(null);
+
+  // Load GLTF Model
+  const gltf = useLoader(GLTFLoader, `/models/${character}.glb`);
+
+  // Load Texture (if available)
+  const texture = useLoader(TextureLoader, `/textures/${character}.jpg`, (loader) => {
+    loader.flipY = false; // Ensure texture maps correctly
+  });
 
   useEffect(() => {
-    const loader = new OBJLoader();
-    loader.load(`/models/${character}.obj`, (obj) => {
-      meshRef.current.add(obj);
-      
-      // Initialize AnimateAnything
-      animateRef.current = new AnimateAnything(obj);
-      
-      // Load animations
-      ['idle', 'attack', 'hurt', 'walk'].forEach(animName => {
-        animateRef.current.loadAnimation(`/animations/${character}_${animName}.json`, animName);
+    if (gltf && gltf.scene) {
+      // Apply texture if the model has a mesh
+      gltf.scene.traverse((child) => {
+        if (child.isMesh) {
+          child.material.map = texture;
+        }
       });
-      
-      // Play initial animation
-      animateRef.current.play(action);
-    });
-  }, [character]);
 
-  useEffect(() => {
-    if (animateRef.current) {
-      animateRef.current.play(action);
+      // Set up animation mixer
+      mixerRef.current = new AnimationMixer(gltf.scene);
+      const clips = gltf.animations;
+      const selectedClip = clips.find((clip) => clip.name.toLowerCase() === action) || clips[0];
+
+      if (selectedClip) {
+        const actionClip = mixerRef.current.clipAction(selectedClip);
+        actionClip.play();
+      }
     }
-  }, [action]);
+  }, [gltf, action, texture]);
 
   useFrame((state, delta) => {
-    if (meshRef.current) {
-      if (action === 'attack') {
-        meshRef.current.rotation.y += delta * 2; // Rotate during attack
-      }
-      // Add more custom frame updates here if needed
+    if (mixerRef.current) {
+      mixerRef.current.update(delta);
     }
   });
 
   return (
-    <group position={position} rotation={rotation}>
-      <mesh ref={meshRef} />
+    <group ref={groupRef} position={position} rotation={rotation}>
+      <primitive object={gltf.scene} />
     </group>
   );
 };
 
-export const BurgerCharacter = (props) => (
-  <CharacterModel character="burger" {...props} />
-);
-
-export const JeanCharacter = (props) => (
-  <CharacterModel character="jean" {...props} />
-);
-
-// Preload models
-const burgerLoader = new OBJLoader();
-burgerLoader.load('/models/burger.obj');
-
-const jeanLoader = new OBJLoader();
-jeanLoader.load('/models/jean.obj');
-
 export default CharacterModel;
+
+// Example usage for specific characters
+export const BurgerCharacter = (props) => <CharacterModel character="burger" {...props} />;
+export const JeanCharacter = (props) => <CharacterModel character="jean" {...props} />;
