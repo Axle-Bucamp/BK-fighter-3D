@@ -1,57 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { MultiplayerManager } from '../utils/MultiplayerManager';
-import styles from '../styles/LobbyRoom.module.css';
+import { MultiplayerManager } from '../lib/MultiplayerManager';
 
-const LobbyRoom = ({ characters, onStartGame }) => {
+const LobbyRoom = ({ onGameStart, onReturnToMenu }) => {
   const [players, setPlayers] = useState([]);
   const [isReady, setIsReady] = useState(false);
-  const [multiplayerManager, setMultiplayerManager] = useState(null);
 
   useEffect(() => {
-    const manager = new MultiplayerManager();
-    setMultiplayerManager(manager);
+    // Initialize connection to multiplayer server
+    MultiplayerManager.connect();
 
-    manager.onPlayersUpdate((updatedPlayers) => {
+    // Listen for player list updates
+    MultiplayerManager.onPlayersUpdate((updatedPlayers) => {
       setPlayers(updatedPlayers);
     });
 
-    manager.onGameStart(() => {
-      onStartGame();
-    });
-
+    // Clean up on component unmount
     return () => {
-      manager.disconnect();
+      MultiplayerManager.disconnect();
     };
-  }, [onStartGame]);
+  }, []);
 
-  const handleReady = () => {
+  const handleReadyToggle = () => {
     setIsReady(!isReady);
-    multiplayerManager.setReady(!isReady);
+    MultiplayerManager.setReady(!isReady);
+  };
+
+  const handleStartGame = () => {
+    if (players.every(player => player.isReady)) {
+      MultiplayerManager.startGame();
+      onGameStart();
+    }
   };
 
   return (
-    <div className={styles.lobbyRoom}>
+    <div className="lobby-room">
       <h2>Multiplayer Lobby</h2>
-      <div className={styles.playerList}>
-        {players.map((player, index) => (
-          <div key={player.id} className={styles.playerItem}>
-            <img src={characters[index].thumbnail} alt={characters[index].name} />
-            <p>{player.name}</p>
-            <span className={player.ready ? styles.ready : styles.notReady}>
-              {player.ready ? 'Ready' : 'Not Ready'}
-            </span>
-          </div>
+      <ul className="player-list">
+        {players.map(player => (
+          <li key={player.id} className={player.isReady ? 'ready' : ''}>
+            {player.name} {player.isReady ? '(Ready)' : '(Not Ready)'}
+          </li>
         ))}
-      </div>
-      <button
-        className={`${styles.readyButton} ${isReady ? styles.ready : ''}`}
-        onClick={handleReady}
-      >
-        {isReady ? 'Ready' : 'Not Ready'}
+      </ul>
+      <button onClick={handleReadyToggle}>
+        {isReady ? 'Not Ready' : 'Ready'}
       </button>
-      <p className={styles.waitingMessage}>
-        Waiting for all players to be ready...
-      </p>
+      <button onClick={handleStartGame} disabled={!players.every(player => player.isReady)}>
+        Start Game
+      </button>
+      <button onClick={onReturnToMenu}>Return to Menu</button>
     </div>
   );
 };
