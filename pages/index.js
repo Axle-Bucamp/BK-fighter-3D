@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
-import Menu from '../components/Menu';
+import MainMenu from '../components/MainMenu';
 import Game from '../components/Game';
-import OptionsMenu from '../components/OptionsMenu';
+import SettingsMenu from '../components/SettingsMenu';
 import TutorialScreen from '../components/TutorialScreen';
 
 const Home = () => {
   const [currentView, setCurrentView] = useState('menu');
   const [gameMode, setGameMode] = useState(null);
 
-  const handleStartSinglePlayer = () => {
-    setGameMode('single');
+  const handleStartArcade = () => {
+    setGameMode('arcade');
     setCurrentView('game');
   };
 
-  const handleStartTwoPlayer = () => {
-    setGameMode('two');
+  const handleStartStoryMode = () => {
+    setGameMode('story');
+    setCurrentView('game');
+  };
+
+  const handleStartVersus = () => {
+    setGameMode('versus');
+    setCurrentView('game');
+  };
+
+  const handleStartOnline = () => {
+    setGameMode('online');
     setCurrentView('game');
   };
 
@@ -34,9 +44,11 @@ const Home = () => {
     switch (currentView) {
       case 'menu':
         return (
-          <Menu
-            onStartSinglePlayer={handleStartSinglePlayer}
-            onStartTwoPlayer={handleStartTwoPlayer}
+          <MainMenu
+            onStartArcade={handleStartArcade}
+            onStartStoryMode={handleStartStoryMode}
+            onStartVersus={handleStartVersus}
+            onStartOnline={handleStartOnline}
             onShowOptions={handleShowOptions}
             onShowTutorial={handleShowTutorial}
           />
@@ -44,7 +56,7 @@ const Home = () => {
       case 'game':
         return <Game mode={gameMode} onExit={handleReturnToMenu} />;
       case 'options':
-        return <OptionsMenu onBack={handleReturnToMenu} />;
+        return <SettingsMenu onBack={handleReturnToMenu} />;
       case 'tutorial':
         return <TutorialScreen onBack={handleReturnToMenu} />;
       default:
