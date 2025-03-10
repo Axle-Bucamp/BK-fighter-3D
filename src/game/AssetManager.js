@@ -1,94 +1,63 @@
-import { TextureLoader, AudioLoader, GLTFLoader } from 'three';
+import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 class AssetManager {
   constructor() {
-    this.textureLoader = new TextureLoader();
-    this.audioLoader = new AudioLoader();
-    this.modelLoader = new GLTFLoader();
-    this.assets = new Map();
-    this.loadingPromises = new Map();
+    this.textureLoader = new THREE.TextureLoader();
+    this.objLoader = new OBJLoader();
+    this.fbxLoader = new FBXLoader();
+    this.gltfLoader = new GLTFLoader();
+    this.loadedAssets = new Map();
   }
 
-  async loadTexture(key, url) {
-    if (this.assets.has(key)) return this.assets.get(key);
-    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
-
-    const promise = new Promise((resolve, reject) => {
-      this.textureLoader.load(url, 
-        (texture) => {
-          this.assets.set(key, texture);
-          resolve(texture);
-        },
-        undefined,
-        (error) => reject(`Error loading texture ${key}: ${error.message}`)
-      );
-    });
-
-    this.loadingPromises.set(key, promise);
-    return promise;
-  }
-
-  async loadAudio(key, url) {
-    if (this.assets.has(key)) return this.assets.get(key);
-    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
-
-    const promise = new Promise((resolve, reject) => {
-      this.audioLoader.load(url, 
-        (buffer) => {
-          this.assets.set(key, buffer);
-          resolve(buffer);
-        },
-        undefined,
-        (error) => reject(`Error loading audio ${key}: ${error.message}`)
-      );
-    });
-
-    this.loadingPromises.set(key, promise);
-    return promise;
-  }
-
-  async loadModel(key, url) {
-    if (this.assets.has(key)) return this.assets.get(key);
-    if (this.loadingPromises.has(key)) return this.loadingPromises.get(key);
-
-    const promise = new Promise((resolve, reject) => {
-      this.modelLoader.load(url, 
-        (gltf) => {
-          this.assets.set(key, gltf);
-          resolve(gltf);
-        },
-        undefined,
-        (error) => reject(`Error loading model ${key}: ${error.message}`)
-      );
-    });
-
-    this.loadingPromises.set(key, promise);
-    return promise;
-  }
-
-  getAsset(key) {
-    return this.assets.get(key);
-  }
-
-  async loadAll(assetManifest) {
-    const loadPromises = [];
-    for (const [key, asset] of Object.entries(assetManifest)) {
-      switch (asset.type) {
-        case 'texture':
-          loadPromises.push(this.loadTexture(key, asset.url));
-          break;
-        case 'audio':
-          loadPromises.push(this.loadAudio(key, asset.url));
-          break;
-        case 'model':
-          loadPromises.push(this.loadModel(key, asset.url));
-          break;
-        default:
-          console.warn(`Unknown asset type for ${key}`);
-      }
+  async loadTexture(url) {
+    if (this.loadedAssets.has(url)) {
+      return this.loadedAssets.get(url);
     }
-    await Promise.all(loadPromises);
+
+    const texture = await new Promise((resolve, reject) => {
+      this.textureLoader.load(url, resolve, undefined, reject);
+    });
+
+    this.loadedAssets.set(url, texture);
+    return texture;
+  }
+
+  async loadModel(url) {
+    if (this.loadedAssets.has(url)) {
+      return this.loadedAssets.get(url);
+    }
+
+    let loader;
+    if (url.endsWith('.obj')) {
+      loader = this.objLoader;
+    } else if (url.endsWith('.fbx')) {
+      loader = this.fbxLoader;
+    } else if (url.endsWith('.gltf') || url.endsWith('.glb')) {
+      loader = this.gltfLoader;
+    } else {
+      throw new Error(`Unsupported model format: ${url}`);
+    }
+
+    const model = await new Promise((resolve, reject) => {
+      loader.load(url, resolve, undefined, reject);
+    });
+
+    this.loadedAssets.set(url, model);
+    return model;
+  }
+
+  async loadCharacterAssets(character) {
+    const [model, animation, texture] = await Promise.all([
+      this.loadModel(character.model),
+      this.loadModel(character.animation),
+      this.loadTexture(character.texture)
+    ]);
+
+    return { model, animation, texture };
   }
 }
 
-export default AssetManager;
+export default new AssetManager();
