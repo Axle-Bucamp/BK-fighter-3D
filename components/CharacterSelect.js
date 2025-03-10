@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import styles from '../styles/CharacterSelect.module.css';
 import CharacterPreview from './CharacterPreview';
 import { loadCustomCharacter } from '../lib/CharacterManager';
 
 const CharacterSelect = ({ onSelectCharacter }) => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [characters, setCharacters] = useState([
+  const [customCharacter, setCustomCharacter] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const characters = [
     { id: 'burger', name: 'Burger' },
     { id: 'jean', name: 'Jean' },
-  ]);
-  const [customCharacter, setCustomCharacter] = useState(null);
+    // Add more default characters here
+  ];
 
   const handleSelect = (character) => {
     setSelectedCharacter(character);
@@ -21,19 +24,16 @@ const CharacterSelect = ({ onSelectCharacter }) => {
     }
   };
 
-  const handleCustomCharacterUpload = async (event) => {
+  const handleFileUpload = async (event) => {
     const files = event.target.files;
     if (files.length > 0) {
-      const objFile = Array.from(files).find(file => file.name.endsWith('.obj'));
-      const fbxFile = Array.from(files).find(file => file.name.endsWith('.fbx'));
-      const jpgFile = Array.from(files).find(file => file.name.endsWith('.jpg'));
-
-      if (objFile && fbxFile && jpgFile) {
-        const customChar = await loadCustomCharacter(objFile, fbxFile, jpgFile);
+      try {
+        const customChar = await loadCustomCharacter(files);
         setCustomCharacter(customChar);
-        setCharacters([...characters, customChar]);
-      } else {
-        alert('Please upload all required files: .obj, .fbx, and .jpg');
+        setSelectedCharacter(customChar);
+      } catch (error) {
+        console.error('Error loading custom character:', error);
+        alert('Failed to load custom character. Please try again.');
       }
     }
   };
@@ -50,19 +50,37 @@ const CharacterSelect = ({ onSelectCharacter }) => {
             }`}
             onClick={() => handleSelect(character)}
           >
-            <CharacterPreview character={character} />
+            <CharacterPreview characterId={character.id} />
             <p className={styles.characterName}>{character.name}</p>
           </div>
         ))}
+        {customCharacter && (
+          <div
+            className={`${styles.characterCard} ${
+              selectedCharacter === customCharacter ? styles.selected : ''
+            }`}
+            onClick={() => handleSelect(customCharacter)}
+          >
+            <CharacterPreview character={customCharacter} />
+            <p className={styles.characterName}>{customCharacter.name}</p>
+          </div>
+        )}
       </div>
-      <div className={styles.customCharacterUpload}>
+      <div className={styles.uploadContainer}>
         <input
           type="file"
-          accept=".obj,.fbx,.jpg"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          accept=".obj,.fbx,.jpg,.png"
+          style={{ display: 'none' }}
           multiple
-          onChange={handleCustomCharacterUpload}
         />
-        <label>Upload Custom Character (.obj, .fbx, .jpg)</label>
+        <button
+          className={styles.uploadButton}
+          onClick={() => fileInputRef.current.click()}
+        >
+          Upload Custom Character
+        </button>
       </div>
       <button
         className={styles.confirmButton}
