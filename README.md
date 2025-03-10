@@ -1,64 +1,66 @@
 # BK Fighter 3D
 
-BK Fighter 3D is an exciting 3D fighting game featuring Burger King-themed characters and Jean-Claude Van Damme movie characters. This project is built using React, Three.js, and WebGL technologies.
+BK Fighter 3D is an exciting 3D fighting game featuring Burger King-themed characters and Jean-Claude Van Damme movie characters. This README provides an overview of the project, its features, and how to set it up.
 
 ## Features
 
-- 3D fighting game with unique characters
-- Enhanced menu system with various game modes
+- 3D fighting gameplay with unique characters
+- Enhanced menu system with multiple game modes
 - Character selection screen with preview animations
 - Custom character upload functionality
-- Multiplayer support (in development)
-- Multiple arenas and stages
-
-## Technologies Used
-
-- React
-- Three.js
-- WebGL
-- Socket.io (for multiplayer)
-- Express.js (server)
+- Support for loading rigged character files (OBJ for 3D objects, FBX for animations, JPG/PNG for textures)
+- Settings menu for audio, graphics, and control options
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+
+### Installation
+
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/BK-fighter-3D.git
+   git clone https://github.com/your-username/bk-fighter-3d.git
    ```
 
-2. Install dependencies:
+2. Navigate to the project directory:
    ```
-   cd BK-fighter-3D
+   cd bk-fighter-3d
+   ```
+
+3. Install dependencies:
+   ```
    npm install
    ```
 
-3. Run the development server:
+4. Start the development server:
    ```
    npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:3000`
-
-## Custom Character Upload
-
-BK Fighter 3D now supports custom character uploads. Users can upload the following file types:
-
-- 3D models: .obj files
-- Animations: .fbx files
-- Textures: .jpg files
-
-To upload a custom character, use the character selection screen and follow the on-screen instructions.
+5. Open your browser and visit `http://localhost:3000` to play the game.
 
 ## Game Modes
 
-- Arcade Mode: Fight against AI opponents in a series of matches
-- Versus Mode: Local multiplayer mode for 1v1 battles
-- Story Mode: Experience the BK Fighter 3D storyline (coming soon)
-- Online Multiplayer: Battle against other players online (in development)
+- Arcade Mode: Fight against a series of AI opponents
+- Story Mode: Experience the BK Fighter 3D storyline
+- Versus Mode: Local multiplayer battles
+- Online Multiplayer: Fight against players from around the world
+
+## Custom Character Upload
+
+Players can upload their own custom characters using the following file formats:
+- 3D Model: OBJ file
+- Animations: FBX file
+- Textures: JPG or PNG files
+
+To upload a custom character, select the "Upload Custom Character" option in the character selection screen and choose the required files.
 
 ## Contributing
 
-We welcome contributions to BK Fighter 3D! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) file for details on our code of conduct and the process for submitting pull requests.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ## License
 
@@ -68,4 +70,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Burger King for inspiration
 - Jean-Claude Van Damme for being awesome
-- The open-source community for providing amazing tools and libraries
+- The open-source community for their invaluable tools and libraries
