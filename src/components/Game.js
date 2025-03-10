@@ -3,6 +3,7 @@ import { CharacterManager } from '../utils/CharacterManager';
 import { MultiplayerManager } from '../utils/MultiplayerManager';
 import GameScene from './GameScene';
 import GameOverScreen from './GameOverScreen';
+import styles from '../styles/Game.module.css';
 
 const Game = ({ gameMode, players, onGameEnd }) => {
   const [characters, setCharacters] = useState([]);
@@ -15,7 +16,7 @@ const Game = ({ gameMode, players, onGameEnd }) => {
     const loadCharacters = async () => {
       const characterManager = new CharacterManager();
       const loadedCharacters = await Promise.all(
-        players.map(player => characterManager.loadCharacter(player.character))
+        players.map(player => characterManager.loadCharacter(player.id))
       );
       setCharacters(loadedCharacters);
       setGameState('playing');
@@ -28,6 +29,9 @@ const Game = ({ gameMode, players, onGameEnd }) => {
     if (gameMode === 'multiplayer') {
       const multiplayerManager = new MultiplayerManager();
       // Set up multiplayer logic here
+      return () => {
+        multiplayerManager.disconnect();
+      };
     }
   }, [gameMode]);
 
@@ -47,7 +51,7 @@ const Game = ({ gameMode, players, onGameEnd }) => {
   const renderGameContent = () => {
     switch (gameState) {
       case 'loading':
-        return <div>Loading characters...</div>;
+        return <div className={styles.loading}>Loading characters...</div>;
       case 'playing':
         return (
           <GameScene
@@ -72,7 +76,7 @@ const Game = ({ gameMode, players, onGameEnd }) => {
   };
 
   return (
-    <div className="game-container">
+    <div className={styles.gameContainer}>
       <h2>{gameMode === 'multiplayer' ? 'Multiplayer Mode' : 'Single Player Mode'}</h2>
       {renderGameContent()}
     </div>
