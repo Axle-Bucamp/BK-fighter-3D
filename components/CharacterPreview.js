@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
-const CharacterPreview = ({ character }) => {
+const CharacterPreview = ({ characterId, character }) => {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -18,41 +18,55 @@ const CharacterPreview = ({ character }) => {
     renderer.setSize(width, height);
     mountRef.current.appendChild(renderer.domElement);
 
-    const light = new THREE.AmbientLight(0xffffff, 0.5);
+    const light = new THREE.PointLight(0xffffff, 1, 100);
+    light.position.set(0, 0, 10);
     scene.add(light);
-
-    const pointLight = new THREE.PointLight(0xffffff, 0.5);
-    pointLight.position.set(5, 5, 5);
-    scene.add(pointLight);
 
     camera.position.z = 5;
 
     let mixer;
+    let model;
 
-    if (character.customModel) {
-      const objLoader = new OBJLoader();
-      objLoader.load(character.customModel, (obj) => {
-        scene.add(obj);
-      });
+    const loadModel = () => {
+      if (character) {
+        // Load custom character
+        const objLoader = new OBJLoader();
+        const fbxLoader = new FBXLoader();
+        const textureLoader = new THREE.TextureLoader();
 
-      const fbxLoader = new FBXLoader();
-      fbxLoader.load(character.customAnimation, (fbx) => {
-        mixer = new THREE.AnimationMixer(fbx);
-        const action = mixer.clipAction(fbx.animations[0]);
-        action.play();
-        scene.add(fbx);
-      });
-    } else {
-      const loader = new GLTFLoader();
-      loader.load(`/models/${character.id}.gltf`, (gltf) => {
-        const model = gltf.scene;
-        scene.add(model);
+        objLoader.load(character.objUrl, (obj) => {
+          model = obj;
+          scene.add(model);
 
-        mixer = new THREE.AnimationMixer(model);
-        const action = mixer.clipAction(gltf.animations[0]);
-        action.play();
-      });
-    }
+          fbxLoader.load(character.fbxUrl, (fbx) => {
+            mixer = new THREE.AnimationMixer(model);
+            const action = mixer.clipAction(fbx.animations[0]);
+            action.play();
+
+            textureLoader.load(character.textureUrl, (texture) => {
+              model.traverse((child) => {
+                if (child.isMesh) {
+                  child.material.map = texture;
+                }
+              });
+            });
+          });
+        });
+      } else {
+        // Load default character
+        const loader = new GLTFLoader();
+        loader.load(`/models/${characterId}.gltf`, (gltf) => {
+          model = gltf.scene;
+          scene.add(model);
+
+          mixer = new THREE.AnimationMixer(model);
+          const action = mixer.clipAction(gltf.animations[0]);
+          action.play();
+        });
+      }
+    };
+
+    loadModel();
 
     const clock = new THREE.Clock();
 
@@ -60,8 +74,11 @@ const CharacterPreview = ({ character }) => {
       requestAnimationFrame(animate);
 
       if (mixer) {
-        const delta = clock.getDelta();
-        mixer.update(delta);
+        mixer.update(clock.getDelta());
+      }
+
+      if (model) {
+        model.rotation.y += 0.01;
       }
 
       renderer.render(scene, camera);
@@ -72,7 +89,7 @@ const CharacterPreview = ({ character }) => {
     return () => {
       mountRef.current.removeChild(renderer.domElement);
     };
-  }, [character]);
+  }, [characterId, character]);
 
   return <div ref={mountRef} />;
 };
