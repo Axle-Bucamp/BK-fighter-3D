@@ -1,16 +1,11 @@
 import React from 'react';
 import Game from '../components/Game';
 
-const GamePage = () => {
-  const players = [
-    { id: 1, character: 'burger_king_classic' },
-    { id: 2, character: 'van_damme_kickboxer' },
-  ];
-
+const GamePage = ({ gameMode, players, difficulty }) => {
   return (
     <div>
-      <h1>Battle Royale</h1>
-      <Game players={players} />
+      <h1>BK Fighter 3D</h1>
+      <Game gameMode={gameMode} players={players} difficulty={difficulty} />
     </div>
   );
 };
