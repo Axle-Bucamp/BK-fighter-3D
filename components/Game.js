@@ -4,7 +4,10 @@ import React, {
   useState,
 } from 'react';
 
-import { useFrame } from '@react-three/fiber';
+import {
+  Canvas,
+  useFrame,
+} from '@react-three/fiber';
 
 import { CharacterManager } from './CharacterManager';
 import { GameOverScreen } from './GameOverScreen';
@@ -29,9 +32,10 @@ const Game = ({ gameMode, selectedCharacters }) => {
       const aiOpponent = characterManager.current.loadCharacter('aiCharacter');
       setPlayer2(aiOpponent);
     }
-  }, []);
+  }, [gameMode, selectedCharacters]);
 
   const handleKeyDown = (event) => {
+    if (!player1) return;
     switch (event.key) {
       case 'ArrowLeft':
         player1.moveLeft();
@@ -45,7 +49,8 @@ const Game = ({ gameMode, selectedCharacters }) => {
       case 'Space':
         player1.attack();
         break;
-      // Add more controls as needed
+      default:
+        break;
     }
   };
 
@@ -56,51 +61,55 @@ const Game = ({ gameMode, selectedCharacters }) => {
     };
   }, [player1]);
 
-  useFrame(() => {
-    if (gameState === 'playing') {
-      // Update game logic here
-      player1.update();
-      player2.update();
-
-      // Check for collisions
-      if (checkCollision(player1, player2)) {
-        handleCollision(player1, player2);
-      }
-
-      // Check for game over condition
-      if (player1.health <= 0 || player2.health <= 0) {
-        setGameState('gameOver');
-      }
-    }
-  });
-
-  const checkCollision = (char1, char2) => {
-    // Implement collision detection logic
-    // Return true if characters are colliding, false otherwise
-  };
-
-  const handleCollision = (char1, char2) => {
-    // Implement collision resolution logic
-    // e.g., reduce health, apply knockback, etc.
-  };
-
   const restartGame = () => {
-    // Reset game state and characters
     setGameState('playing');
-    player1.reset();
-    player2.reset();
+    player1?.reset();
+    player2?.reset();
   };
 
   return (
     <>
       {gameState === 'playing' && (
-        <GameScene player1={player1} player2={player2} gameMode={gameMode} />
+        <Canvas>
+          <GameLoop player1={player1} player2={player2} setGameState={setGameState} />
+          <GameScene player1={player1} player2={player2} gameMode={gameMode} />
+        </Canvas>
       )}
       {gameState === 'gameOver' && (
-        <GameOverScreen winner={player1.health > 0 ? 'Player 1' : 'Player 2'} onRestart={restartGame} />
+        <GameOverScreen winner={player1?.health > 0 ? 'Player 1' : 'Player 2'} onRestart={restartGame} />
       )}
     </>
   );
 };
 
 export default Game;
+
+const GameLoop = ({ player1, player2, setGameState }) => {
+  useFrame(() => {
+    if (!player1 || !player2) return;
+
+    player1.update();
+    player2.update();
+
+    // Check for collision
+    if (checkCollision(player1, player2)) {
+      handleCollision(player1, player2);
+    }
+
+    // Check for game over
+    if (player1.health <= 0 || player2.health <= 0) {
+      setGameState('gameOver');
+    }
+  });
+
+  return null; // This component runs logic but renders nothing
+};
+
+const checkCollision = (char1, char2) => {
+  // Implement collision detection logic
+  return false; // Placeholder
+};
+
+const handleCollision = (char1, char2) => {
+  // Implement collision effects
+};

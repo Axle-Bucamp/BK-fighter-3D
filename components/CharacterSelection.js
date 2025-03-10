@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
+
 import styles from '../styles/CharacterSelection.module.css';
-import { BurgerKingClassic } from './BurgerKingClassic';
-import { BurgerKingWhopper } from './BurgerKingWhopper';
-import { BurgerKingChicken } from './BurgerKingChicken';
-import { VanDammeKickboxer } from './VanDammeKickboxer';
-import { VanDammeUniversalSoldier } from './VanDammeUniversalSoldier';
-import { VanDammeTimecop } from './VanDammeTimecop';
 
 const characters = [
-  { name: 'Burger King Classic', class: BurgerKingClassic, image: '/images/bk_classic.png' },
-  { name: 'Burger King Whopper', class: BurgerKingWhopper, image: '/images/bk_whopper.png' },
-  { name: 'Burger King Chicken', class: BurgerKingChicken, image: '/images/bk_chicken.png' },
-  { name: 'Van Damme Kickboxer', class: VanDammeKickboxer, image: '/images/vd_kickboxer.png' },
-  { name: 'Van Damme Universal Soldier', class: VanDammeUniversalSoldier, image: '/images/vd_universalsoldier.png' },
-  { name: 'Van Damme Timecop', class: VanDammeTimecop, image: '/images/vd_timecop.png' },
+  { name: 'burger', class: Burger, image: '/images/burger.png' },
+  { name: 'jean', class: Jean, image: '/images/jean.png' },
 ];
 
 const CharacterSelection = ({ onCharacterSelect }) => {

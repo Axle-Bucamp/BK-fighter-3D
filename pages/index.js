@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import MainMenu from '../components/MainMenu';
+
 import Game from '../components/Game';
+import MainMenu from '../components/MainMenu';
 import SettingsMenu from '../components/SettingsMenu';
 import TutorialScreen from '../components/TutorialScreen';
 
@@ -40,6 +41,11 @@ const Home = () => {
     setCurrentView('menu');
   };
 
+  const handleSelectGameMode = (mode) => {
+    setGameMode(mode);
+    setCurrentView('game');
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'menu':
@@ -51,10 +57,11 @@ const Home = () => {
             onStartOnline={handleStartOnline}
             onShowOptions={handleShowOptions}
             onShowTutorial={handleShowTutorial}
+            onSelectGameMode={handleSelectGameMode}
           />
         );
       case 'game':
-        return <Game mode={gameMode} onExit={handleReturnToMenu} />;
+        return <Game mode={gameMode} onExit={handleReturnToMenu} selectedCharacters={selectedCharacters}/>;
       case 'options':
         return <SettingsMenu onBack={handleReturnToMenu} />;
       case 'tutorial':
