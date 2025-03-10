@@ -1,65 +1,34 @@
-import React, { useState } from 'react';
-import MainMenu from './components/MainMenu';
-import CharacterSelect from './components/CharacterSelect';
-import Game from './components/Game';
+import React, { useEffect, useState } from 'react';
+import MultiplayerManager from './components/MultiplayerManager';
 import LobbyRoom from './components/LobbyRoom';
+import Game from './components/Game';
+import config from './config';
 
-const App = () => {
-  const [gameState, setGameState] = useState('mainMenu');
-  const [gameMode, setGameMode] = useState(null);
-  const [selectedCharacters, setSelectedCharacters] = useState([]);
+function App() {
+  const [gameStarted, setGameStarted] = useState(false);
 
-  const handleGameModeSelect = (mode) => {
-    setGameMode(mode);
-    setGameState('characterSelect');
-  };
+  useEffect(() => {
+    MultiplayerManager.connect(config.websocketUrl);
 
-  const handleCharacterSelect = (characters) => {
-    setSelectedCharacters(characters);
-    if (gameMode === 'multiplayer') {
-      setGameState('lobby');
-    } else {
-      setGameState('game');
-    }
-  };
+    return () => {
+      MultiplayerManager.disconnect();
+    };
+  }, []);
 
-  const handleReturnToMenu = () => {
-    setGameState('mainMenu');
-    setGameMode(null);
-    setSelectedCharacters([]);
-  };
-
-  const handleStartGame = () => {
-    setGameState('game');
+  const handleGameStart = () => {
+    setGameStarted(true);
   };
 
   return (
-    <div className="app">
-      {gameState === 'mainMenu' && (
-        <MainMenu onGameModeSelect={handleGameModeSelect} />
-      )}
-      {gameState === 'characterSelect' && (
-        <CharacterSelect
-          gameMode={gameMode}
-          onCharacterSelect={handleCharacterSelect}
-          onReturnToMenu={handleReturnToMenu}
-        />
-      )}
-      {gameState === 'lobby' && (
-        <LobbyRoom
-          onGameStart={handleStartGame}
-          onReturnToMenu={handleReturnToMenu}
-        />
-      )}
-      {gameState === 'game' && (
-        <Game
-          gameMode={gameMode}
-          selectedCharacters={selectedCharacters}
-          onReturnToMenu={handleReturnToMenu}
-        />
+    <div className="App">
+      <h1>BK Fighter 3D</h1>
+      {!gameStarted ? (
+        <LobbyRoom onGameStart={handleGameStart} />
+      ) : (
+        <Game />
       )}
     </div>
   );
-};
+}
 
 export default App;
