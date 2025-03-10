@@ -1,33 +1,43 @@
 import React, { useState } from 'react';
-import { useRouter } from 'next/router';
-import CharacterSelect from '../components/CharacterSelect';
 import MainMenu from '../components/MainMenu';
-import styles from '../styles/MainMenu.module.css';
+import CharacterSelect from '../components/CharacterSelect';
+import Game from '../components/Game';
 
 const IndexPage = () => {
+  const [gameState, setGameState] = useState('mainMenu');
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [gameMode, setGameMode] = useState(null);
-  const [showCharacterSelect, setShowCharacterSelect] = useState(false);
-  const router = useRouter();
 
-  const handleModeSelect = (mode) => {
+  const handleGameModeSelect = (mode) => {
     setGameMode(mode);
-    setShowCharacterSelect(true);
+    setGameState('characterSelect');
   };
 
-  const handleCharacterSelect = (selectedCharacter) => {
-    router.push({
-      pathname: '/game',
-      query: { gameMode, character: selectedCharacter },
-    });
+  const handleCharacterSelect = (character) => {
+    setSelectedCharacter(character);
+    setGameState('game');
+  };
+
+  const handleReturnToMainMenu = () => {
+    setGameState('mainMenu');
+    setSelectedCharacter(null);
+    setGameMode(null);
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>BK Fighter 3D</h1>
-      {!showCharacterSelect ? (
-        <MainMenu onModeSelect={handleModeSelect} />
-      ) : (
-        <CharacterSelect onSelect={handleCharacterSelect} />
+    <div>
+      {gameState === 'mainMenu' && (
+        <MainMenu onGameModeSelect={handleGameModeSelect} />
+      )}
+      {gameState === 'characterSelect' && (
+        <CharacterSelect onCharacterSelect={handleCharacterSelect} onBack={handleReturnToMainMenu} />
+      )}
+      {gameState === 'game' && (
+        <Game
+          gameMode={gameMode}
+          selectedCharacter={selectedCharacter}
+          onReturnToMainMenu={handleReturnToMainMenu}
+        />
       )}
     </div>
   );
