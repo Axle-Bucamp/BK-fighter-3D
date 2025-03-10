@@ -1,80 +1,46 @@
-import React, {
-  useEffect,
-  useRef,
-} from 'react';
-
-import {
-  AnimationMixer,
-  Clock,
-  TextureLoader,
-} from 'three';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-
+import React, { useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import {
-  Canvas,
-  useFrame,
-  useLoader,
-  useThree,
-} from '@react-three/fiber';
+import CharacterManager from '../utils/CharacterManager';
+import Arena from './Arena';
+import Player from './Player';
+import GameUI from './GameUI';
 
-const Character = ({ name, position }) => {
-  const objRef = useRef();
-  const mixerRef = useRef(null);
-  const clockRef = useRef(new Clock()); // Ensure the clock persists
-  const { scene } = useThree();
-
-  // Load MTL file
-  const materials = useLoader(MTLLoader, `/assets/${name}/${name}.mtl`);
-
-  // Load OBJ file after materials are loaded
-  const obj = useLoader(OBJLoader, `/assets/${name}/${name}.obj`);
-
-  // Load texture
-  const texture = useLoader(TextureLoader, `/textures/${name}.png`);
+const Game = ({ gameMode, selectedCharacters }) => {
+  const [characters, setCharacters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!obj || !materials) return;
-
-    materials.preload();
-    obj.traverse((child) => {
-      if (child.isMesh) {
-        child.material = materials.materials[child.name] || materials.materials.default;
-        child.material.map = texture;
+    const loadCharacters = async () => {
+      setIsLoading(true);
+      try {
+        const loadedCharacters = await CharacterManager.loadCharacters(selectedCharacters);
+        setCharacters(loadedCharacters);
+      } catch (error) {
+        console.error('Error loading characters:', error);
       }
-    });
-
-    // Set up animation mixer
-    mixerRef.current = new AnimationMixer(obj);
-
-    return () => {
-      if (mixerRef.current) {
-        mixerRef.current.stopAllAction();
-      }
+      setIsLoading(false);
     };
-  }, [obj, materials, texture]);
 
-  useFrame(() => {
-    if (mixerRef.current) {
-      mixerRef.current.update(clockRef.current.getDelta());
-    }
-  });
+    loadCharacters();
+  }, [selectedCharacters]);
 
-  return <primitive object={obj} position={position} ref={objRef} />;
-};
+  if (isLoading) {
+    return <div>Loading characters...</div>;
+  }
 
-const Game = ({ players = [] }) => { // Default to empty array
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <Canvas camera={{ position: [0, 5, 10] }}>
+    <div style={{ width: '100%', height: '100vh' }}>
+      <Canvas>
+        <OrbitControls />
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} />
-        {players.map((player, index) => (
-          <Character key={index} name={player.character} position={[index * 4 - 2, 0, 0]} />
+        <Arena />
+        {characters.map((character, index) => (
+          <Player key={index} character={character} position={[index * 2 - 1, 0, 0]} />
         ))}
-        <OrbitControls />
       </Canvas>
+      <GameUI gameMode={gameMode} characters={characters} />
     </div>
   );
 };
