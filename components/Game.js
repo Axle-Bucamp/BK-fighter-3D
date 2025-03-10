@@ -1,48 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import CharacterManager from '../utils/CharacterManager';
-import Arena from './Arena';
-import Player from './Player';
-import GameUI from './GameUI';
+import React, { useState, useEffect } from 'react';
+import CharacterManager from '../lib/CharacterManager';
+import GameScene from './GameScene';
+import GameOverScreen from './GameOverScreen';
 
-const Game = ({ gameMode, selectedCharacters }) => {
+const Game = ({ gameMode, players, difficulty }) => {
+  const [gameState, setGameState] = useState('playing');
+  const [winner, setWinner] = useState(null);
+  const [scores, setScores] = useState({ player1: 0, player2: 0 });
+  const [gameStats, setGameStats] = useState(null);
   const [characters, setCharacters] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadCharacters = async () => {
-      setIsLoading(true);
-      try {
-        const loadedCharacters = await CharacterManager.loadCharacters(selectedCharacters);
-        setCharacters(loadedCharacters);
-      } catch (error) {
-        console.error('Error loading characters:', error);
-      }
-      setIsLoading(false);
+      const characterManager = new CharacterManager();
+      const loadedCharacters = await Promise.all(
+        players.map(player => characterManager.loadCharacter(player.character))
+      );
+      setCharacters(loadedCharacters);
     };
 
     loadCharacters();
-  }, [selectedCharacters]);
+  }, [players]);
 
-  if (isLoading) {
-    return <div>Loading characters...</div>;
+  const handleGameOver = (winner, finalScores, stats) => {
+    setGameState('gameOver');
+    setWinner(winner);
+    setScores(finalScores);
+    setGameStats(stats);
+  };
+
+  const handleRestart = () => {
+    setGameState('playing');
+    setWinner(null);
+    setScores({ player1: 0, player2: 0 });
+    setGameStats(null);
+  };
+
+  const handleReturnToMenu = () => {
+    // This function should be passed as a prop from a parent component
+    // to handle returning to the main menu
+    console.log('Returning to main menu');
+  };
+
+  if (gameState === 'playing') {
+    return (
+      <GameScene
+        gameMode={gameMode}
+        difficulty={difficulty}
+        characters={characters}
+        onGameOver={handleGameOver}
+      />
+    );
+  } else if (gameState === 'gameOver') {
+    return (
+      <GameOverScreen
+        winner={winner}
+        scores={scores}
+        gameStats={gameStats}
+        onRestart={handleRestart}
+        onReturnToMenu={handleReturnToMenu}
+      />
+    );
   }
-
-  return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <Canvas>
-        <OrbitControls />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <Arena />
-        {characters.map((character, index) => (
-          <Player key={index} character={character} position={[index * 2 - 1, 0, 0]} />
-        ))}
-      </Canvas>
-      <GameUI gameMode={gameMode} characters={characters} />
-    </div>
-  );
 };
 
 export default Game;
