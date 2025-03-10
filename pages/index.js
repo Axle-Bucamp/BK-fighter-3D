@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import MainMenu from '../components/MainMenu';
+
 import CharacterSelect from '../components/CharacterSelect';
 import Game from '../components/Game';
+import MainMenu from '../components/MainMenu';
 
 const IndexPage = () => {
   const [gameState, setGameState] = useState('menu');
@@ -27,10 +28,10 @@ const IndexPage = () => {
   return (
     <div>
       {gameState === 'menu' && (
-        <MainMenu onStartGame={handleStartGame} />
+        <MainMenu onStartGame={handleStartGame} onSelectGameMode={handleStartGame}/>
       )}
       {gameState === 'characterSelect' && (
-        <CharacterSelect onSelect={handleCharacterSelect} onBack={handleReturnToMenu} />
+        <CharacterSelect onSelect={handleCharacterSelect} onCharacterSelect={handleCharacterSelect} onBack={handleReturnToMenu} />
       )}
       {gameState === 'game' && (
         <Game

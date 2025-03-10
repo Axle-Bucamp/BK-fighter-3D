@@ -1,7 +1,7 @@
 const lighthouse = require('lighthouse');
 const chromeLauncher = require('chrome-launcher');
 const { spawn } = require('child_process');
-const config = require('../lighthouse-config.js');
+const config = require('../../lighthouse-config.js');
 
 const url = 'http://localhost:3000'; // Adjust if your dev server uses a different port
 

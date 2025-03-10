@@ -78,7 +78,7 @@ const CharacterSelect = ({ onCharacterSelect, selectedGameMode }) => {
           type="file"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          accept=".obj,.fbx,.jpg,.png"
+          accept=".gltf"
           style={{ display: 'none' }}
           multiple
         />
