@@ -1,19 +1,19 @@
-import { EventEmitter } from 'events';
+import EventEmitter from 'events';
 
 class MultiplayerManager extends EventEmitter {
   constructor() {
     super();
     this.socket = null;
-    this.clientId = null;
-    this.currentLobby = null;
-    this.players = [];
+    this.connected = false;
+    this.lobby = null;
   }
 
-  connect(serverUrl = 'ws://localhost:3000') {
-    this.socket = new WebSocket(serverUrl);
+  connect(url) {
+    this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
       console.log('Connected to WebSocket server');
+      this.connected = true;
       this.emit('connected');
     };
 
@@ -24,6 +24,7 @@ class MultiplayerManager extends EventEmitter {
 
     this.socket.onclose = () => {
       console.log('Disconnected from WebSocket server');
+      this.connected = false;
       this.emit('disconnected');
     };
 
@@ -35,23 +36,14 @@ class MultiplayerManager extends EventEmitter {
 
   handleMessage(data) {
     switch (data.type) {
-      case 'connection':
-        this.clientId = data.clientId;
-        this.emit('clientIdReceived', this.clientId);
+      case 'lobby_update':
+        this.lobby = data.players;
+        this.emit('lobbyUpdate', data.players);
         break;
-      case 'lobbyCreated':
-      case 'lobbyJoined':
-        this.currentLobby = data.lobbyName;
-        this.emit('lobbyUpdated', this.currentLobby);
-        break;
-      case 'playerJoined':
-      case 'playerLeft':
-        this.updatePlayers(data);
-        break;
-      case 'gameStarted':
+      case 'game_started':
         this.emit('gameStarted');
         break;
-      case 'gameUpdate':
+      case 'game_update':
         this.emit('gameUpdate', data);
         break;
       case 'error':
@@ -63,44 +55,36 @@ class MultiplayerManager extends EventEmitter {
     }
   }
 
-  updatePlayers(data) {
-    // Update players list based on server data
-    // This is a simplified version, you might want to expand this
-    if (data.type === 'playerJoined') {
-      this.players.push(data.clientId);
-    } else if (data.type === 'playerLeft') {
-      this.players = this.players.filter(id => id !== data.clientId);
-    }
-    this.emit('playersUpdated', this.players);
-  }
-
   createLobby(lobbyName) {
-    this.send({ type: 'createLobby', lobbyName });
+    this.sendMessage({ type: 'create_lobby', lobbyName });
   }
 
   joinLobby(lobbyName) {
-    this.send({ type: 'joinLobby', lobbyName });
+    this.sendMessage({ type: 'join_lobby', lobbyName });
   }
 
   leaveLobby() {
-    this.send({ type: 'leaveLobby' });
-    this.currentLobby = null;
-    this.players = [];
+    if (this.lobby) {
+      this.sendMessage({ type: 'leave_lobby', lobbyName: this.lobby });
+      this.lobby = null;
+    }
   }
 
   startGame() {
-    this.send({ type: 'startGame' });
+    if (this.lobby) {
+      this.sendMessage({ type: 'start_game', lobbyName: this.lobby });
+    }
   }
 
   sendGameUpdate(updateData) {
-    this.send({ type: 'gameUpdate', ...updateData });
+    this.sendMessage({ type: 'game_update', ...updateData });
   }
 
-  send(data) {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+  sendMessage(data) {
+    if (this.connected) {
       this.socket.send(JSON.stringify(data));
     } else {
-      console.error('WebSocket is not connected');
+      console.error('Not connected to WebSocket server');
     }
   }
 
