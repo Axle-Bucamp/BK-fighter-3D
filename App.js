@@ -3,58 +3,62 @@ import MainMenu from './components/MainMenu';
 import CharacterSelect from './components/CharacterSelect';
 import Game from './components/Game';
 import LobbyRoom from './components/LobbyRoom';
+import CharacterManager from './lib/CharacterManager';
 
 const App = () => {
   const [gameState, setGameState] = useState('mainMenu');
   const [gameMode, setGameMode] = useState(null);
   const [selectedCharacters, setSelectedCharacters] = useState([]);
 
-  const handleGameModeSelect = (mode) => {
+  const handleGameModeSelection = (mode) => {
     setGameMode(mode);
-    setGameState(mode === 'multiplayer' ? 'lobby' : 'characterSelect');
+    setGameState('characterSelect');
   };
 
-  const handleCharacterSelect = (characters) => {
+  const handleCharacterSelection = (characters) => {
     setSelectedCharacters(characters);
-    setGameState('game');
+    if (gameMode === 'multiplayer') {
+      setGameState('lobby');
+    } else {
+      setGameState('game');
+    }
   };
 
-  const handleReturnToMenu = () => {
+  const handleReturnToMainMenu = () => {
     setGameState('mainMenu');
     setGameMode(null);
     setSelectedCharacters([]);
   };
 
-  return (
-    <div>
-      {gameState === 'mainMenu' && (
-        <MainMenu onGameModeSelect={handleGameModeSelect} />
-      )}
-      {gameState === 'characterSelect' && (
-        <CharacterSelect
-          gameMode={gameMode}
-          onCharacterSelect={handleCharacterSelect}
-          onBack={handleReturnToMenu}
-        />
-      )}
-      {gameState === 'lobby' && (
-        <LobbyRoom
-          onJoinGame={(characters) => {
-            setSelectedCharacters(characters);
-            setGameState('game');
-          }}
-          onBack={handleReturnToMenu}
-        />
-      )}
-      {gameState === 'game' && (
-        <Game
-          gameMode={gameMode}
-          selectedCharacters={selectedCharacters}
-          onGameOver={handleReturnToMenu}
-        />
-      )}
-    </div>
-  );
+  const renderGameState = () => {
+    switch (gameState) {
+      case 'mainMenu':
+        return <MainMenu onSelectGameMode={handleGameModeSelection} />;
+      case 'characterSelect':
+        return (
+          <CharacterSelect
+            gameMode={gameMode}
+            onCharacterSelect={handleCharacterSelection}
+            onBack={handleReturnToMainMenu}
+          />
+        );
+      case 'lobby':
+        return <LobbyRoom characters={selectedCharacters} onBack={handleReturnToMainMenu} />;
+      case 'game':
+        return (
+          <Game
+            gameMode={gameMode}
+            characters={selectedCharacters}
+            characterManager={new CharacterManager()}
+            onGameOver={handleReturnToMainMenu}
+          />
+        );
+      default:
+        return <div>Error: Invalid game state</div>;
+    }
+  };
+
+  return <div className="app">{renderGameState()}</div>;
 };
 
 export default App;
