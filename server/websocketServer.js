@@ -1,128 +1,121 @@
 const WebSocket = require('ws');
 const http = require('http');
+const url = require('url');
 
 const server = http.createServer();
 const wss = new WebSocket.Server({ server });
 
-const clients = new Map();
 const lobbies = new Map();
+const clients = new Map();
 
-wss.on('connection', (ws) => {
-  const clientId = Date.now().toString();
-  clients.set(clientId, ws);
+wss.on('connection', (ws, req) => {
+  const id = Math.random().toString(36).substr(2, 9);
+  clients.set(ws, { id, lobby: null });
 
-  console.log(`New client connected: ${clientId}`);
+  console.log(`Client ${id} connected`);
 
   ws.on('message', (message) => {
     const data = JSON.parse(message);
-    handleMessage(clientId, data);
+    handleMessage(ws, data);
   });
 
   ws.on('close', () => {
-    console.log(`Client disconnected: ${clientId}`);
-    clients.delete(clientId);
-    removeClientFromLobby(clientId);
+    const client = clients.get(ws);
+    if (client.lobby) {
+      leaveLobby(ws, client.lobby);
+    }
+    clients.delete(ws);
+    console.log(`Client ${id} disconnected`);
   });
-
-  ws.send(JSON.stringify({ type: 'connection', clientId }));
 });
 
-function handleMessage(clientId, data) {
+function handleMessage(ws, data) {
   switch (data.type) {
-    case 'createLobby':
-      createLobby(clientId, data.lobbyName);
+    case 'create_lobby':
+      createLobby(ws, data.lobbyName);
       break;
-    case 'joinLobby':
-      joinLobby(clientId, data.lobbyName);
+    case 'join_lobby':
+      joinLobby(ws, data.lobbyName);
       break;
-    case 'leaveLobby':
-      leaveLobby(clientId);
+    case 'leave_lobby':
+      leaveLobby(ws, data.lobbyName);
       break;
-    case 'startGame':
-      startGame(clientId);
+    case 'start_game':
+      startGame(data.lobbyName);
       break;
-    case 'gameUpdate':
-      broadcastToLobby(clientId, data);
+    case 'game_update':
+      broadcastGameUpdate(ws, data);
       break;
     default:
       console.log(`Unknown message type: ${data.type}`);
   }
 }
 
-function createLobby(clientId, lobbyName) {
+function createLobby(ws, lobbyName) {
   if (lobbies.has(lobbyName)) {
-    sendToClient(clientId, { type: 'error', message: 'Lobby already exists' });
+    ws.send(JSON.stringify({ type: 'error', message: 'Lobby already exists' }));
     return;
   }
-  lobbies.set(lobbyName, new Set([clientId]));
-  sendToClient(clientId, { type: 'lobbyCreated', lobbyName });
+  lobbies.set(lobbyName, { players: new Set(), game: null });
+  joinLobby(ws, lobbyName);
 }
 
-function joinLobby(clientId, lobbyName) {
-  if (!lobbies.has(lobbyName)) {
-    sendToClient(clientId, { type: 'error', message: 'Lobby does not exist' });
-    return;
-  }
+function joinLobby(ws, lobbyName) {
   const lobby = lobbies.get(lobbyName);
-  lobby.add(clientId);
-  sendToClient(clientId, { type: 'lobbyJoined', lobbyName });
-  broadcastToLobby(clientId, { type: 'playerJoined', clientId });
+  if (!lobby) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Lobby not found' }));
+    return;
+  }
+  const client = clients.get(ws);
+  client.lobby = lobbyName;
+  lobby.players.add(client.id);
+  broadcastLobbyUpdate(lobbyName);
 }
 
-function leaveLobby(clientId) {
-  removeClientFromLobby(clientId);
-}
-
-function startGame(clientId) {
-  const lobby = findLobbyByClientId(clientId);
+function leaveLobby(ws, lobbyName) {
+  const lobby = lobbies.get(lobbyName);
   if (!lobby) return;
-  broadcastToLobby(clientId, { type: 'gameStarted' });
-}
-
-function removeClientFromLobby(clientId) {
-  for (const [lobbyName, lobby] of lobbies.entries()) {
-    if (lobby.has(clientId)) {
-      lobby.delete(clientId);
-      if (lobby.size === 0) {
-        lobbies.delete(lobbyName);
-      } else {
-        broadcastToLobby(clientId, { type: 'playerLeft', clientId });
-      }
-      break;
-    }
+  const client = clients.get(ws);
+  lobby.players.delete(client.id);
+  client.lobby = null;
+  if (lobby.players.size === 0) {
+    lobbies.delete(lobbyName);
+  } else {
+    broadcastLobbyUpdate(lobbyName);
   }
 }
 
-function findLobbyByClientId(clientId) {
-  for (const lobby of lobbies.values()) {
-    if (lobby.has(clientId)) {
-      return lobby;
-    }
-  }
-  return null;
-}
-
-function broadcastToLobby(senderId, data) {
-  const lobby = findLobbyByClientId(senderId);
+function startGame(lobbyName) {
+  const lobby = lobbies.get(lobbyName);
   if (!lobby) return;
+  lobby.game = { status: 'playing' };
+  broadcastToLobby(lobbyName, { type: 'game_started' });
+}
 
-  for (const clientId of lobby) {
-    if (clientId !== senderId) {
-      sendToClient(clientId, data);
+function broadcastGameUpdate(ws, data) {
+  const client = clients.get(ws);
+  if (!client.lobby) return;
+  broadcastToLobby(client.lobby, data, ws);
+}
+
+function broadcastLobbyUpdate(lobbyName) {
+  const lobby = lobbies.get(lobbyName);
+  if (!lobby) return;
+  const players = Array.from(lobby.players);
+  broadcastToLobby(lobbyName, { type: 'lobby_update', players });
+}
+
+function broadcastToLobby(lobbyName, data, exclude = null) {
+  const lobby = lobbies.get(lobbyName);
+  if (!lobby) return;
+  for (const [ws, client] of clients.entries()) {
+    if (client.lobby === lobbyName && ws !== exclude) {
+      ws.send(JSON.stringify(data));
     }
   }
 }
 
-function sendToClient(clientId, data) {
-  const client = clients.get(clientId);
-  if (client && client.readyState === WebSocket.OPEN) {
-    client.send(JSON.stringify(data));
-  }
-}
-
-const PORT = process.env.PORT || N3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`WebSocket server is running on port ${PORT}`);
 });
-
-module.exports = server;
