@@ -23,41 +23,41 @@ const App = () => {
     }
   };
 
-  const handleStartGame = () => {
-    setGameState('game');
-  };
-
   const handleReturnToMenu = () => {
     setGameState('mainMenu');
     setGameMode(null);
     setSelectedCharacters([]);
   };
 
-  const renderGameState = () => {
-    switch (gameState) {
-      case 'mainMenu':
-        return <MainMenu onSelectGameMode={handleGameModeSelect} />;
-      case 'characterSelect':
-        return <CharacterSelect onSelectCharacters={handleCharacterSelect} />;
-      case 'lobby':
-        return <LobbyRoom characters={selectedCharacters} onStartGame={handleStartGame} />;
-      case 'game':
-        return (
-          <Game
-            gameMode={gameMode}
-            players={selectedCharacters}
-            onGameEnd={handleReturnToMenu}
-          />
-        );
-      default:
-        return null;
-    }
+  const handleStartGame = () => {
+    setGameState('game');
   };
 
   return (
-    <div className="app-container">
-      <h1>BK Fighter 3D</h1>
-      {renderGameState()}
+    <div className="app">
+      {gameState === 'mainMenu' && (
+        <MainMenu onGameModeSelect={handleGameModeSelect} />
+      )}
+      {gameState === 'characterSelect' && (
+        <CharacterSelect
+          gameMode={gameMode}
+          onCharacterSelect={handleCharacterSelect}
+          onReturnToMenu={handleReturnToMenu}
+        />
+      )}
+      {gameState === 'lobby' && (
+        <LobbyRoom
+          onGameStart={handleStartGame}
+          onReturnToMenu={handleReturnToMenu}
+        />
+      )}
+      {gameState === 'game' && (
+        <Game
+          gameMode={gameMode}
+          selectedCharacters={selectedCharacters}
+          onReturnToMenu={handleReturnToMenu}
+        />
+      )}
     </div>
   );
 };
