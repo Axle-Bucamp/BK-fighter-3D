@@ -5,53 +5,50 @@ import Game from './components/Game';
 import LobbyRoom from './components/LobbyRoom';
 
 const App = () => {
-  const [currentScreen, setCurrentScreen] = useState('mainMenu');
-  const [selectedGameMode, setSelectedGameMode] = useState(null);
-  const [selectedCharacters, setSelectedCharacters] = useState({});
+  const [gameState, setGameState] = useState('mainMenu');
+  const [gameMode, setGameMode] = useState(null);
+  const [selectedCharacters, setSelectedCharacters] = useState([]);
 
   const handleGameModeSelect = (mode) => {
-    setSelectedGameMode(mode);
-    setCurrentScreen('characterSelect');
+    setGameMode(mode);
+    setGameState(mode === 'multiplayer' ? 'lobby' : 'characterSelect');
   };
 
-  const handleCharacterSelect = (player, character) => {
-    setSelectedCharacters({...selectedCharacters, [player]: character});
-    if (Object.keys(selectedCharacters).length === (selectedGameMode === 'multiplayer' ? 2 : 1)) {
-      if (selectedGameMode === 'multiplayer') {
-        setCurrentScreen('lobby');
-      } else {
-        setCurrentScreen('game');
-      }
-    }
+  const handleCharacterSelect = (characters) => {
+    setSelectedCharacters(characters);
+    setGameState('game');
   };
 
   const handleReturnToMenu = () => {
-    setCurrentScreen('mainMenu');
-    setSelectedGameMode(null);
-    setSelectedCharacters({});
+    setGameState('mainMenu');
+    setGameMode(null);
+    setSelectedCharacters([]);
   };
 
   return (
-    <div className="app">
-      {currentScreen === 'mainMenu' && (
+    <div>
+      {gameState === 'mainMenu' && (
         <MainMenu onGameModeSelect={handleGameModeSelect} />
       )}
-      {currentScreen === 'characterSelect' && (
-        <CharacterSelect 
+      {gameState === 'characterSelect' && (
+        <CharacterSelect
+          gameMode={gameMode}
           onCharacterSelect={handleCharacterSelect}
-          selectedGameMode={selectedGameMode}
+          onBack={handleReturnToMenu}
         />
       )}
-      {currentScreen === 'lobby' && (
-        <LobbyRoom 
-          selectedCharacters={selectedCharacters}
-          onGameStart={() => setCurrentScreen('game')}
-          onCancel={handleReturnToMenu}
+      {gameState === 'lobby' && (
+        <LobbyRoom
+          onJoinGame={(characters) => {
+            setSelectedCharacters(characters);
+            setGameState('game');
+          }}
+          onBack={handleReturnToMenu}
         />
       )}
-      {currentScreen === 'game' && (
-        <Game 
-          gameMode={selectedGameMode}
+      {gameState === 'game' && (
+        <Game
+          gameMode={gameMode}
           selectedCharacters={selectedCharacters}
           onGameOver={handleReturnToMenu}
         />
