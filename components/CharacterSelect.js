@@ -1,7 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, {
+  useRef,
+  useState,
+} from 'react';
+
 import styles from '../styles/CharacterSelect.module.css';
+import { loadCustomCharacter } from './CharacterManager';
 import CharacterPreview from './CharacterPreview';
-import { loadCustomCharacter } from '../lib/CharacterManager';
 
 const CharacterSelect = ({ onCharacterSelect, selectedGameMode }) => {
   const [selectedCharacters, setSelectedCharacters] = useState({});

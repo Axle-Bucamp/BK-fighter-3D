@@ -1,5 +1,9 @@
-import React, { useEffect, useRef } from 'react';
-import { GameEngine } from '../lib/gameEngine';
+import React, {
+  useEffect,
+  useRef,
+} from 'react';
+
+import { GameEngine } from '../src/gameEngine';
 import styles from '../styles/GameScene.module.css';
 
 const GameScene = () => {

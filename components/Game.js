@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
 import { useFrame } from '@react-three/fiber';
-import { CharacterManager } from '../game/CharacterManager';
-import { GameScene } from './GameScene';
+
+import { CharacterManager } from './CharacterManager';
 import { GameOverScreen } from './GameOverScreen';
+import { GameScene } from './GameScene';
 
 const Game = ({ gameMode, selectedCharacters }) => {
   const [gameState, setGameState] = useState('playing');

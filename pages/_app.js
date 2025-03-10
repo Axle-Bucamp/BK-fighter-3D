@@ -6,7 +6,7 @@ import {
 } from 'react';
 
 import GameEngine from '../src/gameEngine';
-import MultiplayerManager from '../src/multiplayerManager';
+import MultiplayerManager from '../src/MultiplayerManager';
 
 export default function App({ Component, pageProps }) {
   const [gameEngine, setGameEngine] = useState(null);
