@@ -1,55 +1,55 @@
-# TODO List for BK-fighter-3D
+# TODO List for BK Fighter 3D
 
-## Completed Tasks
-- [x] Implement basic game structure using React and Three.js
-- [x] Create character models and animations
-- [x] Implement basic fighting mechanics
-- [x] Add character selection screen
-- [x] Optimize rendering performance using React.memo and useMemo
-- [x] Implement object pooling for particles and other frequently created/destroyed objects
-- [x] Add Level of Detail (LOD) for character models
-- [x] Optimize asset loading and management
-- [x] Implement adaptive resolution scaling
-- [x] Create custom shaders for improved rendering efficiency
-- [x] Optimize touch input for mobile devices
+## High Priority
+- [x] Implement custom character upload functionality
+  - [x] Add file input for .obj and .fbx files in CharacterSelect component
+  - [x] Create a service to handle file uploads and processing
+  - [x] Integrate custom characters into the game engine
+- [x] Enhance menu system
+  - [x] Create a main menu with options for different game modes
+  - [x] Implement settings menu for audio, graphics, and control options
+- [x] Improve character selection screen
+  - [x] Add preview animations for each character
+  - [x] Include character stats and special moves information
 
-## fix 
-- [ ] Game system
-- [ ] Generated unconected artefact (src files, pages files, componant files) Ensure developpement logic
-- [ ] Import and dependencies
-- [ ] Main Menue make sure the player arrive on the main menu
-
-## In Progress
+## Medium Priority
 - [ ] Implement multiplayer functionality
-- [ ] Enhance AI for computer-controlled opponents
-- [ ] Expand character roster and move sets
+  - [ ] Set up WebSocket server for real-time communication
+  - [ ] Create lobby system for player matchmaking
+  - [ ] Implement network synchronization for gameplay
+- [ ] Add more characters to the roster
+  - [ ] Design and implement at least 2 new Burger King-themed characters
+  - [ ] Add 2 more Jean-Claude Van Damme movie characters
+- [ ] Enhance graphics and visual effects
+  - [ ] Implement particle systems for special moves and impacts
+  - [ ] Add dynamic lighting and shadows to the arena
 
-## Future Tasks
-- [ ] Implement more advanced culling techniques (e.g., portal culling)
-- [ ] Add support for WebGPU on compatible devices
-- [ ] Implement asset streaming for large levels or open-world scenarios
-- [ ] Use Web Workers for offloading heavy computations
-- [ ] Implement more sophisticated LOD techniques for terrain and environments
-- [ ] Create a comprehensive tutorial system
-- [ ] Implement a ranking system and online leaderboards
-- [ ] Add customizable character skins and accessories
-- [ ] Develop additional game modes (e.g., tournament, survival)
-- [ ] Optimize for VR/AR platforms
-- [ ] Implement cross-platform play
-- [ ] Create a level editor for user-generated content
-- [ ] Integrate with popular game streaming platforms
+## Low Priority
+- [ ] Create additional arenas/stages
+  - [ ] Design and implement at least 3 new themed arenas
+- [ ] Add unlockable content
+  - [ ] Create a progression system to unlock new characters and stages
+- [ ] Implement a training mode
+  - [ ] Add AI-controlled dummy for practice
+  - [ ] Include move list and frame data display
 
-## Optimization Goals
-- [ ] Achieve consistent 60 FPS on mid-range mobile devices
-- [ ] Reduce initial loading time to under 5 seconds on average connections
-- [ ] Minimize memory usage to support longer gaming sessions
-- [ ] Implement dynamic quality settings to maintain performance across various devices
-- [ ] Optimize network code to reduce latency in multiplayer matches
+## Ongoing
+- [ ] Optimize performance
+  - [ ] Profile and optimize rendering pipeline
+  - [ ] Implement level-of-detail (LOD) system for character models
+- [ ] Bug fixing and polishing
+  - [ ] Regularly test and fix any reported issues
+  - [ ] Improve user interface and user experience based on feedback
 
-## Community and Documentation
-- [ ] Expand contributor guidelines with more detailed performance best practices
-- [ ] Create a performance testing suite for automated benchmarking
-- [ ] Develop a comprehensive API documentation for modders and plugin developers
-- [ ] Set up a community forum for discussions and feedback
+## Future Considerations
+- [ ] Mobile version development
+- [ ] Cross-platform multiplayer support
+- [ ] Integration with online leaderboards and achievements
 
-Please feel free to add or modify tasks as the project evolves. Remember to update this list regularly as tasks are completed or new priorities emerge.
+## Next Steps
+1. Implement the Game component to handle different game modes
+2. Create the LobbyRoom component for multiplayer matchmaking
+3. Develop the actual gameplay mechanics and controls
+4. Implement the WebSocket server for real-time multiplayer communication
+5. Add more characters and arenas to increase game content
+6. Enhance graphics and visual effects to improve the overall game experience
