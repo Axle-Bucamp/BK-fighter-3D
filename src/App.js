@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import MainMenu from './components/MainMenu';
 import CharacterSelect from './components/CharacterSelect';
-import LobbyRoom from './components/LobbyRoom';
 import Game from './components/Game';
-import CharacterManager from './lib/CharacterManager';
+import LobbyRoom from './components/LobbyRoom';
 
 const App = () => {
   const [gameState, setGameState] = useState('mainMenu');
@@ -24,14 +23,14 @@ const App = () => {
     }
   };
 
+  const handleStartGame = () => {
+    setGameState('game');
+  };
+
   const handleReturnToMenu = () => {
     setGameState('mainMenu');
     setGameMode(null);
     setSelectedCharacters([]);
-  };
-
-  const handleStartGame = () => {
-    setGameState('game');
   };
 
   const renderGameState = () => {
@@ -39,35 +38,28 @@ const App = () => {
       case 'mainMenu':
         return <MainMenu onSelectGameMode={handleGameModeSelect} />;
       case 'characterSelect':
-        return (
-          <CharacterSelect
-            gameMode={gameMode}
-            onSelectCharacters={handleCharacterSelect}
-            onReturnToMenu={handleReturnToMenu}
-          />
-        );
+        return <CharacterSelect onSelectCharacters={handleCharacterSelect} />;
       case 'lobby':
-        return (
-          <LobbyRoom
-            onStartGame={handleStartGame}
-            onReturnToMenu={handleReturnToMenu}
-          />
-        );
+        return <LobbyRoom characters={selectedCharacters} onStartGame={handleStartGame} />;
       case 'game':
         return (
           <Game
             gameMode={gameMode}
-            selectedCharacters={selectedCharacters}
-            characterManager={new CharacterManager()}
-            onGameOver={handleReturnToMenu}
+            players={selectedCharacters}
+            onGameEnd={handleReturnToMenu}
           />
         );
       default:
-        return <div>Error: Invalid game state</div>;
+        return null;
     }
   };
 
-  return <div className="app">{renderGameState()}</div>;
+  return (
+    <div className="app-container">
+      <h1>BK Fighter 3D</h1>
+      {renderGameState()}
+    </div>
+  );
 };
 
 export default App;
