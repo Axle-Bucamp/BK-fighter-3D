@@ -8,7 +8,7 @@ class MultiplayerManager {
   }
 
   connect(serverUrl) {
-    this.socket = new WebSocket(serverUrl);
+    this.socket = new WebSocket("http://localhost:3000");
 
     this.socket.onopen = () => {
       console.log('Connected to server');

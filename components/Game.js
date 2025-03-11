@@ -6,12 +6,15 @@ import React, {
 
 import {
   Canvas,
+  extend,
   useFrame,
 } from '@react-three/fiber';
 
-import { CharacterManager } from './CharacterManager';
-import { GameOverScreen } from './GameOverScreen';
-import { GameScene } from './GameScene';
+import { CharacterManager } from './CharacterManager'; // Ensure correct import
+import GameOverScreen from './GameOverScreen';
+import GameScene from './GameScene';
+
+extend({ GameScene });
 
 const Game = ({ gameMode, selectedCharacters }) => {
   const [gameState, setGameState] = useState('playing');
@@ -20,18 +23,22 @@ const Game = ({ gameMode, selectedCharacters }) => {
   const characterManager = useRef(new CharacterManager());
 
   useEffect(() => {
-    // Load characters
-    const loadedPlayer1 = characterManager.current.loadCharacter(selectedCharacters[0]);
-    setPlayer1(loadedPlayer1);
+    const loadPlayers = async () => {
+      if (!selectedCharacters?.player1) return;
 
-    if (gameMode === 'multiplayer') {
-      const loadedPlayer2 = characterManager.current.loadCharacter(selectedCharacters[1]);
-      setPlayer2(loadedPlayer2);
-    } else {
-      // Load AI opponent for single player
-      const aiOpponent = characterManager.current.loadCharacter('aiCharacter');
-      setPlayer2(aiOpponent);
-    }
+      const loadedPlayer1 = await characterManager.current.loadCharacter(selectedCharacters.player1);
+      setPlayer1(loadedPlayer1);
+
+      if (gameMode === 'multiplayer' && selectedCharacters?.player2) {
+        const loadedPlayer2 = await characterManager.current.loadCharacter(selectedCharacters.player2);
+        setPlayer2(loadedPlayer2);
+      } else {
+        const aiOpponent = await characterManager.current.loadCharacter('aiCharacter');
+        setPlayer2(aiOpponent);
+      }
+    };
+
+    loadPlayers();
   }, [gameMode, selectedCharacters]);
 
   const handleKeyDown = (event) => {
@@ -61,6 +68,10 @@ const Game = ({ gameMode, selectedCharacters }) => {
     };
   }, [player1]);
 
+  const onReturnToMenu = () => {
+    setGameState('menu');
+  };
+
   const restartGame = () => {
     setGameState('playing');
     player1?.reset();
@@ -76,7 +87,13 @@ const Game = ({ gameMode, selectedCharacters }) => {
         </Canvas>
       )}
       {gameState === 'gameOver' && (
-        <GameOverScreen winner={player1?.health > 0 ? 'Player 1' : 'Player 2'} onRestart={restartGame} />
+        <GameOverScreen
+          winner={player1?.health > 0 ? 'Player 1' : 'Player 2'}
+          scores={0}
+          gameStats={0}
+          onReturnToMenu={onReturnToMenu}
+          onRestart={restartGame}
+        />
       )}
     </>
   );
@@ -91,25 +108,30 @@ const GameLoop = ({ player1, player2, setGameState }) => {
     player1.update();
     player2.update();
 
-    // Check for collision
     if (checkCollision(player1, player2)) {
       handleCollision(player1, player2);
     }
 
-    // Check for game over
     if (player1.health <= 0 || player2.health <= 0) {
       setGameState('gameOver');
     }
   });
 
-  return null; // This component runs logic but renders nothing
+  return null;
 };
 
 const checkCollision = (char1, char2) => {
-  // Implement collision detection logic
-  return false; // Placeholder
+  const rect1 = char1.getBoundingBox();
+  const rect2 = char2.getBoundingBox();
+  return (
+    rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.y + rect1.height > rect2.y
+  );
 };
 
 const handleCollision = (char1, char2) => {
-  // Implement collision effects
+  char1.takeDamage(10);
+  char2.takeDamage(10);
 };

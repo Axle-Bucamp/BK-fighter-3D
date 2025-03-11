@@ -7,6 +7,20 @@ class GameEngine {
     this.clock = new Clock();
     this.entities = [];
     this.isRunning = false;
+
+    // Set up camera
+    this.camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    this.camera.position.z = 5;
+
+    // Set up renderer
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(this.renderer.domElement);
   }
 
   start() {
@@ -34,7 +48,7 @@ class GameEngine {
     
     const delta = this.clock.getDelta();
     this.entities.forEach(entity => {
-      if (entity.update) {
+      if (entity && typeof entity.update === 'function') {
         entity.update(delta);
       }
     });

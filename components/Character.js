@@ -11,10 +11,11 @@ import {
   useThree,
 } from '@react-three/fiber';
 
-import CharacterManager from '../lib/CharacterManager';
+import characterManager
+  from '../lib/CharacterManager'; // Importing the singleton manager
 
 const Character = ({ name, position, isPlayer, controls }) => {
-  const character = CharacterManager.getCharacter(name);
+  const character = characterManager.getCharacter(name); // Get character from the manager
   const { camera } = useThree();
 
   const [ref, api] = useSphere(() => ({
@@ -48,6 +49,8 @@ const Character = ({ name, position, isPlayer, controls }) => {
   };
 
   useFrame((state, delta) => {
+    if (!character) return; // Make sure character is loaded before using it
+
     const { left, right, up, down, jump: jumpControl, attack: attackControl } = controls;
 
     // Calculate movement direction
