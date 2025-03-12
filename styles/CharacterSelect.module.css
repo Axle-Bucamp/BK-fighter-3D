@@ -1,73 +1,114 @@
+/* Character Selection Container */
 .characterSelectContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  background-color: #f0f0f0;
   min-height: 100vh;
+  background: linear-gradient(135deg, #e0e0e0, #c0c0c0);
 }
 
+/* Title Styling */
 .title {
-  font-size: 2rem;
+  font-size: 2.5rem;
+  font-weight: bold;
   margin-bottom: 2rem;
-  color: #333;
+  color: #222;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Character Selection Grid */
 .charactersContainer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
   margin-bottom: 2rem;
+  max-width: 80%;
 }
 
+/* Character Card */
 .characterCard {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.2rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 220px;
+  border: 3px solid transparent;
 }
 
 .characterCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
 }
 
 .characterCard.selected {
-  border: 3px solid #4CAF50;
+  border-color: #4CAF50;
+  box-shadow: 0 8px 14px rgba(76, 175, 80, 0.3);
+  transform: scale(1.05);
 }
 
+/* Character Image */
 .characterImage {
   width: 200px;
   height: 200px;
   object-fit: cover;
-  border-radius: 5px;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
 }
 
+.characterCard:hover .characterImage {
+  transform: scale(1.05);
+}
+
+/* Character Name */
 .characterName {
-  text-align: center;
   margin-top: 1rem;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Confirm Button */
+.confirmButton {
+  padding: 0.8rem 1.8rem;
+  font-size: 1.1rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
   font-weight: bold;
 }
 
-.confirmButton {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
 .confirmButton:hover:not(:disabled) {
-  background-color: #45a049;
+  background: #45a049;
+  transform: scale(1.05);
 }
 
 .confirmButton:disabled {
-  background-color: #cccccc;
+  background: #cccccc;
   cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .charactersContainer {
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+  }
+
+  .characterCard {
+    max-width: 100%;
+  }
+
+  .confirmButton {
+    font-size: 1rem;
+    padding: 0.7rem 1.5rem;
+  }
 }

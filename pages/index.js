@@ -3,10 +3,15 @@ import React, { useState } from 'react';
 import CharacterSelect from '../components/CharacterSelect';
 import Game from '../components/Game';
 import MainMenu from '../components/MainMenu';
+import OptionsMenu
+  from '../components/OptionsMenu'; // New Options Menu Component
 
 const IndexPage = () => {
   const [gameState, setGameState] = useState('menu');
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [selectedCharacters, setSelectedCharacters] = useState({
+    player1: null,
+    player2: null,
+  });
   const [gameMode, setGameMode] = useState(null);
 
   const handleStartGame = (mode) => {
@@ -14,31 +19,50 @@ const IndexPage = () => {
     setGameState('characterSelect');
   };
 
-  const handleCharacterSelect = (character) => {
-    setSelectedCharacter(character);
-    setGameState('game');
+  const handleSelectCharacter = (player, character) => {
+    setSelectedCharacters((prev) => ({
+      ...prev,
+      [player]: character,
+    }));
+  
+    if (gameMode === 'singleplayer' || (gameMode === 'multiplayer' && selectedCharacters.player1)) {
+      setGameState('game');
+    }
+  };
+
+  const handleOpenOptions = () => {
+    setGameState('options');
   };
 
   const handleReturnToMenu = () => {
     setGameState('menu');
-    setSelectedCharacter(null);
+    setSelectedCharacters({ player1: null, player2: null });
     setGameMode(null);
   };
 
   return (
     <div>
       {gameState === 'menu' && (
-        <MainMenu onStartGame={handleStartGame} onSelectGameMode={handleStartGame}/>
+        <MainMenu onSelectGameMode={handleStartGame} onOpenOptions={handleOpenOptions} />
       )}
       {gameState === 'characterSelect' && (
-        <CharacterSelect onSelect={handleCharacterSelect} onCharacterSelect={handleCharacterSelect} onBack={handleReturnToMenu} />
+        <CharacterSelect
+          onSelect={handleSelectCharacter}
+          onBack={handleReturnToMenu}
+          onCharacterSelect={handleSelectCharacter}
+
+        />
       )}
       {gameState === 'game' && (
         <Game
-          character={selectedCharacter}
+          selectedCharacters={selectedCharacters}
           gameMode={gameMode}
           onExit={handleReturnToMenu}
+          onCharacterSelect={handleSelectCharacter}
         />
+      )}
+      {gameState === 'options' && (
+        <OptionsMenu onBack={handleReturnToMenu} />
       )}
     </div>
   );

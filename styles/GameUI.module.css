@@ -9,15 +9,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+  background: rgba(0, 0, 0, 0.7); /* Darker overlay for better contrast */
   z-index: 10; /* Ensure it's above the canvas */
+  text-align: center;
+  padding: 1rem;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 /* Health Bar Positioned at the Top */
 .healthBarContainer {
   position: absolute;
   top: 20px;
-  transform: translateX(-50%);
   display: flex;
   width: 25%;
   height: 30px;
@@ -25,18 +27,18 @@
   border-radius: 8px;
   overflow: hidden;
   z-index: 20; /* Above the game */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 /* Burger Health Bar - Left Side */
-.burger  {
-  left: 32%;
+.burger {
+  left: 30%;
 }
 
 /* Jean Health Bar - Right Side */
 .jean {
-  left: 59%;
+  left: 60%;
 }
-
 
 /* Health bar fills dynamically */
 .healthBar {
@@ -53,16 +55,104 @@
   font-size: 1rem;
   font-weight: bold;
   color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* Start Screen Styling */
 .startScreen {
   background: rgba(0, 0, 0, 0.85);
-  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.startScreen h1 {
+  font-size: 3rem;
+  color: white;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.startButton {
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.startButton:hover {
+  background: linear-gradient(135deg, #45a049, #256D27);
+  transform: scale(1.05);
+}
+
+.startButton:active {
+  transform: scale(0.98);
 }
 
 /* Game Over Overlay */
 .gameOver {
   background: rgba(0, 0, 0, 0.9);
-  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.gameOver h1 {
+  font-size: 3rem;
+  color: #ff3b3b;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 6px rgba(255, 59, 59, 0.5);
+}
+
+.retryButton {
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #ff3b3b, #ff9800);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.retryButton:hover {
+  background: linear-gradient(135deg, #d32f2f, #f57c00);
+  transform: scale(1.05);
+}
+
+.retryButton:active {
+  transform: scale(0.98);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .healthBarContainer {
+    width: 40%;
+    height: 25px;
+  }
+
+  .burger {
+    left: 25%;
+  }
+
+  .jean {
+    left: 65%;
+  }
+
+  .startScreen h1, .gameOver h1 {
+    font-size: 2.5rem;
+  }
+
+  .startButton, .retryButton {
+    font-size: 1.2rem;
+    padding: 0.75rem 1.5rem;
+  }
 }

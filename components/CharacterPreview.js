@@ -1,6 +1,7 @@
 import React, {
   useEffect,
   useRef,
+  useState,
 } from 'react';
 
 import * as THREE from 'three';
@@ -10,115 +11,103 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 const CharacterPreview = ({ characterId, character }) => {
   const mountRef = useRef(null);
-  let renderer, scene, camera, mixer, model;
+  const [loading, setLoading] = useState(true);
+  const clockRef = useRef(new THREE.Clock());
+  const mixerRef = useRef(null);
+  const modelRef = useRef(null);
 
   useEffect(() => {
-    if (!mountRef.current) return; // Ensure mountRef exists before proceeding
+    if (!mountRef.current) return;
 
-    const width = 200;
-    const height = 200;
-
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-
+    // Scene Setup
+    const width = 200, height = 200;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     mountRef.current.appendChild(renderer.domElement);
 
+    // Lighting
     const light = new THREE.PointLight(0xffffff, 1, 100);
     light.position.set(0, 0, 10);
     scene.add(light);
 
     camera.position.z = 5;
 
+    // Texture Loader
+    const textureLoader = new THREE.TextureLoader();
+    
     const loadModel = () => {
+      setLoading(true);
+      let loader, path;
+
       if (character) {
-        // Load custom character
-        const objLoader = new OBJLoader();
-        const fbxLoader = new FBXLoader();
-        const textureLoader = new THREE.TextureLoader();
+        loader = character.objUrl ? new OBJLoader() : new FBXLoader();
+        path = character.objUrl || character.fbxUrl;
+      } else {
+        loader = new GLTFLoader();
+        path = `/models/${characterId}.gltf`;
+      }
 
-        objLoader.load(character.objUrl, (obj) => {
-          model = obj;
-          scene.add(model);
+      loader.load(path, (loadedModel) => {
+        modelRef.current = loadedModel.scene || loadedModel;
+        modelRef.current.scale.set(2, 2, 2);
+        scene.add(modelRef.current);
 
-          fbxLoader.load(character.fbxUrl, (fbx) => {
-            mixer = new THREE.AnimationMixer(model);
-            if (fbx.animations.length > 0) {
-              const action = mixer.clipAction(fbx.animations[0]);
-              action.play();
-            }
-
-            textureLoader.load(character.textureUrl, (texture) => {
-              model.traverse((child) => {
-                if (child.isMesh) {
-                  child.material.map = texture;
-                  child.material.needsUpdate = true;
-                }
-              });
+        if (character?.textureUrl) {
+          textureLoader.load(character.textureUrl, (texture) => {
+            modelRef.current.traverse((child) => {
+              if (child.isMesh) {
+                child.material.map = texture;
+                child.material.needsUpdate = true;
+              }
             });
           });
-        });
-      } else {
-        // Load default character
-        const loader = new GLTFLoader();
-        loader.load(`/models/${characterId}.gltf`, (gltf) => {
-          model = gltf.scene;
-          scene.add(model);
+        }
 
-          mixer = new THREE.AnimationMixer(model);
-          if (gltf.animations.length > 0) {
-            const action = mixer.clipAction(gltf.animations[0]);
-            action.play();
-          }
-        });
-      }
+        if (loadedModel.animations?.length) {
+          mixerRef.current = new THREE.AnimationMixer(modelRef.current);
+          const action = mixerRef.current.clipAction(loadedModel.animations[0]);
+          action.play();
+        }
+
+        setLoading(false);
+      });
     };
 
     loadModel();
 
-    const clock = new THREE.Clock();
-
     const animate = () => {
-      if (!mountRef.current) return; // Ensure component is still mounted
       requestAnimationFrame(animate);
-
-      if (mixer) {
-        mixer.update(clock.getDelta());
-      }
-
-      if (model) {
-        model.rotation.y += 0.01;
-      }
-
+      if (mixerRef.current) mixerRef.current.update(clockRef.current.getDelta());
+      if (modelRef.current) modelRef.current.rotation.y += 0.01;
       renderer.render(scene, camera);
     };
 
     animate();
 
     return () => {
-      if (mountRef.current && renderer) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      if (renderer) {
-        renderer.dispose();
-      }
-      if (scene) {
-        scene.children.forEach((child) => {
-          if (child.geometry) child.geometry.dispose();
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach((mat) => mat.dispose());
-            } else {
-              child.material.dispose();
-            }
+      if (mountRef.current) mountRef.current.removeChild(renderer.domElement);
+      renderer.dispose();
+      scene.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach((mat) => mat.dispose());
+          } else {
+            child.material.dispose();
           }
-        });
-      }
+        }
+      });
     };
   }, [characterId, character]);
 
-  return <div ref={mountRef} style={{ width: 200, height: 200 }} />;
+  return (
+    <div>
+      {loading && <div>Loading...</div>}
+      <div ref={mountRef} style={{ width: 200, height: 200 }} />
+    </div>
+  );
 };
 
 export default CharacterPreview;

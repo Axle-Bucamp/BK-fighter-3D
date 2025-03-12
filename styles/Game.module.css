@@ -1,40 +1,92 @@
+/* Game Container */
 .gameContainer {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f0f0;
+  background: radial-gradient(circle at center, #e0e0e0, #bbb);
+  overflow: hidden;
+  position: relative;
 }
 
+/* Game Canvas */
 .gameCanvas {
-  border: 2px solid #333;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border: 3px solid #222;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: #fff;
+  max-width: 90%;
+  max-height: 90%;
 }
 
+/* Health Bar Container */
 .healthBar {
-  width: 200px;
-  height: 20px;
-  background-color: #e0e0e0;
-  margin: 10px 0;
-  border: 1px solid #333;
+  width: 220px;
+  height: 22px;
+  background-color: #1e1e1e;
+  margin: 12px 0;
+  border-radius: 12px;
+  border: 2px solid #444;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Health Bar Fill */
 .healthFill {
   height: 100%;
-  background-color: #4CAF50;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #4CAF50, #2ecc71);
+  transition: width 0.4s ease-in-out;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(46, 204, 113, 0.6);
 }
 
+/* Player Info Container */
 .playerInfo {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
+  align-items: center;
+  width: 80%;
+  padding: 12px 20px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 10px;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Player Name */
 .playerName {
-  font-size: 18px;
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gameContainer {
+    height: 100vh;
+    padding: 10px;
+  }
+
+  .playerInfo {
+    width: 95%;
+    top: 10px;
+  }
+
+  .healthBar {
+    width: 180px;
+    height: 18px;
+  }
+
+  .playerName {
+    font-size: 1rem;
+  }
 }

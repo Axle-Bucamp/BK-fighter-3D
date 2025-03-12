@@ -3,39 +3,48 @@ import React, {
   useRef,
 } from 'react';
 
-import { useThree } from '@react-three/fiber'; // Use R3F hooks
+import { useThree } from '@react-three/fiber';
 
-import GameEngine
-  from '../src/gameEngine'; // Assuming GameEngine is your custom class
+import GameEngine from '../src/gameEngine';
 
 const GameScene = ({ player1, player2, gameMode }) => {
-  const { scene } = useThree(); // R3F hook to access the scene
+  const { scene } = useThree();
   const gameEngineRef = useRef(null);
 
   useEffect(() => {
     if (!gameEngineRef.current) {
-      gameEngineRef.current = new GameEngine(); // Initialize the game engine
+      gameEngineRef.current = new GameEngine();
+      console.log("GameEngine initialized");
     }
 
     const gameEngine = gameEngineRef.current;
-    
-    // Assuming player1 and player2 are loaded and passed as props
-    if (player1) gameEngine.addEntity(player1.model);
-    if (player2) gameEngine.addEntity(player2.model);
 
-    gameEngine.start(); // Start the game loop
+    if (player1?.model) {
+      scene.add(player1.model);
+      gameEngine.addEntity(player1.model);
+      console.log("Added Player 1 to scene");
+    }
 
-    // Cleanup game engine on component unmount
+    if (player2?.model) {
+      scene.add(player2.model);
+      gameEngine.addEntity(player2.model);
+      console.log("Added Player 2 to scene");
+    }
+
+    gameEngine.start();
+
     return () => {
       gameEngine.stop();
     };
-  }, [player1, player2]); // Effect runs whenever player1 or player2 changes
+  }, [player1, player2]);
 
   return (
     <group>
-      {/* Render your game elements */}
-      {player1 && <primitive object={player1.model} />}
-      {player2 && <primitive object={player2.model} />}
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} />
+      
+      {player1?.model && <primitive object={player1.model} />}
+      {player2?.model && <primitive object={player2.model} />}
     </group>
   );
 };

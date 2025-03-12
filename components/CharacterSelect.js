@@ -22,8 +22,13 @@ const CharacterSelect = ({ onCharacterSelect, selectedGameMode }) => {
   ];
 
   const handleSelect = (character, player) => {
-    setSelectedCharacters({...selectedCharacters, [player]: character});
-    onCharacterSelect(player, character);
+    setSelectedCharacters({ ...selectedCharacters, [player]: character });
+  
+    if (typeof onCharacterSelect === "function") {
+      onCharacterSelect(player, character);
+    } else {
+      console.error("onCharacterSelect is not defined or not a function");
+    }
   };
 
   const handleFileUpload = async (event) => {
