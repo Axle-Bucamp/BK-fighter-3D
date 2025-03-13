@@ -4,25 +4,38 @@ import { Character } from './Character';
 
 export class CharacterManager {
   constructor() {
-    this.loader = new GLTFLoader(); // Correct instantiation
-    this.characters = {};
+    this.loader = new GLTFLoader();
+    this.characters = {}; // Store loaded characters
   }
 
-  loadCharacter(name) {
+  async loadCharacter(name) {
+    if (this.characters[name]) {
+      console.log(`Character ${name} already loaded.`);
+      return this.characters[name]; // Return cached character
+    }
+
     return new Promise((resolve, reject) => {
-      this.loader.load(`/models/${name}.glb`, 
+      this.loader.load(
+        `/models/${name}.glb`,
         (gltf) => {
-          const character = new Character(name, gltf.scene, gltf.animations);
+          const { scene, animations } = gltf;
+          const character = new Character(name, scene, animations);
+
           this.characters[name] = character;
+          console.log(`Character ${name} loaded successfully.`);
+
           resolve(character);
-        }, 
-        undefined, 
-        (error) => reject(error) // Added explicit error handling
+        },
+        undefined,
+        (error) => {
+          console.error(`Failed to load character ${name}:`, error);
+          reject(error);
+        }
       );
     });
   }
 
   getCharacter(name) {
-    return this.characters[name];
+    return this.characters[name] || null;
   }
 }
